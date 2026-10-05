@@ -1,0 +1,5 @@
+# Cloudflare Pages config for the partnergap-crm project.
+# The repo has no build step; the dashboard is a static page.
+name = "partnergap-crm"
+pages_build_output_dir = "./crm/dashboard"
+compatibility_date = "2026-10-05"
