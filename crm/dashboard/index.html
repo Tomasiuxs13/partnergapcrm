@@ -378,11 +378,11 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
         </div>
         <div class="ai warn">
           <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></div>
-          <div><b><span class="num">4,010</span> sites have no owner</b><p>Mostly older imports. Assign someone to follow them up.</p></div>
+          <div><b><span class="num">731</span> sites have no owner</b><p>Mostly Weglot (690), a client we no longer work with.</p></div>
         </div>
         <div class="ai info">
           <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L3 13V3h10l7.6 7.6a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></div>
-          <div><b><span class="num">2,919</span> contacts need a client tag</b><p>Imported from Jonas's Gmail, not yet linked to a client.</p></div>
+          <div><b><span class="num">2,706</span> Gmail sites have no client tag</b><p>Only Soro could be matched from Jonas's sent mail (213 sites).</p></div>
         </div>
         <div class="ai done">
           <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
@@ -467,7 +467,7 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
     ['MailerSend','Transactional email','Kamile',56,4,'US'],
     ['Headway','Book summaries app','Kamile',11,11,'US / IN / GB'],
     ['Raibu','Supplements','Monica',9,9,'IT / ES / US'],
-    ['Soro','AI SEO content','Jonas & Vik',8,8,'US'],
+    ['Soro','AI SEO content','Jonas & Vik',221,8,'US'],
     ['Botanical Synthesis','Topical pain relief','Eivyda',7,6,'US'],
     ['Fiverr','Freelance marketplace','Mantvydas',7,7,'IN / US'],
     ['TransferGO','Money transfer','Jonas & Vik',6,6,'GB / UA / PL / DE'],
@@ -515,10 +515,10 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
   render();
 
   /* Owners */
-  var owners = [['No owner yet',4010,true],['Jonas',2933],['Gaby',327],['Kamile',23],['Vik',17],['Eivyda',16],['Monica',9],['Mantvydas',7],['Others',4]];
+  var owners = [['No owner yet',731,true],['Kamile',3302],['Jonas',2933],['Gaby',327],['Vik',17],['Eivyda',16],['Monica',9],['Mantvydas',7],['Others',4]];
   var oEl = document.getElementById('owners');
   owners.forEach(function(o){
-    var w = Math.max(1.2, o[1] / 4010 * 100);
+    var w = Math.max(1.2, o[1] / 3302 * 100);
     var d = document.createElement('div'); d.className = 'ow';
     var col = o[2] ? 'linear-gradient(90deg,rgba(246,180,76,.35),#f6b44c)' : 'linear-gradient(90deg,rgba(63,216,238,.3),#3fd8ee)';
     var gl = o[2] ? 'rgba(246,180,76,.5)' : 'rgba(63,216,238,.45)';
