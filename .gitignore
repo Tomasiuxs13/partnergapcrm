@@ -1,0 +1,6 @@
+# CRM working data with contact details stays out of git
+*.json
+pages/
+bounced.txt
+__pycache__/
+!package.json
