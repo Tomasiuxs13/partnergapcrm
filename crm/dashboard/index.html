@@ -1,0 +1,144 @@
+<title>PartnerGap Affiliate Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-column operations sheet, summary strip, pipeline bar, client ledger, schedule */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --ink:#1b2420; --muted:#5f6b65; --line:#dde2dc;
+  --accent:#1f6b52; --accent-soft:#e2efe9;
+  --new:#9aa7a0; --contacted:#3f7fae; --replied:#1f6b52; --lost:#b4553c;
+  --display:"Fraunces",Georgia,serif; --body:"Instrument Sans",system-ui,-apple-system,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121715; --surface:#1a211e; --ink:#e7ece9; --muted:#9aa6a0; --line:#2b3430;
+  --accent:#5fbf98; --accent-soft:#1f2f29; --new:#6d7a74; --contacted:#6aa6d4; --replied:#5fbf98; --lost:#d8805f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1a211e; --ink:#e7ece9; --muted:#9aa6a0; --line:#2b3430;
+  --accent:#5fbf98; --accent-soft:#1f2f29; --new:#6d7a74; --contacted:#6aa6d4; --replied:#5fbf98; --lost:#d8805f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:28px 48px;display:grid;gap:28px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(26px,4vw,34px);margin:0;text-wrap:balance;letter-spacing:-0.01em}
+.sub{color:var(--muted);margin:4px 0 0}
+.stamp{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.stamp a{color:var(--accent)}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile .n{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .l{color:var(--muted);font-size:13px}
+.bar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:10px;font-size:13px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+th.num{text-align:right}
+.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.warn{background:transparent;border:1px solid var(--lost);color:var(--lost)}
+.pill.quiet{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.cols>section{min-width:0}
+ul.sched{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+ul.sched li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.what{margin:2px 0 0}
+.owners{display:grid;gap:8px}
+.orow{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
+.otrack{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.otrack span{display:block;height:100%;background:var(--contacted)}
+.orow .c{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:13px;margin:10px 0 0}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>PartnerGap Affiliate Pipeline</h1>
+      <p class="sub">Affiliate partners across all PartnerGap clients, from the master CRM sheet.</p>
+    </div>
+    <div class="stamp">Snapshot 5 Oct 2026, 15:30 Vilnius<br><a href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener">Open the CRM sheet</a></div>
+  </header>
+
+  <section>
+    <h2>At a glance</h2>
+    <div class="tiles">
+      <div class="tile"><div class="n">7,340</div><div class="l">Affiliate accounts</div></div>
+      <div class="tile"><div class="n">6,014</div><div class="l">Contacts</div></div>
+      <div class="tile"><div class="n">1,760</div><div class="l">Accounts that replied</div></div>
+      <div class="tile"><div class="n">42.7%</div><div class="l">Reply rate on Jonas's Gmail outreach</div></div>
+      <div class="tile"><div class="n">63</div><div class="l">New sites from this week's discovery</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pipeline by stage</h2>
+    <div class="bar" role="img" aria-label="New 2,368, Contacted 3,172, Replied 1,760, Lost 40">
+      <span style="width:32.26%;background:var(--new)"></span>
+      <span style="width:43.22%;background:var(--contacted)"></span>
+      <span style="width:23.98%;background:var(--replied)"></span>
+      <span style="width:0.54%;background:var(--lost)"></span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--new)"></i>New <b>2,368</b></span>
+      <span><i style="background:var(--contacted)"></i>Contacted <b>3,172</b></span>
+      <span><i style="background:var(--replied)"></i>Replied <b>1,760</b></span>
+      <span><i style="background:var(--lost)"></i>Lost <b>40</b></span>
+      <span style="color:var(--muted)">Negotiating and Active: 0 so far</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Active clients</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Client</th><th>Manager</th><th class="num">Accounts</th><th class="num">New this week</th><th>Focus market</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Ultahost</td><td>Vik</td><td class="num">3,445</td><td class="num">0</td><td>US</td><td><span class="pill quiet">Top sites already in CRM</span></td></tr>
+          <tr><td>MailerLite</td><td>Vik</td><td class="num">100</td><td class="num">7</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>MailerSend</td><td>Jonas</td><td class="num">56</td><td class="num">4</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Headway</td><td>Kamile</td><td class="num">11</td><td class="num">11</td><td>US, IN, GB</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Raibu</td><td>Monica</td><td class="num">9</td><td class="num">9</td><td>IT</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Soro</td><td>Jonas, Vik</td><td class="num">8</td><td class="num">8</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Fiverr</td><td>Mantvydas</td><td class="num">7</td><td class="num">7</td><td>IN, US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>TransferGO</td><td>Jonas, Vik</td><td class="num">6</td><td class="num">6</td><td>GB, UA, PL, DE</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Melograno (Trafft, Amelia, wpDataTables, IvyForms)</td><td>Eivyda</td><td class="num">6</td><td class="num">6</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Desktronic</td><td>Eivyda</td><td class="num">5</td><td class="num">5</td><td>DE and EU, US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>GuardBlinds</td><td>Kamile</td><td class="num">3</td><td class="num">3</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
+          <tr><td>Botanical Synthesis</td><td>Eivyda</td><td class="num">0</td><td class="num">0</td><td>Not set</td><td><span class="pill warn">Needs keywords</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Accounts counts only partners tagged with that client. Most of the 2,919 Gmail outreach accounts have no client tag yet.</p>
+  </section>
+
+  <div class="cols">
+    <section>
+      <h2>Accounts by owner</h2>
+      <div class="owners">
+        <div class="orow"><span>Unassigned</span><div class="otrack"><span style="width:100%"></span></div><span class="c">4,010</span></div>
+        <div class="orow"><span>Jonas</span><div class="otrack"><span style="width:73.2%"></span></div><span class="c">2,936</span></div>
+        <div class="orow"><span>Gaby</span><div class="otrack"><span style="width:8.2%"></span></div><span class="c">327</span></div>
+        <div class="orow"><span>Vik</span><div class="otrack"><span style="width:0.6%"></span></div><span class="c">24</span></div>
+        <div class="orow"><span>Kamile</span><div class="otrack"><span style="width:0.3%"></span></div><span class="c">13</span></div>
+        <div class="orow"><span>Eivyda</span><div class="otrack"><span style="width:0.25%"></span></div><span class="c">10</span></div>
+        <div class="orow"><span>Monica</span><div class="otrack"><span style="width:0.22%"></span></div><span class="c">9</span></div>
+        <div class="orow"><span>Mantvydas</span><div class="otrack"><span style="width:0.17%"></span></div><span class="c">7</span></div>
+      </div>
+    </section>
+    <section>
+      <h2>What runs automatically</h2>
+      <ul class="sched">
+        <li><div class="when">Mon 07:52</div><p class="what">Find new affiliate sites for every active client in Ahrefs and add them to Accounts.</p></li>
+        <li><div class="when">Mon–Fri 08:47</div><p class="what">Sync Gmail replies and bounces, find contacts in Apollo (25 credits a day), draft outreach. Nothing is sent until Jonas approves.</p></li>
+        <li><div class="when">Fri 15:51</div><p class="what">Weekly summary per client, posted in the CRM thread.</p></li>
+      </ul>
+    </section>
+  </div>
+</div>
