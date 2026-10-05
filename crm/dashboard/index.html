@@ -5,61 +5,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PartnerGap Affiliate Pipeline</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one-column operations sheet, summary strip, pipeline bar, client ledger, schedule */
+/* Layout: summary first (headline + 4 tiles), then the pipeline funnel, a "needs attention" list,
+   the client ledger with filters, and owners + schedule side by side. */
 :root{
-  --bg:#f6f7f4; --surface:#ffffff; --ink:#1b2420; --muted:#5f6b65; --line:#dde2dc;
-  --accent:#1f6b52; --accent-soft:#e2efe9;
-  --new:#9aa7a0; --contacted:#3f7fae; --replied:#1f6b52; --lost:#b4553c;
-  --display:"Fraunces",Georgia,serif; --body:"Instrument Sans",system-ui,-apple-system,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --bg:#f5f7f9; --surface:#ffffff; --sunk:#eef1f5; --line:#dde3ea;
+  --ink:#121a24; --ink-2:#4a5666; --ink-3:#6f7b8b;
+  --accent:#2a5bd7; --accent-soft:#e6edfc;
+  --s1:#86b6ef; --s2:#5598e7; --s3:#2a78d6; --s4:#1c5cab; --s5:#104281; --lost:#a7b0bc;
+  --good:#0ca30c; --warn:#b77900; --crit:#d03b3b;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:14px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#121715; --surface:#1a211e; --ink:#e7ece9; --muted:#9aa6a0; --line:#2b3430;
-  --accent:#5fbf98; --accent-soft:#1f2f29; --new:#6d7a74; --contacted:#6aa6d4; --replied:#5fbf98; --lost:#d8805f; color-scheme:dark}}
+  --bg:#0f141b; --surface:#161d26; --sunk:#1c2530; --line:#29333f;
+  --ink:#eef2f7; --ink-2:#b4bfcc; --ink-3:#8b97a6;
+  --accent:#7aa2ff; --accent-soft:#1d2a45;
+  --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#6da7ec; --s5:#9ec5f4; --lost:#4d5866;
+  --good:#3cc23c; --warn:#fab219; --crit:#ef6b6b; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121715; --surface:#1a211e; --ink:#e7ece9; --muted:#9aa6a0; --line:#2b3430;
-  --accent:#5fbf98; --accent-soft:#1f2f29; --new:#6d7a74; --contacted:#6aa6d4; --replied:#5fbf98; --lost:#d8805f; color-scheme:dark}
+  --bg:#0f141b; --surface:#161d26; --sunk:#1c2530; --line:#29333f;
+  --ink:#eef2f7; --ink-2:#b4bfcc; --ink-3:#8b97a6;
+  --accent:#7aa2ff; --accent-soft:#1d2a45;
+  --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#6da7ec; --s5:#9ec5f4; --lost:#4d5866;
+  --good:#3cc23c; --warn:#fab219; --crit:#ef6b6b; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;padding-block:28px 48px;display:grid;gap:28px}
-header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
-h1{font-family:var(--display);font-weight:600;font-size:clamp(26px,4vw,34px);margin:0;text-wrap:balance;letter-spacing:-0.01em}
-.sub{color:var(--muted);margin:4px 0 0}
-.stamp{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
-.stamp a{color:var(--accent)}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 12px;font-weight:600}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.tile .n{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums;line-height:1.1}
-.tile .l{color:var(--muted);font-size:13px}
-.bar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
-.bar span{display:block;height:100%}
-.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:10px;font-size:13px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-.legend b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
-.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
-table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
-th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-tr:last-child td{border-bottom:0}
-td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
-th.num{text-align:right}
-.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
-.pill.warn{background:transparent;border:1px solid var(--lost);color:var(--lost)}
-.pill.quiet{background:transparent;border:1px solid var(--line);color:var(--muted)}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
-.cols>section{min-width:0}
-ul.sched{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-ul.sched li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.when{font-family:var(--mono);font-size:12px;color:var(--accent)}
-.what{margin:2px 0 0}
-.owners{display:grid;gap:8px}
-.orow{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:14px}
-.otrack{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
-.otrack span{display:block;height:100%;background:var(--contacted)}
-.orow .c{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
-.note{color:var(--muted);font-size:13px;margin:10px 0 0}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:grid;gap:22px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header */
+header{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 6px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.lede{margin:8px 0 0;color:var(--ink-2);max-width:62ch}
+.lede b{color:var(--ink);font-weight:600}
+.head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stamp{font-size:13px;color:var(--ink-3)}
+.btn{display:inline-flex;align-items:center;gap:6px;font:500 14px var(--body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn svg{width:15px;height:15px}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
+.panel h2{font-family:var(--display);font-weight:600;font-size:19px;margin:0;letter-spacing:-.005em}
+.panel .sub{margin:2px 0 16px;color:var(--ink-3);font-size:13.5px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:22px}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.tile .k{font-size:13px;color:var(--ink-2);font-weight:500}
+.tile .v{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tile .h{font-size:13px;color:var(--ink-3)}
+.tile .h b{color:var(--good);font-weight:600}
+
+/* funnel */
+.funnel{display:grid;gap:10px}
+.stage{display:grid;grid-template-columns:minmax(120px,170px) 1fr 64px;gap:12px;align-items:center}
+.stage .lab{display:grid;line-height:1.25}
+.stage .lab b{font-weight:600;font-size:14.5px}
+.stage .lab span{font-size:12.5px;color:var(--ink-3)}
+.track{height:26px;background:var(--sunk);border-radius:7px;overflow:hidden;position:relative}
+.fill{height:100%;border-radius:0 4px 4px 0;min-width:3px}
+.stage .c{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px}
+.stage.zero .c{color:var(--ink-3)}
+.stage.zero .fill{min-width:0}
+.foot{margin:14px 0 0;font-size:13px;color:var(--ink-3)}
+
+/* attention */
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.alert{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 14px;border-radius:10px;background:var(--sunk);align-items:start}
+.alert .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--body);color:var(--surface)}
+.alert.next .ic{background:var(--accent)}
+.alert.warn .ic{background:var(--warn)}
+.alert.ok .ic{background:var(--good)}
+.alert p{margin:0}
+.alert .t{font-weight:600}
+.alert .d{font-size:13.5px;color:var(--ink-2)}
+
+/* client ledger */
+.ledger-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.ledger-head .sub{margin:2px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--body);padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--sunk)}
+th{font-size:12px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--sunk)}
+th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+th button:hover{color:var(--ink)}
+th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+th .arr{font-size:10px;opacity:.35}
+th[aria-sort="ascending"] .arr,th[aria-sort="descending"] .arr{opacity:1;color:var(--accent)}
+td.r,th.r{text-align:right}
+.client b{font-weight:600}
+.client small{display:block;color:var(--ink-3);font-size:12.5px}
+.who{display:flex;gap:6px;flex-wrap:wrap}
+.av{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.av i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:600 11px var(--body)}
+.newbar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.newbar .mini{width:70px;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.newbar .mini span{display:block;height:100%;background:var(--s3);border-radius:0 3px 3px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:3px 10px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--ink-2)}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.go{color:var(--good)}
+.pill.full{color:var(--warn)}
+.empty{padding:18px;color:var(--ink-3);text-align:center}
+
+/* owners */
+.owners{display:grid;gap:9px}
+.orow{display:grid;grid-template-columns:96px 1fr 56px;gap:10px;align-items:center;font-size:14px}
+.orow .track{height:12px;border-radius:6px}
+.orow .fill{background:var(--s3)}
+.orow .c{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* schedule */
+.sched{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.sched li{display:grid;grid-template-columns:118px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.sched li:first-child{border-top:0;padding-top:0}
+.when{display:grid;gap:2px}
+.when b{font-family:var(--mono);font-weight:500;font-size:13px}
+.when span{font-size:12px;color:var(--accent);font-weight:600}
+.sched p{margin:0;font-size:14px;color:var(--ink-2)}
+.sched p b{color:var(--ink);font-weight:600}
+
+/* glossary */
+details.help{font-size:14px;color:var(--ink-2)}
+details.help summary{cursor:pointer;font-weight:600;color:var(--ink)}
+details.help dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0 0}
+details.help dt{font-weight:600;color:var(--ink)}
+details.help dd{margin:0}
+
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 10px;border-radius:8px;transform:translate(-50%,calc(-100% - 10px));white-space:nowrap;z-index:5}
+@media (max-width:560px){
+  .stage{grid-template-columns:1fr 56px}
+  .stage .lab{grid-column:1/-1}
+  .sched li{grid-template-columns:1fr;gap:4px}
+  details.help dl{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fill{transition:width .5s ease}
+}
 </style>
 </head>
 <body>
@@ -67,87 +164,218 @@ ul.sched li{background:var(--surface);border:1px solid var(--line);border-radius
 <div class="wrap">
   <header>
     <div>
-      <h1>PartnerGap Affiliate Pipeline</h1>
-      <p class="sub">Affiliate partners across all PartnerGap clients, from the master CRM sheet.</p>
+      <p class="eyebrow">PartnerGap · Affiliate CRM</p>
+      <h1>Affiliate pipeline</h1>
+      <p class="lede">We track <b>7,346 partner sites</b> across 12 active clients. <b>1,760</b> of them have replied to us so far, and <b>69</b> new sites were found this week.</p>
     </div>
-    <div class="stamp">Snapshot 5 Oct 2026, 15:30 Vilnius<br><a href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener">Open the CRM sheet</a></div>
+    <div class="head-actions">
+      <span class="stamp">Updated 5 Oct 2026, 15:40 Vilnius</span>
+      <a class="btn" href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg>
+        Open CRM sheet
+      </a>
+    </div>
   </header>
 
-  <section>
-    <h2>At a glance</h2>
-    <div class="tiles">
-      <div class="tile"><div class="n">7,346</div><div class="l">Affiliate accounts</div></div>
-      <div class="tile"><div class="n">6,014</div><div class="l">Contacts</div></div>
-      <div class="tile"><div class="n">1,760</div><div class="l">Accounts that replied</div></div>
-      <div class="tile"><div class="n">42.7%</div><div class="l">Reply rate on Jonas's Gmail outreach</div></div>
-      <div class="tile"><div class="n">69</div><div class="l">New sites from this week's discovery</div></div>
-    </div>
+  <section class="tiles" aria-label="Key numbers">
+    <div class="tile"><span class="k">Partner sites</span><span class="v">7,346</span><span class="h">Publishers, blogs and review sites in the CRM</span></div>
+    <div class="tile"><span class="k">Contacts</span><span class="v">6,014</span><span class="h">People we can email at those sites</span></div>
+    <div class="tile"><span class="k">Replied</span><span class="v">1,760</span><span class="h"><b>42.7%</b> reply rate on Jonas's Gmail outreach</span></div>
+    <div class="tile"><span class="k">New this week</span><span class="v">69</span><span class="h">Found in Ahrefs for 11 clients, ready to contact</span></div>
   </section>
 
-  <section>
-    <h2>Pipeline by stage</h2>
-    <div class="bar" role="img" aria-label="New 2,374, Contacted 3,172, Replied 1,760, Lost 40">
-      <span style="width:32.26%;background:var(--new)"></span>
-      <span style="width:43.22%;background:var(--contacted)"></span>
-      <span style="width:23.98%;background:var(--replied)"></span>
-      <span style="width:0.54%;background:var(--lost)"></span>
-    </div>
-    <div class="legend">
-      <span><i style="background:var(--new)"></i>New <b>2,374</b></span>
-      <span><i style="background:var(--contacted)"></i>Contacted <b>3,172</b></span>
-      <span><i style="background:var(--replied)"></i>Replied <b>1,760</b></span>
-      <span><i style="background:var(--lost)"></i>Lost <b>40</b></span>
-      <span style="color:var(--muted)">Negotiating and Active: 0 so far</span>
-    </div>
-  </section>
-
-  <section>
-    <h2>Active clients</h2>
-    <div class="tablebox">
-      <table>
-        <thead><tr><th>Client</th><th>Manager</th><th class="num">Accounts</th><th class="num">New this week</th><th>Focus market</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Ultahost</td><td>Kamile</td><td class="num">3,445</td><td class="num">0</td><td>US</td><td><span class="pill quiet">Top sites already in CRM</span></td></tr>
-          <tr><td>MailerLite</td><td>Kamile</td><td class="num">100</td><td class="num">7</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>MailerSend</td><td>Kamile</td><td class="num">56</td><td class="num">4</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Headway</td><td>Kamile</td><td class="num">11</td><td class="num">11</td><td>US, IN, GB</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Raibu</td><td>Monica</td><td class="num">9</td><td class="num">9</td><td>IT</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Soro</td><td>Jonas, Vik</td><td class="num">8</td><td class="num">8</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Fiverr</td><td>Mantvydas</td><td class="num">7</td><td class="num">7</td><td>IN, US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>TransferGO</td><td>Jonas, Vik</td><td class="num">6</td><td class="num">6</td><td>GB, UA, PL, DE</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Melograno (Trafft, Amelia, wpDataTables, IvyForms)</td><td>Eivyda</td><td class="num">6</td><td class="num">6</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Desktronic</td><td>Eivyda</td><td class="num">5</td><td class="num">5</td><td>DE and EU, US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>GuardBlinds</td><td>Kamile</td><td class="num">3</td><td class="num">3</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-          <tr><td>Botanical Synthesis</td><td>Eivyda</td><td class="num">7</td><td class="num">6</td><td>US</td><td><span class="pill">Discovering</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="note">Accounts counts only partners tagged with that client. Most of the 2,919 Gmail outreach accounts have no client tag yet.</p>
-  </section>
-
-  <div class="cols">
-    <section>
-      <h2>Accounts by owner</h2>
-      <div class="owners">
-        <div class="orow"><span>Unassigned</span><div class="otrack"><span style="width:100%"></span></div><span class="c">4,010</span></div>
-        <div class="orow"><span>Jonas</span><div class="otrack"><span style="width:73.1%"></span></div><span class="c">2,933</span></div>
-        <div class="orow"><span>Gaby</span><div class="otrack"><span style="width:8.2%"></span></div><span class="c">327</span></div>
-        <div class="orow"><span>Kamile</span><div class="otrack"><span style="width:0.57%"></span></div><span class="c">23</span></div>
-        <div class="orow"><span>Vik</span><div class="otrack"><span style="width:0.42%"></span></div><span class="c">17</span></div>
-        <div class="orow"><span>Eivyda</span><div class="otrack"><span style="width:0.4%"></span></div><span class="c">16</span></div>
-        <div class="orow"><span>Monica</span><div class="otrack"><span style="width:0.22%"></span></div><span class="c">9</span></div>
-        <div class="orow"><span>Mantvydas</span><div class="otrack"><span style="width:0.17%"></span></div><span class="c">7</span></div>
-      </div>
+  <div class="grid2">
+    <section class="panel" aria-labelledby="h-funnel">
+      <h2 id="h-funnel">Where partners are</h2>
+      <p class="sub">Every partner site sits in one stage. Hover a bar for its share.</p>
+      <div class="funnel" id="funnel"></div>
+      <p class="foot">No partner has reached Negotiating or Active yet. Those stages fill in as replies turn into deals.</p>
     </section>
-    <section>
-      <h2>What runs automatically</h2>
-      <ul class="sched">
-        <li><div class="when">Mon 07:52</div><p class="what">Find new affiliate sites for every active client in Ahrefs and add them to Accounts.</p></li>
-        <li><div class="when">Mon–Fri 08:47</div><p class="what">Sync Gmail replies and bounces, find contacts in Apollo (25 credits a day), draft outreach. Nothing is sent until Jonas approves.</p></li>
-        <li><div class="when">Fri 15:51</div><p class="what">Weekly summary per client, posted in the CRM thread.</p></li>
+
+    <section class="panel" aria-labelledby="h-attn">
+      <h2 id="h-attn">What needs attention</h2>
+      <p class="sub">Things waiting on a person, most urgent first.</p>
+      <ul class="alerts">
+        <li class="alert next"><span class="ic" aria-hidden="true">→</span><p><span class="t">First outreach batch arrives tomorrow</span><br><span class="d">Drafts for the 69 new sites post in the CRM thread at 08:47. Jonas approves them before anything is sent.</span></p></li>
+        <li class="alert warn"><span class="ic" aria-hidden="true">!</span><p><span class="t">4,010 partner sites have no owner</span><br><span class="d">Mostly older imports. Assign an owner in the sheet's Owner column so follow-ups go to the right person.</span></p></li>
+        <li class="alert warn"><span class="ic" aria-hidden="true">!</span><p><span class="t">2,919 Gmail contacts have no client</span><br><span class="d">They came from Jonas's sent mail. Tag a client so they count toward that client's numbers.</span></p></li>
+        <li class="alert ok"><span class="ic" aria-hidden="true">✓</span><p><span class="t">All 12 active clients have keywords</span><br><span class="d">Botanical Synthesis was added today, so every client gets new sites each Monday.</span></p></li>
       </ul>
     </section>
   </div>
+
+  <section class="panel" aria-labelledby="h-clients">
+    <div class="ledger-head">
+      <div>
+        <h2 id="h-clients">Clients</h2>
+        <p class="sub">Partner sites tagged to each client. Click a column to sort.</p>
+      </div>
+      <div class="chips" role="group" aria-label="Filter by manager" id="chips"></div>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr>
+          <th aria-sort="none"><button data-k="name">Client <span class="arr">▲▼</span></button></th>
+          <th aria-sort="none"><button data-k="mgr">Manager <span class="arr">▲▼</span></button></th>
+          <th class="r" aria-sort="descending"><button data-k="accounts">Partner sites <span class="arr">▼</span></button></th>
+          <th class="r" aria-sort="none"><button data-k="fresh">New this week <span class="arr">▲▼</span></button></th>
+          <th>Markets</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="foot">Partner sites only counts sites tagged with that client. Most of the 2,919 Gmail contacts have no client tag yet.</p>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="h-owners">
+      <h2 id="h-owners">Partner sites by owner</h2>
+      <p class="sub">Who follows up with each site. 4,010 more have no owner yet.</p>
+      <div class="owners" id="owners"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-sched">
+      <h2 id="h-sched">What runs automatically</h2>
+      <p class="sub">Times are Vilnius time. Nothing is emailed or posted in Slack without Jonas's OK.</p>
+      <ul class="sched">
+        <li><div class="when"><b>Mon 07:52</b><span data-next="1:07:52"></span></div><p><b>Find new sites.</b> Searches Ahrefs with each client's keywords and adds new publishers to the CRM.</p></li>
+        <li><div class="when"><b>Mon–Fri 08:47</b><span data-next="1,2,3,4,5:08:47"></span></div><p><b>Daily outreach run.</b> Syncs Gmail replies and bounces, finds contacts in Apollo (25 a day) and drafts emails for approval.</p></li>
+        <li><div class="when"><b>Fri 15:51</b><span data-next="5:15:51"></span></div><p><b>Weekly summary.</b> Numbers per client posted in the CRM thread, and this page is refreshed.</p></li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <details class="help">
+      <summary>What the stages mean</summary>
+      <dl>
+        <dt>New</dt><dd>Found and added to the CRM, not contacted yet.</dd>
+        <dt>Contacted</dt><dd>We emailed them and are waiting for an answer.</dd>
+        <dt>Replied</dt><dd>They wrote back. The owner picks up the conversation.</dd>
+        <dt>Negotiating</dt><dd>Talking terms, commission or a placement.</dd>
+        <dt>Active</dt><dd>Live partner sending traffic for a client.</dd>
+        <dt>Lost</dt><dd>Said no, or the site is gone.</dd>
+      </dl>
+    </details>
+  </section>
 </div>
+<div id="tip" hidden></div>
+
+<script>
+(function(){
+  const TOTAL = 7346;
+  const stages = [
+    {n:"New", d:"Not contacted yet", v:2374, c:"--s1"},
+    {n:"Contacted", d:"Waiting for an answer", v:3172, c:"--s2"},
+    {n:"Replied", d:"Wrote back to us", v:1760, c:"--s3"},
+    {n:"Negotiating", d:"Talking terms", v:0, c:"--s4"},
+    {n:"Active", d:"Live partner", v:0, c:"--s5"},
+    {n:"Lost", d:"Said no or gone", v:40, c:"--lost"}
+  ];
+  const fmt = n => n.toLocaleString("en-US");
+  const pct = n => (n/TOTAL*100).toFixed(1) + "%";
+  const maxS = Math.max(...stages.map(s=>s.v));
+  document.getElementById("funnel").innerHTML = stages.map(s =>
+    `<div class="stage${s.v? "" : " zero"}"><div class="lab"><b>${s.n}</b><span>${s.d}</span></div>
+      <div class="track" data-tip="${s.n}: ${fmt(s.v)} sites, ${pct(s.v)} of all"><div class="fill" style="width:${s.v? (s.v/maxS*100) : 0}%;background:var(${s.c})"></div></div>
+      <span class="c">${fmt(s.v)}</span></div>`).join("");
+
+  const clients = [
+    {name:"Ultahost", note:"Web hosting", mgr:["Kamile"], accounts:3445, fresh:0, mk:"US", st:"full"},
+    {name:"MailerLite", note:"Email marketing", mgr:["Kamile"], accounts:100, fresh:7, mk:"US"},
+    {name:"MailerSend", note:"Transactional email", mgr:["Kamile"], accounts:56, fresh:4, mk:"US"},
+    {name:"Headway", note:"Book summaries app", mgr:["Kamile"], accounts:11, fresh:11, mk:"US, IN, GB"},
+    {name:"Raibu", note:"Supplements", mgr:["Monica"], accounts:9, fresh:9, mk:"IT, ES, US"},
+    {name:"Soro", note:"AI SEO content", mgr:["Jonas","Vik"], accounts:8, fresh:8, mk:"US"},
+    {name:"Botanical Synthesis", note:"Topical pain relief", mgr:["Eivyda"], accounts:7, fresh:6, mk:"US"},
+    {name:"Fiverr", note:"Freelance marketplace", mgr:["Mantvydas"], accounts:7, fresh:7, mk:"IN, US"},
+    {name:"TransferGO", note:"Money transfer", mgr:["Jonas","Vik"], accounts:6, fresh:6, mk:"GB, UA, PL, DE"},
+    {name:"Melograno", note:"Trafft, Amelia, wpDataTables, IvyForms", mgr:["Eivyda"], accounts:6, fresh:6, mk:"US"},
+    {name:"Desktronic", note:"Standing desks", mgr:["Eivyda"], accounts:5, fresh:5, mk:"DE and EU, US"},
+    {name:"GuardBlinds", note:"Blackout blinds", mgr:["Kamile"], accounts:3, fresh:3, mk:"US"}
+  ];
+  const maxF = Math.max(...clients.map(c=>c.fresh));
+  const managers = ["All", ...[...new Set(clients.flatMap(c=>c.mgr))].sort()];
+  let filter = "All", sortK = "accounts", dir = -1;
+  try { const f = localStorage.getItem("pg-mgr"); if (f && managers.includes(f)) filter = f; } catch(e){}
+
+  const chips = document.getElementById("chips");
+  function drawChips(){
+    chips.innerHTML = managers.map(m => {
+      const n = m === "All" ? clients.length : clients.filter(c=>c.mgr.includes(m)).length;
+      return `<button class="chip" id="chip-${m}" aria-pressed="${m===filter}" data-m="${m}">${m} <span class="num">${n}</span></button>`;
+    }).join("");
+  }
+  chips.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    filter = b.dataset.m;
+    try { localStorage.setItem("pg-mgr", filter); } catch(e){}
+    drawChips(); drawRows();
+  });
+
+  const av = n => `<span class="av"><i aria-hidden="true">${n.slice(0,2)}</i>${n}</span>`;
+  function drawRows(){
+    let rows = clients.filter(c => filter === "All" || c.mgr.includes(filter));
+    rows.sort((a,b) => {
+      let x = a[sortK], y = b[sortK];
+      if (sortK === "mgr") { x = a.mgr.join(); y = b.mgr.join(); }
+      return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir;
+    });
+    document.getElementById("rows").innerHTML = rows.length ? rows.map(c => `<tr>
+      <td class="client"><b>${c.name}</b><small>${c.note}</small></td>
+      <td><div class="who">${c.mgr.map(av).join("")}</div></td>
+      <td class="r num">${fmt(c.accounts)}</td>
+      <td class="r"><div class="newbar" data-tip="${c.name}: ${c.fresh} new sites this week"><span class="num">${c.fresh}</span><span class="mini"><span style="width:${c.fresh/maxF*100}%"></span></span></div></td>
+      <td>${c.mk}</td>
+      <td>${c.st === "full" ? '<span class="pill full">Top sites already in CRM</span>' : '<span class="pill go">Finding new sites</span>'}</td>
+    </tr>`).join("") : `<tr><td colspan="6" class="empty">No clients for this manager.</td></tr>`;
+  }
+  document.querySelectorAll("th button").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.k;
+    if (k === sortK) dir = -dir; else { sortK = k; dir = (k === "name" || k === "mgr") ? 1 : -1; }
+    document.querySelectorAll("th[aria-sort]").forEach(th => {
+      const on = th.querySelector("button").dataset.k === sortK;
+      th.setAttribute("aria-sort", on ? (dir === 1 ? "ascending" : "descending") : "none");
+      th.querySelector(".arr").textContent = on ? (dir === 1 ? "▲" : "▼") : "▲▼";
+    });
+    drawRows();
+  }));
+  drawChips(); drawRows();
+
+  const owners = [["Jonas",2933],["Gaby",327],["Kamile",23],["Vik",17],["Eivyda",16],["Monica",9],["Mantvydas",7],["Others",4]];
+  const maxO = owners[0][1];
+  document.getElementById("owners").innerHTML = owners.map(([n,v]) =>
+    `<div class="orow"><span>${n}</span><div class="track" data-tip="${n}: ${fmt(v)} sites"><div class="fill" style="width:${v/maxO*100}%"></div></div><span class="c">${fmt(v)}</span></div>`).join("");
+
+  // "Next run" labels, computed in Vilnius time
+  function vilniusNow(){
+    const p = new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Vilnius",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
+    const g = t => p.find(x=>x.type===t).value;
+    const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(g("weekday"));
+    return {wd, min: (+g("hour") % 24) * 60 + +g("minute")};
+  }
+  const names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  document.querySelectorAll("[data-next]").forEach(el => {
+    const [days, hh, mm] = el.dataset.next.split(":");
+    const set = days.split(",").map(Number), at = +hh * 60 + +mm, now = vilniusNow();
+    for (let off = 0; off < 8; off++) {
+      const wd = (now.wd + off) % 7;
+      if (!set.includes(wd) || (off === 0 && at <= now.min)) continue;
+      el.textContent = "Next: " + (off === 0 ? "today" : off === 1 ? "tomorrow" : names[wd]);
+      break;
+    }
+  });
+
+  // tooltips
+  const tip = document.getElementById("tip");
+  document.addEventListener("pointermove", e => {
+    const t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.dataset.tip; tip.hidden = false;
+    tip.style.left = Math.min(Math.max(e.clientX, 90), innerWidth - 90) + "px"; tip.style.top = e.clientY + "px";
+  });
+})();
+</script>
 </body>
 </html>
