@@ -6,374 +6,409 @@
 <title>PartnerGap Affiliate Pipeline</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: summary first (headline + 4 tiles), then the pipeline funnel, a "needs attention" list,
-   the client ledger with filters, and owners + schedule side by side. */
+/* Layout: a dark hero band with the headline and reply-rate ring, then the partner journey as four
+   connected steps, attention cards, a filterable grid of client cards, and owners + schedule. */
 :root{
-  --bg:#f5f7f9; --surface:#ffffff; --sunk:#eef1f5; --line:#dde3ea;
-  --ink:#121a24; --ink-2:#4a5666; --ink-3:#6f7b8b;
-  --accent:#2a5bd7; --accent-soft:#e6edfc;
-  --s1:#86b6ef; --s2:#5598e7; --s3:#2a78d6; --s4:#1c5cab; --s5:#104281; --lost:#a7b0bc;
-  --good:#0ca30c; --warn:#b77900; --crit:#d03b3b;
+  --bg:#f2f4f8; --surface:#ffffff; --sunk:#eaeef4; --line:#dbe1ea;
+  --ink:#0f1a2a; --ink-2:#46546a; --ink-3:#6b7a90;
+  --accent:#1769d6; --accent-soft:#e3eefc; --pos:#0f8f6e; --pos-soft:#dff4ec;
+  --warn:#a86a00; --warn-soft:#fbf0d9;
+  --hero:#0c1a2e; --hero-2:#13294a; --hero-ink:#eef4fc; --hero-mute:#9db1ca; --hero-line:#25395a;
+  --ring:#5cc8ff; --ring-track:#223754;
+  --st1:#86b6ef; --st2:#5598e7; --st3:#2a78d6; --st4:#1c5cab;
   --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --r:14px;
+  --r:18px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0f141b; --surface:#161d26; --sunk:#1c2530; --line:#29333f;
-  --ink:#eef2f7; --ink-2:#b4bfcc; --ink-3:#8b97a6;
-  --accent:#7aa2ff; --accent-soft:#1d2a45;
-  --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#6da7ec; --s5:#9ec5f4; --lost:#4d5866;
-  --good:#3cc23c; --warn:#fab219; --crit:#ef6b6b; color-scheme:dark}}
+  --bg:#0a0f17; --surface:#121a26; --sunk:#182232; --line:#243246;
+  --ink:#edf2f9; --ink-2:#b2bfd1; --ink-3:#8696ab;
+  --accent:#6aa8ff; --accent-soft:#16294a; --pos:#3fd0a4; --pos-soft:#0f3329;
+  --warn:#f5b53d; --warn-soft:#3a2c10;
+  --hero:#0f213b; --hero-2:#173257; --hero-line:#2a4469;
+  --st1:#184f95; --st2:#256abf; --st3:#3987e5; --st4:#6da7ec; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f141b; --surface:#161d26; --sunk:#1c2530; --line:#29333f;
-  --ink:#eef2f7; --ink-2:#b4bfcc; --ink-3:#8b97a6;
-  --accent:#7aa2ff; --accent-soft:#1d2a45;
-  --s1:#184f95; --s2:#256abf; --s3:#3987e5; --s4:#6da7ec; --s5:#9ec5f4; --lost:#4d5866;
-  --good:#3cc23c; --warn:#fab219; --crit:#ef6b6b; color-scheme:dark}
+  --bg:#0a0f17; --surface:#121a26; --sunk:#182232; --line:#243246;
+  --ink:#edf2f9; --ink-2:#b2bfd1; --ink-3:#8696ab;
+  --accent:#6aa8ff; --accent-soft:#16294a; --pos:#3fd0a4; --pos-soft:#0f3329;
+  --warn:#f5b53d; --warn-soft:#3a2c10;
+  --hero:#0f213b; --hero-2:#173257; --hero-line:#2a4469;
+  --st1:#184f95; --st2:#256abf; --st3:#3987e5; --st4:#6da7ec; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:grid;gap:22px}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px;padding-block:20px 64px;display:grid;gap:28px}
 a{color:var(--accent)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
-.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(21px,2.6vw,26px);letter-spacing:-.015em;margin:0;text-wrap:balance}
+.sec-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.sec-head p{margin:4px 0 0;color:var(--ink-3);font-size:14px;max-width:60ch}
 
-/* header */
-header{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
-.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:0 0 6px}
-h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,40px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
-.lede{margin:8px 0 0;color:var(--ink-2);max-width:62ch}
-.lede b{color:var(--ink);font-weight:600}
-.head-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.stamp{font-size:13px;color:var(--ink-3)}
-.btn{display:inline-flex;align-items:center;gap:6px;font:500 14px var(--body);padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none}
-.btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn svg{width:15px;height:15px}
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:26px;color:var(--hero-ink);
+  background:radial-gradient(120% 140% at 100% 0%,var(--hero-2) 0%,transparent 55%),var(--hero);
+  padding:clamp(22px,4vw,40px);display:grid;gap:28px}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(var(--hero-line) 1px,transparent 1.2px);background-size:22px 22px;
+  mask-image:linear-gradient(110deg,transparent 35%,#000 100%);-webkit-mask-image:linear-gradient(110deg,transparent 35%,#000 100%)}
+.hero>*{position:relative;z-index:1}
+.hero-top{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--hero-mute);font-weight:600;margin:0}
+.live{width:8px;height:8px;border-radius:50%;background:var(--ring);box-shadow:0 0 0 4px rgba(92,200,255,.18)}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6.4vw,64px);line-height:.98;letter-spacing:-.03em;margin:12px 0 0;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--ring)}
+.hero .lede{margin:14px 0 0;font-size:clamp(15px,1.6vw,17.5px);color:var(--hero-mute);max-width:56ch}
+.hero .lede b{color:var(--hero-ink);font-weight:600}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:20px}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--body);padding:10px 16px;border-radius:999px;text-decoration:none;border:1px solid var(--hero-line);color:var(--hero-ink);background:rgba(255,255,255,.04)}
+.btn:hover{border-color:var(--ring);color:var(--ring)}
+.btn svg{width:16px;height:16px}
+.stamp{font-size:13px;color:var(--hero-mute)}
+.ring{width:clamp(150px,20vw,196px);aspect-ratio:1;max-width:100%;display:grid;place-items:center;position:relative}
+.ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring .in{text-align:center;display:grid;gap:2px}
+.ring .big{font-family:var(--display);font-weight:800;font-size:clamp(34px,4.4vw,46px);line-height:1;letter-spacing:-.02em}
+.ring .cap{font-size:12.5px;color:var(--hero-mute);max-width:12ch;line-height:1.3}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hero-line);padding-top:22px;gap:18px}
+.stat{display:grid;gap:2px}
+.stat .v{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .v small{font-size:.55em;color:var(--ring);margin-right:2px}
+.stat .k{font-size:13.5px;color:var(--hero-mute)}
 
-/* panels */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
-.panel h2{font-family:var(--display);font-weight:600;font-size:19px;margin:0;letter-spacing:-.005em}
-.panel .sub{margin:2px 0 16px;color:var(--ink-3);font-size:13.5px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:22px}
-
-/* tiles */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:4px;align-content:start}
-.tile .k{font-size:13px;color:var(--ink-2);font-weight:500}
-.tile .v{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.tile .h{font-size:13px;color:var(--ink-3)}
-.tile .h b{color:var(--good);font-weight:600}
-
-/* funnel */
-.funnel{display:grid;gap:10px}
-.stage{display:grid;grid-template-columns:minmax(120px,170px) 1fr 64px;gap:12px;align-items:center}
-.stage .lab{display:grid;line-height:1.25}
-.stage .lab b{font-weight:600;font-size:14.5px}
-.stage .lab span{font-size:12.5px;color:var(--ink-3)}
-.track{height:26px;background:var(--sunk);border-radius:7px;overflow:hidden;position:relative}
-.fill{height:100%;border-radius:0 4px 4px 0;min-width:3px}
-.stage .c{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:14px}
-.stage.zero .c{color:var(--ink-3)}
-.stage.zero .fill{min-width:0}
-.foot{margin:14px 0 0;font-size:13px;color:var(--ink-3)}
+/* journey */
+.journey{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:stretch}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:6px;align-content:start;min-width:0}
+.step .ico{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.step .ico svg{width:20px;height:20px}
+.step .name{font-weight:600;font-size:15px;margin-top:6px}
+.step .n{font-family:var(--display);font-weight:800;font-size:clamp(28px,3.4vw,38px);letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.step .d{font-size:13px;color:var(--ink-3)}
+.step .bar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;margin-top:8px}
+.step .bar span{display:block;height:100%;border-radius:3px}
+.step.zero .n{color:var(--ink-3)}
+.link{display:grid;place-items:center;align-content:center;gap:4px;padding:0 6px}
+.link .chip{display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--ink-3);text-align:center}
+.link .chip b{font:600 13px var(--mono);color:var(--pos);background:var(--pos-soft);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.link .chip.dim b{color:var(--ink-3);background:var(--sunk)}
+.link svg{width:18px;height:18px;color:var(--ink-3)}
+.jnote{margin:12px 0 0;font-size:13.5px;color:var(--ink-3)}
 
 /* attention */
-.alerts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.alert{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 14px;border-radius:10px;background:var(--sunk);align-items:start}
-.alert .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--body);color:var(--surface)}
-.alert.next .ic{background:var(--accent)}
-.alert.warn .ic{background:var(--warn)}
-.alert.ok .ic{background:var(--good)}
-.alert p{margin:0}
-.alert .t{font-weight:600}
-.alert .d{font-size:13.5px;color:var(--ink-2)}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}
+.attn{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:8px;align-content:start}
+.attn .tag{display:inline-flex;align-items:center;gap:6px;justify-self:start;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+.attn .tag svg{width:13px;height:13px}
+.attn.next .tag{background:var(--accent-soft);color:var(--accent)}
+.attn.warn .tag{background:var(--warn-soft);color:var(--warn)}
+.attn.ok .tag{background:var(--pos-soft);color:var(--pos)}
+.attn h3{margin:0;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em;line-height:1.2}
+.attn p{margin:0;font-size:14px;color:var(--ink-2)}
 
-/* client ledger */
-.ledger-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
-.ledger-head .sub{margin:2px 0 0}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:500 13px var(--body);padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}
-.chip:hover{border-color:var(--accent)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
-.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
-table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
-th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
-tbody tr:last-child td{border-bottom:0}
-tbody tr:hover{background:var(--sunk)}
-th{font-size:12px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--sunk)}
-th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
-th button:hover{color:var(--ink)}
-th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-th .arr{font-size:10px;opacity:.35}
-th[aria-sort="ascending"] .arr,th[aria-sort="descending"] .arr{opacity:1;color:var(--accent)}
-td.r,th.r{text-align:right}
-.client b{font-weight:600}
-.client small{display:block;color:var(--ink-3);font-size:12.5px}
-.who{display:flex;gap:6px;flex-wrap:wrap}
-.av{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
-.av i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:600 11px var(--body)}
-.newbar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
-.newbar .mini{width:70px;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
-.newbar .mini span{display:block;height:100%;background:var(--s3);border-radius:0 3px 3px 0}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:3px 10px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);color:var(--ink-2)}
-.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
-.pill.go{color:var(--good)}
-.pill.full{color:var(--warn)}
-.empty{padding:18px;color:var(--ink-3);text-align:center}
+/* clients */
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:3px}
+.seg button{font:500 13px var(--body);border:0;background:transparent;color:var(--ink-2);padding:5px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(15,26,42,.15)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip-btn{font:500 13px var(--body);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip-btn .c{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.chip-btn:hover{border-color:var(--accent)}
+.chip-btn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip-btn[aria-pressed="true"] .c{color:var(--bg);opacity:.7}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,255px),1fr));gap:14px}
+.cc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 16px 14px;display:grid;gap:12px;align-content:start;transition:transform .15s ease,box-shadow .15s ease,border-color .15s}
+.cc:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 10px 24px -14px rgba(15,26,42,.35)}
+.cc-top{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:center}
+.mono-tile{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font:700 15px var(--display);color:#fff}
+.cc h3{margin:0;font-size:16px;font-weight:600;line-height:1.2}
+.cc .cat{font-size:12.5px;color:var(--ink-3)}
+.cc-nums{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.cc-nums .n{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.cc-nums .n small{display:block;font:500 12px var(--body);color:var(--ink-3);letter-spacing:0;margin-top:4px}
+.newb{font:600 12.5px var(--mono);padding:4px 9px;border-radius:999px;background:var(--pos-soft);color:var(--pos);white-space:nowrap}
+.newb.none{background:var(--sunk);color:var(--ink-3)}
+.cc-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:10px;font-size:12.5px;color:var(--ink-3)}
+.avs{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:13px}
+.avs i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:600 10.5px var(--body);border:2px solid var(--surface)}
+.avs i+i{margin-left:-10px}
+.empty{grid-column:1/-1;padding:24px;text-align:center;color:var(--ink-3)}
 
-/* owners */
-.owners{display:grid;gap:9px}
-.orow{display:grid;grid-template-columns:96px 1fr 56px;gap:10px;align-items:center;font-size:14px}
-.orow .track{height:12px;border-radius:6px}
-.orow .fill{background:var(--s3)}
+/* owners + schedule */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:28px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
+.panel .intro{margin:4px 0 14px;color:var(--ink-3);font-size:14px}
+.orow{display:grid;grid-template-columns:30px 90px 1fr 54px;gap:10px;align-items:center;font-size:14px;padding:5px 0}
+.orow i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font:600 11px var(--body)}
+.orow .tr{height:10px;background:var(--sunk);border-radius:5px;overflow:hidden}
+.orow .tr span{display:block;height:100%;background:var(--st3);border-radius:5px}
 .orow .c{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.unowned{margin:12px 0 0;font-size:13.5px;color:var(--ink-3)}
+.tl{list-style:none;margin:0;padding:0;display:grid}
+.tl li{display:grid;grid-template-columns:22px 1fr;gap:12px;padding:10px 0}
+.tl li+li{border-top:1px dashed var(--line)}
+.tl .dot{width:12px;height:12px;border-radius:50%;margin:5px 0 0 5px;background:var(--surface);border:3px solid var(--accent)}
+.tl .when{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.tl .when b{font:500 13px var(--mono)}
+.tl .when span{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px}
+.tl .when span:empty{display:none}
+.tl h3{margin:4px 0 2px;font-size:15px;font-weight:600}
+.tl p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.safe{margin:14px 0 0;display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);background:var(--sunk);border-radius:12px;padding:10px 12px}
+.safe svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--pos)}
 
-/* schedule */
-.sched{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.sched li{display:grid;grid-template-columns:118px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
-.sched li:first-child{border-top:0;padding-top:0}
-.when{display:grid;gap:2px}
-.when b{font-family:var(--mono);font-weight:500;font-size:13px}
-.when span{font-size:12px;color:var(--accent);font-weight:600}
-.sched p{margin:0;font-size:14px;color:var(--ink-2)}
-.sched p b{color:var(--ink);font-weight:600}
-
-/* glossary */
-details.help{font-size:14px;color:var(--ink-2)}
+details.help{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;font-size:14px;color:var(--ink-2)}
 details.help summary{cursor:pointer;font-weight:600;color:var(--ink)}
-details.help dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0 0}
+details.help dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;margin:14px 0 0}
 details.help dt{font-weight:600;color:var(--ink)}
 details.help dd{margin:0}
 
-#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 10px;border-radius:8px;transform:translate(-50%,calc(-100% - 10px));white-space:nowrap;z-index:5}
-@media (max-width:560px){
-  .stage{grid-template-columns:1fr 56px}
-  .stage .lab{grid-column:1/-1}
-  .sched li{grid-template-columns:1fr;gap:4px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 10px;border-radius:8px;transform:translate(-50%,calc(-100% - 12px));white-space:nowrap;z-index:5}
+
+@media (max-width:860px){
+  .journey{grid-template-columns:1fr}
+  .link{padding:8px 0;grid-auto-flow:column;gap:10px}
+  .link svg{transform:rotate(90deg)}
+  .link .chip{grid-auto-flow:column;gap:8px;align-items:center}
+}
+@media (max-width:640px){
+  .hero-top{grid-template-columns:1fr}
+  .ring{justify-self:start}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .orow{grid-template-columns:30px 76px 1fr 48px}
   details.help dl{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion:no-preference){
-  .fill{transition:width .5s ease}
-}
+@media (prefers-reduced-motion:reduce){.cc{transition:none}.cc:hover{transform:none}}
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <header>
-    <div>
-      <p class="eyebrow">PartnerGap · Affiliate CRM</p>
-      <h1>Affiliate pipeline</h1>
-      <p class="lede">We track <b>7,346 partner sites</b> across 12 active clients. <b>1,760</b> of them have replied to us so far, and <b>69</b> new sites were found this week.</p>
+  <section class="hero" aria-label="Summary">
+    <div class="hero-top">
+      <div>
+        <p class="eyebrow"><span class="live" aria-hidden="true"></span>PartnerGap affiliate CRM · 12 active clients</p>
+        <h1>Affiliate <em>pipeline</em></h1>
+        <p class="lede">We track <b>7,346 partner sites</b>. We've emailed <b>4,972</b> of them and <b>1,760</b> wrote back. This week Ahrefs found <b>69 new sites</b>, and the first emails to them are drafted tomorrow morning.</p>
+        <div class="hero-actions">
+          <a class="btn" href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg>
+            Open CRM sheet
+          </a>
+          <span class="stamp">Updated 5 Oct 2026, 15:45 Vilnius</span>
+        </div>
+      </div>
+      <div class="ring" role="img" aria-label="35 percent of emailed partners replied">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--ring-track)" stroke-width="9"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--ring)" stroke-width="9" stroke-linecap="round" stroke-dasharray="93.3 263.9"/>
+        </svg>
+        <div class="in"><span class="big">35%</span><span class="cap">of emailed partners replied</span></div>
+      </div>
     </div>
-    <div class="head-actions">
-      <span class="stamp">Updated 5 Oct 2026, 15:40 Vilnius</span>
-      <a class="btn" href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg>
-        Open CRM sheet
-      </a>
+    <div class="stats">
+      <div class="stat"><span class="v">7,346</span><span class="k">Partner sites</span></div>
+      <div class="stat"><span class="v">6,014</span><span class="k">Contacts with email</span></div>
+      <div class="stat"><span class="v">1,760</span><span class="k">Replied to us</span></div>
+      <div class="stat"><span class="v"><small>+</small>69</span><span class="k">New sites this week</span></div>
     </div>
-  </header>
-
-  <section class="tiles" aria-label="Key numbers">
-    <div class="tile"><span class="k">Partner sites</span><span class="v">7,346</span><span class="h">Publishers, blogs and review sites in the CRM</span></div>
-    <div class="tile"><span class="k">Contacts</span><span class="v">6,014</span><span class="h">People we can email at those sites</span></div>
-    <div class="tile"><span class="k">Replied</span><span class="v">1,760</span><span class="h"><b>42.7%</b> reply rate on Jonas's Gmail outreach</span></div>
-    <div class="tile"><span class="k">New this week</span><span class="v">69</span><span class="h">Found in Ahrefs for 11 clients, ready to contact</span></div>
   </section>
 
-  <div class="grid2">
-    <section class="panel" aria-labelledby="h-funnel">
-      <h2 id="h-funnel">Where partners are</h2>
-      <p class="sub">Every partner site sits in one stage. Hover a bar for its share.</p>
-      <div class="funnel" id="funnel"></div>
-      <p class="foot">No partner has reached Negotiating or Active yet. Those stages fill in as replies turn into deals.</p>
-    </section>
-
-    <section class="panel" aria-labelledby="h-attn">
-      <h2 id="h-attn">What needs attention</h2>
-      <p class="sub">Things waiting on a person, most urgent first.</p>
-      <ul class="alerts">
-        <li class="alert next"><span class="ic" aria-hidden="true">→</span><p><span class="t">First outreach batch arrives tomorrow</span><br><span class="d">Drafts for the 69 new sites post in the CRM thread at 08:47. Jonas approves them before anything is sent.</span></p></li>
-        <li class="alert warn"><span class="ic" aria-hidden="true">!</span><p><span class="t">4,010 partner sites have no owner</span><br><span class="d">Mostly older imports. Assign an owner in the sheet's Owner column so follow-ups go to the right person.</span></p></li>
-        <li class="alert warn"><span class="ic" aria-hidden="true">!</span><p><span class="t">2,919 Gmail contacts have no client</span><br><span class="d">They came from Jonas's sent mail. Tag a client so they count toward that client's numbers.</span></p></li>
-        <li class="alert ok"><span class="ic" aria-hidden="true">✓</span><p><span class="t">All 12 active clients have keywords</span><br><span class="d">Botanical Synthesis was added today, so every client gets new sites each Monday.</span></p></li>
-      </ul>
-    </section>
-  </div>
-
-  <section class="panel" aria-labelledby="h-clients">
-    <div class="ledger-head">
-      <div>
-        <h2 id="h-clients">Clients</h2>
-        <p class="sub">Partner sites tagged to each client. Click a column to sort.</p>
+  <section aria-labelledby="h-journey">
+    <div class="sec-head">
+      <div><h2 id="h-journey">The partner journey</h2>
+      <p>Every site moves left to right. The green chips show how many make it to the next step.</p></div>
+    </div>
+    <div class="journey">
+      <div class="step">
+        <span class="ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13 13 4 4"/></svg></span>
+        <span class="name">Found</span><span class="n">7,346</span><span class="d">Sites in the CRM. 2,374 not contacted yet.</span>
+        <div class="bar" data-tip="Found: 7,346 sites (100%)"><span style="width:100%;background:var(--st1)"></span></div>
       </div>
-      <div class="chips" role="group" aria-label="Filter by manager" id="chips"></div>
+      <div class="link"><div class="chip"><b>68%</b><span>emailed</span></div><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 10h12m-4-4 4 4-4 4"/></svg></div>
+      <div class="step">
+        <span class="ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="m3 6 7 5 7-5"/></svg></span>
+        <span class="name">Emailed</span><span class="n">4,972</span><span class="d">We reached out. 3,172 haven't answered yet.</span>
+        <div class="bar" data-tip="Emailed: 4,972 sites (68% of found)"><span style="width:67.7%;background:var(--st2)"></span></div>
+      </div>
+      <div class="link"><div class="chip"><b>35%</b><span>replied</span></div><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 10h12m-4-4 4 4-4 4"/></svg></div>
+      <div class="step">
+        <span class="ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3.5 15.5V5a1.5 1.5 0 0 1 1.5-1.5h10A1.5 1.5 0 0 1 16.5 5v7a1.5 1.5 0 0 1-1.5 1.5H7z"/></svg></span>
+        <span class="name">Replied</span><span class="n">1,760</span><span class="d">They wrote back. The owner takes it from here.</span>
+        <div class="bar" data-tip="Replied: 1,760 sites (35% of emailed)"><span style="width:24%;background:var(--st3)"></span></div>
+      </div>
+      <div class="link"><div class="chip dim"><b>0</b><span>so far</span></div><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 10h12m-4-4 4 4-4 4"/></svg></div>
+      <div class="step zero">
+        <span class="ico"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg></span>
+        <span class="name">Partner deal</span><span class="n">0</span><span class="d">Negotiating or live. Fills in as replies turn into deals.</span>
+        <div class="bar" data-tip="Deals: 0 so far"><span style="width:0"></span></div>
+      </div>
     </div>
-    <div class="tablebox">
-      <table>
-        <thead><tr>
-          <th aria-sort="none"><button data-k="name">Client <span class="arr">▲▼</span></button></th>
-          <th aria-sort="none"><button data-k="mgr">Manager <span class="arr">▲▼</span></button></th>
-          <th class="r" aria-sort="descending"><button data-k="accounts">Partner sites <span class="arr">▼</span></button></th>
-          <th class="r" aria-sort="none"><button data-k="fresh">New this week <span class="arr">▲▼</span></button></th>
-          <th>Markets</th>
-          <th>Status</th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
+    <p class="jnote">40 sites said no or are gone (Lost). They are counted in Emailed.</p>
+  </section>
+
+  <section aria-labelledby="h-attn">
+    <div class="sec-head"><div><h2 id="h-attn">Needs attention</h2><p>What's waiting on a person, most urgent first.</p></div></div>
+    <div class="cards3">
+      <article class="attn next">
+        <span class="tag"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>Tomorrow 08:47</span>
+        <h3>First outreach batch</h3>
+        <p>Email drafts for the 69 new sites arrive in the CRM thread. Jonas approves them before anything is sent.</p>
+      </article>
+      <article class="attn warn">
+        <span class="tag"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 2.5 14 13H2z"/><path d="M8 6.5v3M8 11.2v.1"/></svg>To do</span>
+        <h3>4,010 sites have no owner</h3>
+        <p>Mostly older imports. Fill in the Owner column in the sheet so follow-ups reach the right person.</p>
+      </article>
+      <article class="attn warn">
+        <span class="tag"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 2.5 14 13H2z"/><path d="M8 6.5v3M8 11.2v.1"/></svg>To do</span>
+        <h3>2,919 contacts have no client</h3>
+        <p>They came from Jonas's sent Gmail. Tag a client so they count toward that client's numbers.</p>
+      </article>
+      <article class="attn ok">
+        <span class="tag"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m3.5 8.5 3 3 6-7"/></svg>Done</span>
+        <h3>Every client has keywords</h3>
+        <p>Botanical Synthesis was added today, so all 12 clients get new sites every Monday.</p>
+      </article>
     </div>
-    <p class="foot">Partner sites only counts sites tagged with that client. Most of the 2,919 Gmail contacts have no client tag yet.</p>
+  </section>
+
+  <section aria-labelledby="h-clients">
+    <div class="sec-head">
+      <div><h2 id="h-clients">Clients</h2><p>Partner sites tagged to each client and what was found this week.</p></div>
+      <div class="seg" role="group" aria-label="Sort clients" id="sort">
+        <button id="sort-accounts" data-k="accounts" aria-pressed="true">Most sites</button>
+        <button id="sort-fresh" data-k="fresh" aria-pressed="false">Most new</button>
+        <button id="sort-name" data-k="name" aria-pressed="false">A–Z</button>
+      </div>
+    </div>
+    <div class="chips" role="group" aria-label="Filter by manager" id="chips"></div>
+    <div class="cgrid" id="cgrid"></div>
   </section>
 
   <div class="grid2">
     <section class="panel" aria-labelledby="h-owners">
-      <h2 id="h-owners">Partner sites by owner</h2>
-      <p class="sub">Who follows up with each site. 4,010 more have no owner yet.</p>
-      <div class="owners" id="owners"></div>
+      <h2 id="h-owners">Who owns which sites</h2>
+      <p class="intro">The owner follows up when a site replies.</p>
+      <div id="owners"></div>
+      <p class="unowned">Plus <b>4,010</b> sites with no owner yet.</p>
     </section>
 
     <section class="panel" aria-labelledby="h-sched">
-      <h2 id="h-sched">What runs automatically</h2>
-      <p class="sub">Times are Vilnius time. Nothing is emailed or posted in Slack without Jonas's OK.</p>
-      <ul class="sched">
-        <li><div class="when"><b>Mon 07:52</b><span data-next="1:07:52"></span></div><p><b>Find new sites.</b> Searches Ahrefs with each client's keywords and adds new publishers to the CRM.</p></li>
-        <li><div class="when"><b>Mon–Fri 08:47</b><span data-next="1,2,3,4,5:08:47"></span></div><p><b>Daily outreach run.</b> Syncs Gmail replies and bounces, finds contacts in Apollo (25 a day) and drafts emails for approval.</p></li>
-        <li><div class="when"><b>Fri 15:51</b><span data-next="5:15:51"></span></div><p><b>Weekly summary.</b> Numbers per client posted in the CRM thread, and this page is refreshed.</p></li>
+      <h2 id="h-sched">Runs on its own</h2>
+      <p class="intro">Times are Vilnius time.</p>
+      <ul class="tl">
+        <li><span class="dot" aria-hidden="true"></span><div><div class="when"><b>Every Monday 07:52</b><span data-next="1:07:52"></span></div><h3>Find new sites</h3><p>Searches Ahrefs with each client's keywords and adds new publishers to the CRM.</p></div></li>
+        <li><span class="dot" aria-hidden="true"></span><div><div class="when"><b>Mon–Fri 08:47</b><span data-next="1,2,3,4,5:08:47"></span></div><h3>Daily outreach run</h3><p>Syncs Gmail replies, finds contacts in Apollo (25 a day) and drafts emails.</p></div></li>
+        <li><span class="dot" aria-hidden="true"></span><div><div class="when"><b>Every Friday 15:51</b><span data-next="5:15:51"></span></div><h3>Weekly summary</h3><p>Numbers per client posted in the CRM thread, and this page refreshes.</p></div></li>
       </ul>
+      <p class="safe"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 1.8 13.5 4v4c0 3.2-2.3 5.4-5.5 6.2C4.8 13.4 2.5 11.2 2.5 8V4z"/><path d="m5.6 8.2 1.7 1.7 3.2-3.5"/></svg>Nothing is emailed or posted in Slack until Jonas approves it.</p>
     </section>
   </div>
 
-  <section class="panel">
-    <details class="help">
-      <summary>What the stages mean</summary>
-      <dl>
-        <dt>New</dt><dd>Found and added to the CRM, not contacted yet.</dd>
-        <dt>Contacted</dt><dd>We emailed them and are waiting for an answer.</dd>
-        <dt>Replied</dt><dd>They wrote back. The owner picks up the conversation.</dd>
-        <dt>Negotiating</dt><dd>Talking terms, commission or a placement.</dd>
-        <dt>Active</dt><dd>Live partner sending traffic for a client.</dd>
-        <dt>Lost</dt><dd>Said no, or the site is gone.</dd>
-      </dl>
-    </details>
-  </section>
+  <details class="help">
+    <summary>What the stages in the sheet mean</summary>
+    <dl>
+      <dt>New</dt><dd>Found and added to the CRM, not contacted yet.</dd>
+      <dt>Contacted</dt><dd>We emailed them and are waiting for an answer.</dd>
+      <dt>Replied</dt><dd>They wrote back. The owner picks up the conversation.</dd>
+      <dt>Negotiating</dt><dd>Talking terms, commission or a placement.</dd>
+      <dt>Active</dt><dd>Live partner sending traffic for a client.</dd>
+      <dt>Lost</dt><dd>Said no, or the site is gone.</dd>
+    </dl>
+  </details>
 </div>
 <div id="tip" hidden></div>
 
 <script>
 (function(){
-  const TOTAL = 7346;
-  const stages = [
-    {n:"New", d:"Not contacted yet", v:2374, c:"--s1"},
-    {n:"Contacted", d:"Waiting for an answer", v:3172, c:"--s2"},
-    {n:"Replied", d:"Wrote back to us", v:1760, c:"--s3"},
-    {n:"Negotiating", d:"Talking terms", v:0, c:"--s4"},
-    {n:"Active", d:"Live partner", v:0, c:"--s5"},
-    {n:"Lost", d:"Said no or gone", v:40, c:"--lost"}
-  ];
   const fmt = n => n.toLocaleString("en-US");
-  const pct = n => (n/TOTAL*100).toFixed(1) + "%";
-  const maxS = Math.max(...stages.map(s=>s.v));
-  document.getElementById("funnel").innerHTML = stages.map(s =>
-    `<div class="stage${s.v? "" : " zero"}"><div class="lab"><b>${s.n}</b><span>${s.d}</span></div>
-      <div class="track" data-tip="${s.n}: ${fmt(s.v)} sites, ${pct(s.v)} of all"><div class="fill" style="width:${s.v? (s.v/maxS*100) : 0}%;background:var(${s.c})"></div></div>
-      <span class="c">${fmt(s.v)}</span></div>`).join("");
-
+  const tones = ["#2a78d6","#d9541f","#13906a","#b07400","#c9467a","#4a3aa7","#d23f3e","#0f7f8c"];
   const clients = [
-    {name:"Ultahost", note:"Web hosting", mgr:["Kamile"], accounts:3445, fresh:0, mk:"US", st:"full"},
-    {name:"MailerLite", note:"Email marketing", mgr:["Kamile"], accounts:100, fresh:7, mk:"US"},
-    {name:"MailerSend", note:"Transactional email", mgr:["Kamile"], accounts:56, fresh:4, mk:"US"},
-    {name:"Headway", note:"Book summaries app", mgr:["Kamile"], accounts:11, fresh:11, mk:"US, IN, GB"},
-    {name:"Raibu", note:"Supplements", mgr:["Monica"], accounts:9, fresh:9, mk:"IT, ES, US"},
-    {name:"Soro", note:"AI SEO content", mgr:["Jonas","Vik"], accounts:8, fresh:8, mk:"US"},
-    {name:"Botanical Synthesis", note:"Topical pain relief", mgr:["Eivyda"], accounts:7, fresh:6, mk:"US"},
-    {name:"Fiverr", note:"Freelance marketplace", mgr:["Mantvydas"], accounts:7, fresh:7, mk:"IN, US"},
-    {name:"TransferGO", note:"Money transfer", mgr:["Jonas","Vik"], accounts:6, fresh:6, mk:"GB, UA, PL, DE"},
-    {name:"Melograno", note:"Trafft, Amelia, wpDataTables, IvyForms", mgr:["Eivyda"], accounts:6, fresh:6, mk:"US"},
-    {name:"Desktronic", note:"Standing desks", mgr:["Eivyda"], accounts:5, fresh:5, mk:"DE and EU, US"},
-    {name:"GuardBlinds", note:"Blackout blinds", mgr:["Kamile"], accounts:3, fresh:3, mk:"US"}
+    {name:"Ultahost", cat:"Web hosting", mgr:["Kamile"], accounts:3445, fresh:0, mk:"US"},
+    {name:"MailerLite", cat:"Email marketing", mgr:["Kamile"], accounts:100, fresh:7, mk:"US"},
+    {name:"MailerSend", cat:"Transactional email", mgr:["Kamile"], accounts:56, fresh:4, mk:"US"},
+    {name:"Headway", cat:"Book summaries app", mgr:["Kamile"], accounts:11, fresh:11, mk:"US · IN · GB"},
+    {name:"Raibu", cat:"Supplements", mgr:["Monica"], accounts:9, fresh:9, mk:"IT · ES · US"},
+    {name:"Soro", cat:"AI SEO content", mgr:["Jonas","Vik"], accounts:8, fresh:8, mk:"US"},
+    {name:"Botanical Synthesis", cat:"Topical pain relief", mgr:["Eivyda"], accounts:7, fresh:6, mk:"US"},
+    {name:"Fiverr", cat:"Freelance marketplace", mgr:["Mantvydas"], accounts:7, fresh:7, mk:"IN · US"},
+    {name:"TransferGO", cat:"Money transfer", mgr:["Jonas","Vik"], accounts:6, fresh:6, mk:"GB · UA · PL · DE"},
+    {name:"Melograno", cat:"Trafft, Amelia, wpDataTables, IvyForms", mgr:["Eivyda"], accounts:6, fresh:6, mk:"US"},
+    {name:"Desktronic", cat:"Standing desks", mgr:["Eivyda"], accounts:5, fresh:5, mk:"DE · EU · US"},
+    {name:"GuardBlinds", cat:"Blackout blinds", mgr:["Kamile"], accounts:3, fresh:3, mk:"US"}
   ];
-  const maxF = Math.max(...clients.map(c=>c.fresh));
+  clients.forEach((c,i) => c.tone = tones[i % tones.length]);
   const managers = ["All", ...[...new Set(clients.flatMap(c=>c.mgr))].sort()];
-  let filter = "All", sortK = "accounts", dir = -1;
+  let filter = "All", sortK = "accounts";
   try { const f = localStorage.getItem("pg-mgr"); if (f && managers.includes(f)) filter = f; } catch(e){}
 
   const chips = document.getElementById("chips");
   function drawChips(){
     chips.innerHTML = managers.map(m => {
       const n = m === "All" ? clients.length : clients.filter(c=>c.mgr.includes(m)).length;
-      return `<button class="chip" id="chip-${m}" aria-pressed="${m===filter}" data-m="${m}">${m} <span class="num">${n}</span></button>`;
+      return `<button class="chip-btn" id="mgr-${m}" aria-pressed="${m===filter}" data-m="${m}">${m === "All" ? "All managers" : m}<span class="c">${n}</span></button>`;
     }).join("");
   }
   chips.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     filter = b.dataset.m;
     try { localStorage.setItem("pg-mgr", filter); } catch(e){}
-    drawChips(); drawRows();
+    drawChips(); drawCards();
+  });
+  document.getElementById("sort").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    sortK = b.dataset.k;
+    document.querySelectorAll("#sort button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    drawCards();
   });
 
-  const av = n => `<span class="av"><i aria-hidden="true">${n.slice(0,2)}</i>${n}</span>`;
-  function drawRows(){
-    let rows = clients.filter(c => filter === "All" || c.mgr.includes(filter));
-    rows.sort((a,b) => {
-      let x = a[sortK], y = b[sortK];
-      if (sortK === "mgr") { x = a.mgr.join(); y = b.mgr.join(); }
-      return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir;
-    });
-    document.getElementById("rows").innerHTML = rows.length ? rows.map(c => `<tr>
-      <td class="client"><b>${c.name}</b><small>${c.note}</small></td>
-      <td><div class="who">${c.mgr.map(av).join("")}</div></td>
-      <td class="r num">${fmt(c.accounts)}</td>
-      <td class="r"><div class="newbar" data-tip="${c.name}: ${c.fresh} new sites this week"><span class="num">${c.fresh}</span><span class="mini"><span style="width:${c.fresh/maxF*100}%"></span></span></div></td>
-      <td>${c.mk}</td>
-      <td>${c.st === "full" ? '<span class="pill full">Top sites already in CRM</span>' : '<span class="pill go">Finding new sites</span>'}</td>
-    </tr>`).join("") : `<tr><td colspan="6" class="empty">No clients for this manager.</td></tr>`;
+  const initials = s => s.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  function drawCards(){
+    const rows = clients.filter(c => filter === "All" || c.mgr.includes(filter))
+      .sort((a,b) => sortK === "name" ? a.name.localeCompare(b.name) : (b[sortK] - a[sortK]) || a.name.localeCompare(b.name));
+    document.getElementById("cgrid").innerHTML = rows.length ? rows.map(c => `
+      <article class="cc">
+        <div class="cc-top"><span class="mono-tile" style="background:${c.tone}" aria-hidden="true">${initials(c.name)}</span>
+          <div><h3>${c.name}</h3><span class="cat">${c.cat}</span></div></div>
+        <div class="cc-nums"><span class="n">${fmt(c.accounts)}<small>partner sites</small></span>
+          ${c.fresh ? `<span class="newb">+${c.fresh} this week</span>` : `<span class="newb none" title="Its top-ranking sites are already in the CRM">No new sites</span>`}</div>
+        <div class="cc-foot"><span class="avs">${c.mgr.map(m=>`<i aria-hidden="true">${m.slice(0,2)}</i>`).join("")}<span>${c.mgr.join(" & ")}</span></span><span>${c.mk}</span></div>
+      </article>`).join("") : `<p class="empty">No clients for this manager.</p>`;
   }
-  document.querySelectorAll("th button").forEach(b => b.addEventListener("click", () => {
-    const k = b.dataset.k;
-    if (k === sortK) dir = -dir; else { sortK = k; dir = (k === "name" || k === "mgr") ? 1 : -1; }
-    document.querySelectorAll("th[aria-sort]").forEach(th => {
-      const on = th.querySelector("button").dataset.k === sortK;
-      th.setAttribute("aria-sort", on ? (dir === 1 ? "ascending" : "descending") : "none");
-      th.querySelector(".arr").textContent = on ? (dir === 1 ? "▲" : "▼") : "▲▼";
-    });
-    drawRows();
-  }));
-  drawChips(); drawRows();
+  drawChips(); drawCards();
 
   const owners = [["Jonas",2933],["Gaby",327],["Kamile",23],["Vik",17],["Eivyda",16],["Monica",9],["Mantvydas",7],["Others",4]];
   const maxO = owners[0][1];
   document.getElementById("owners").innerHTML = owners.map(([n,v]) =>
-    `<div class="orow"><span>${n}</span><div class="track" data-tip="${n}: ${fmt(v)} sites"><div class="fill" style="width:${v/maxO*100}%"></div></div><span class="c">${fmt(v)}</span></div>`).join("");
+    `<div class="orow"><i aria-hidden="true">${n.slice(0,2)}</i><span>${n}</span><div class="tr" data-tip="${n}: ${fmt(v)} sites"><span style="width:${Math.max(v/maxO*100, 1.2)}%"></span></div><span class="c">${fmt(v)}</span></div>`).join("");
 
-  // "Next run" labels, computed in Vilnius time
   function vilniusNow(){
     const p = new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Vilnius",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date());
     const g = t => p.find(x=>x.type===t).value;
-    const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(g("weekday"));
-    return {wd, min: (+g("hour") % 24) * 60 + +g("minute")};
+    return {wd:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(g("weekday")), min:(+g("hour") % 24) * 60 + +g("minute")};
   }
   const names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  document.querySelectorAll("[data-next]").forEach(el => {
-    const [days, hh, mm] = el.dataset.next.split(":");
-    const set = days.split(",").map(Number), at = +hh * 60 + +mm, now = vilniusNow();
-    for (let off = 0; off < 8; off++) {
-      const wd = (now.wd + off) % 7;
-      if (!set.includes(wd) || (off === 0 && at <= now.min)) continue;
-      el.textContent = "Next: " + (off === 0 ? "today" : off === 1 ? "tomorrow" : names[wd]);
-      break;
-    }
-  });
+  try {
+    const now = vilniusNow();
+    document.querySelectorAll("[data-next]").forEach(el => {
+      const [days, hh, mm] = el.dataset.next.split(":");
+      const set = days.split(",").map(Number), at = +hh * 60 + +mm;
+      for (let off = 0; off < 8; off++) {
+        const wd = (now.wd + off) % 7;
+        if (!set.includes(wd) || (off === 0 && at <= now.min)) continue;
+        el.textContent = "Next: " + (off === 0 ? "today" : off === 1 ? "tomorrow" : names[wd]);
+        break;
+      }
+    });
+  } catch(e){}
 
-  // tooltips
   const tip = document.getElementById("tip");
   document.addEventListener("pointermove", e => {
     const t = e.target.closest && e.target.closest("[data-tip]");
     if (!t) { tip.hidden = true; return; }
     tip.textContent = t.dataset.tip; tip.hidden = false;
-    tip.style.left = Math.min(Math.max(e.clientX, 90), innerWidth - 90) + "px"; tip.style.top = e.clientY + "px";
+    tip.style.left = Math.min(Math.max(e.clientX, 100), innerWidth - 100) + "px"; tip.style.top = e.clientY + "px";
   });
 })();
 </script>
