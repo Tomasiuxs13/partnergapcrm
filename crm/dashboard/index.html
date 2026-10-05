@@ -215,6 +215,8 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
 .nav .badge{margin-left:auto;font:600 11px var(--mono);padding:1px 7px;border-radius:999px;background:var(--amber-dim);color:var(--amber)}
 .side-foot{margin-top:auto;font-size:12px;color:var(--faint);line-height:1.5;padding:0 6px}
 .side-foot b{color:var(--muted);font-weight:600}
+.signout{display:block;margin-top:10px;color:var(--cyan);font-weight:700;text-decoration:none}
+.signout:hover{text-decoration:underline}
 .page{display:none}
 .page.on{display:grid}
 .page>.tile,.page>section{animation:rise .35s ease both}
@@ -305,7 +307,7 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
     <a href="#schedule"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Schedule</a>
     <a href="#owners"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.7 3 2.5 3.5 5.2"/></svg>Site owners</a>
   </nav>
-  <div class="side-foot"><b>Snapshot</b><br>5 Oct 2026, 15:45<br>Vilnius time</div>
+  <div class="side-foot"><b>Snapshot</b><br>5 Oct 2026, 15:45<br>Vilnius time<a class="signout" href="/logout" hidden>Sign out</a></div>
 </aside>
 <div class="wrap">
 
@@ -689,18 +691,23 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
     window.scrollTo(0,0);
     document.dispatchEvent(new CustomEvent('pagechange',{detail:h}));
   }
-  addEventListener('hashchange',show);show();addEventListener('load',function(){window.scrollTo(0,0);});
+  addEventListener('hashchange',show);show();
+  if(/^https?:$/.test(location.protocol)&&/pages\.dev$|partnergap/.test(location.hostname)){var so=document.querySelector('.signout');if(so)so.hidden=false;}addEventListener('load',function(){window.scrollTo(0,0);});
 })();
 </script>
 <script>
 /* Partners page */
 (function(){
   var wrap=document.getElementById('pwrap');
-  var D=window.PARTNERS;
-  if(!D){
-    wrap.innerHTML='<div class="lockmsg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6b44c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><div><b>The partner list is private</b><p>This public site only shows totals. Open the private dashboard in Claude or the CRM sheet to see every partner.</p></div></div>';
-    return;
+  function locked(){
+    wrap.innerHTML='<div class="lockmsg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f6b44c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><div><b>The partner list is private</b><p>The partner list isn't connected to this site yet. Open the private dashboard in Claude or the CRM sheet to see every partner.</p></div></div>';
   }
+  if(window.PARTNERS){start(window.PARTNERS);return;}
+  /* On the signed-in web app the list comes from the server */
+  if(location.protocol.indexOf('http')!==0){locked();return;}
+  wrap.innerHTML='<div class="empty">Loading partner sites…</div>';
+  fetch('/api/partners',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(start).catch(locked);
+  function start(D){
   /* row: [id, domain, name, type, DR, traffic, owner, stage, lastTouch, clients, country, contacts] */
   var fmt=function(n){return n==null?'':n.toLocaleString('en-US');};
   var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
@@ -770,6 +777,7 @@ select{font:600 12px var(--sans);color:var(--text);background:var(--bg-2);border
     if(scroll)wrap.scrollIntoView({block:'start'});
   }
   render();
+  }
 })();
 </script>
 </body>
