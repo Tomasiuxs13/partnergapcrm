@@ -3,3 +3,4 @@
 pages/
 bounced.txt
 __pycache__/
+!package.json

@@ -1,0 +1,8 @@
+{
+  "name": "partnergap-crm",
+  "private": true,
+  "description": "PartnerGap affiliate CRM docs, scripts and static dashboard",
+  "scripts": {
+    "build": "echo \"No build step: crm/dashboard is static\""
+  }
+}
