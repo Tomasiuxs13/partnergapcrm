@@ -3,3 +3,10 @@
 name = "partnergap-crm"
 pages_build_output_dir = "./crm/dashboard"
 compatibility_date = "2026-10-05"
+
+# Partner list for the signed-in Partners page (functions/api/partners.js).
+# Lives in Cloudflare D1, never in this public repo.
+[[d1_databases]]
+binding = "PARTNERS_DB"
+database_name = "partnergap-crm-partners"
+database_id = "ccc497cd-fbac-40c5-b28f-374d2cdecf2f"
