@@ -75,7 +75,8 @@ ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
 export async function onRequest(ctx) {
   const { request, env, next } = ctx;
   const url = new URL(request.url);
-  const secret = env.DASHBOARD_PASSWORD;
+  // Trim so a stray space or line break saved with the secret (common when set from a terminal) does not lock everyone out.
+  const secret = (env.DASHBOARD_PASSWORD || "").trim();
 
   if (url.pathname === "/logout") {
     return new Response(null, { status: 302, headers: { Location: "/login", "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax` } });
@@ -86,7 +87,7 @@ export async function onRequest(ctx) {
     if (request.method === "POST") {
       const form = await request.formData();
       const nextUrl = safeNext(form.get("next"));
-      if (await same(String(form.get("password") || ""), secret)) {
+      if (await same(String(form.get("password") || "").trim(), secret)) {
         return new Response(null, { status: 303, headers: { Location: nextUrl, "Set-Cookie": `${COOKIE}=${await makeToken(secret)}; Path=/; Max-Age=${MAX_AGE}; HttpOnly; Secure; SameSite=Lax` } });
       }
       await new Promise((r) => setTimeout(r, 800)); // slow down guessing
