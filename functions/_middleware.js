@@ -72,9 +72,21 @@ ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
   return new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 }
 
+// Sign-in is switched off for now (Jonas, 2026-10-08): everyone with the link can open the site.
+// Set this back to true to require the DASHBOARD_PASSWORD again.
+const LOGIN_ENABLED = false;
+
 export async function onRequest(ctx) {
   const { request, env, next } = ctx;
   const url = new URL(request.url);
+
+  if (!LOGIN_ENABLED) {
+    if (url.pathname === "/login" || url.pathname === "/logout") return Response.redirect(new URL("/", url), 302);
+    const res = await next();
+    const out = new Response(res.body, res);
+    out.headers.set("X-Robots-Tag", "noindex");
+    return out;
+  }
   const secret = env.DASHBOARD_PASSWORD;
 
   if (url.pathname === "/logout") {
