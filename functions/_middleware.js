@@ -45,25 +45,24 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 function page(msg, next, status = 200) {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sign in · PartnerGap Affiliate Pipeline</title><meta name="robots" content="noindex">
+<title>Sign in · PartnerGap CRM</title><meta name="robots" content="noindex">
 <style>
-:root{color-scheme:dark;--bg:#0a0f1c;--tile:#111a2e;--tile2:#142038;--line:rgba(148,170,210,.18);--text:#e7edf7;--muted:#93a1bb;--cyan:#3fd8ee;--amber:#f6b44c;--rose:#f2727f}
+:root{color-scheme:light;--bg:#f5f8fa;--tile:#fff;--line:#dfe3eb;--text:#213343;--muted:#516f90;--acc:#ff5c35;--rose:#d9364f}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
-body{font:15px/1.45 Manrope,"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--text);display:grid;place-items:center;padding:24px 16px;
-background:radial-gradient(900px 500px at 85% -10%,rgba(63,216,238,.10),transparent 60%),radial-gradient(700px 400px at -10% 110%,rgba(246,180,76,.08),transparent 60%),var(--bg)}
-form{width:100%;max-width:380px;background:linear-gradient(180deg,var(--tile2),var(--tile));border:1px solid var(--line);border-radius:18px;padding:28px 24px;display:grid;gap:16px}
-.b{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(140deg,rgba(63,216,238,.25),rgba(246,180,76,.18));border:1px solid var(--line)}
-h1{margin:0;font-size:19px;font-weight:800}p{margin:0;color:var(--muted);font-size:13px}
+body{font:15px/1.45 "Lexend Deca","Segoe UI",system-ui,-apple-system,sans-serif;color:var(--text);display:grid;place-items:center;padding:24px 16px;background:var(--bg)}
+form{width:100%;max-width:380px;background:var(--tile);border:1px solid var(--line);border-radius:8px;padding:28px 24px;display:grid;gap:16px;box-shadow:0 8px 24px -12px rgba(33,51,67,.25)}
+.b{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:var(--acc)}
+h1{margin:0;font-size:19px;font-weight:600}p{margin:0;color:var(--muted);font-size:13px}
 label{display:grid;gap:6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input{font:inherit;font-size:16px;color:var(--text);background:#0d1426;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-input:focus{outline:2px solid var(--cyan);outline-offset:1px}
-button{font:inherit;font-weight:700;font-size:15px;padding:12px;border:0;border-radius:12px;cursor:pointer;color:#05202a;background:linear-gradient(180deg,#5fe3f4,#2fc4dc)}
-button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input{font:inherit;font-size:16px;color:var(--text);background:#fff;border:1px solid #cbd6e2;border-radius:6px;padding:11px 12px}
+input:focus{outline:2px solid #00a4bd;outline-offset:1px}
+button{font:inherit;font-weight:600;font-size:15px;padding:12px;border:0;border-radius:6px;cursor:pointer;color:#fff;background:var(--acc)}
+button:focus-visible{outline:2px solid #00a4bd;outline-offset:2px}
 .err{color:var(--rose);font-size:13px;font-weight:600}
 </style></head><body>
 <form method="post" action="/login">
-<div class="b"><div class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3fd8ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2"/></svg></div>
-<div><h1>Affiliate Pipeline</h1><p>PartnerGap team sign-in</p></div></div>
+<div class="b"><div class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2"/></svg></div>
+<div><h1>PartnerGap CRM</h1><p>Team sign-in</p></div></div>
 ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
 <label>Password<input type="password" name="password" autocomplete="current-password" required autofocus></label>
 <input type="hidden" name="next" value="${esc(next)}">
@@ -72,9 +71,9 @@ ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
   return new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 }
 
-// Sign-in is switched off for now (Jonas, 2026-10-08): everyone with the link can open the site.
-// Set this back to true to require the DASHBOARD_PASSWORD again.
-const LOGIN_ENABLED = false;
+// Sign-in is on (Jonas, 2026-10-09) because partner profiles show contact emails.
+// Setting this to false opens the whole site, emails included, to anyone with the link.
+const LOGIN_ENABLED = true;
 
 export async function onRequest(ctx) {
   const { request, env, next } = ctx;
@@ -87,18 +86,19 @@ export async function onRequest(ctx) {
     out.headers.set("X-Robots-Tag", "noindex");
     return out;
   }
-  const secret = env.DASHBOARD_PASSWORD;
+  // Trim so a stray space or line break saved with the secret does not lock everyone out.
+  const secret = (env.DASHBOARD_PASSWORD || "").trim();
 
   if (url.pathname === "/logout") {
     return new Response(null, { status: 302, headers: { Location: "/login", "Set-Cookie": `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax` } });
   }
 
   if (url.pathname === "/login") {
-    if (!secret) return page("Sign-in is not set up yet. Ask Tomas to add the DASHBOARD_PASSWORD secret in Cloudflare Pages.", "/", 503);
+    if (!secret) return page("Sign-in is not set up yet. Add the DASHBOARD_PASSWORD secret to the partnergap-crm Pages project in Cloudflare.", "/", 503);
     if (request.method === "POST") {
       const form = await request.formData();
       const nextUrl = safeNext(form.get("next"));
-      if (await same(String(form.get("password") || ""), secret)) {
+      if (await same(String(form.get("password") || "").trim(), secret)) {
         return new Response(null, { status: 303, headers: { Location: nextUrl, "Set-Cookie": `${COOKIE}=${await makeToken(secret)}; Path=/; Max-Age=${MAX_AGE}; HttpOnly; Secure; SameSite=Lax` } });
       }
       await new Promise((r) => setTimeout(r, 800)); // slow down guessing
