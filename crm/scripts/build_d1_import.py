@@ -6,9 +6,11 @@ Inputs are the JSON dumps the Google Sheets connector saves for large reads:
 Output: SQL that is loaded with
   npx wrangler d1 execute partnergap-crm-partners --remote --file <out.sql>
 
-No email addresses go in: the Email column of Contacts is never read, any
+Contact emails go only into contacts.email, which the site shows to signed-in
+users (functions/_middleware.js keeps the whole site behind the login). Any
 Domain or Brand value containing "@" is blanked, and any address inside a
-Next step, Notes or Activity summary is replaced.
+Next step, Notes or Activity summary is replaced, so the partner list itself
+carries none.
 
 Usage: python3 crm/scripts/build_d1_import.py <accounts.json> <contacts.json> <activity.json> <out.sql>
 """
@@ -26,7 +28,7 @@ SCHEMA = """CREATE TABLE IF NOT EXISTS partners (id TEXT PRIMARY KEY, domain TEX
   country TEXT, contacts INTEGER, next_step TEXT, next_due TEXT, source TEXT, seed_keyword TEXT, notes TEXT);
 DROP TABLE IF EXISTS contacts;
 CREATE TABLE contacts (id TEXT PRIMARY KEY, account_id TEXT, first_name TEXT, last_name TEXT, title TEXT,
-  linkedin TEXT, email_status TEXT, source TEXT, primary_contact INTEGER, outreach_status TEXT,
+  email TEXT, linkedin TEXT, email_status TEXT, source TEXT, primary_contact INTEGER, outreach_status TEXT,
   last_email TEXT, replied INTEGER, client TEXT);
 CREATE INDEX contacts_account ON contacts (account_id);
 DROP TABLE IF EXISTS activity;
@@ -41,7 +43,7 @@ MIGRATE = (
     "ALTER TABLE partners ADD COLUMN notes TEXT;",
 )
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-CONTACT_COLS = ("id,account_id,first_name,last_name,title,linkedin,email_status,source,primary_contact,"
+CONTACT_COLS = ("id,account_id,first_name,last_name,title,email,linkedin,email_status,source,primary_contact,"
                 "outreach_status,last_email,replied,client")
 ACTIVITY_COLS = "n,date,account_id,contact_id,type,by_whom,summary,client"
 
@@ -127,7 +129,8 @@ def main(accounts_path, contacts_path, activity_path, out_path):
 
     people = [(
         cell(r, 0), cell(r, 1), cell(r, 3), cell(r, 4), cell(r, 5),
-        cell(r, 8),                # I LinkedIn URL (column G, the email, is skipped)
+        cell(r, 6),                # G Email
+        cell(r, 8),                # I LinkedIn URL
         cell(r, 7), cell(r, 9), flag(cell(r, 11)), cell(r, 12),
         day(cell(r, 14)), flag(cell(r, 15)), cell(r, 16),
     ) for r in contacts]
@@ -142,14 +145,15 @@ def main(accounts_path, contacts_path, activity_path, out_path):
     parts += inserts("activity", ACTIVITY_COLS, log)
     text = "\n".join(parts) + "\n"
 
-    # Check the file runs cleanly and carries no address before anyone loads it.
+    # Check the file runs cleanly and only contacts.email carries addresses.
     db = sqlite3.connect(":memory:")
     db.executescript(text)
     count = db.execute("SELECT COUNT(*) FROM partners").fetchone()[0]
     assert count == len(rows) and not any(
-        EMAIL.search(str(v)) for t in ("partners", "contacts", "activity")
-        for row in db.execute(f"SELECT * FROM {t}") for v in row if v is not None
-    ), "an email address got through"
+        EMAIL.search(str(v)) for q in ("SELECT * FROM partners", "SELECT * FROM activity",
+                                       "SELECT id, account_id, first_name, last_name, title, linkedin FROM contacts")
+        for row in db.execute(q) for v in row if v is not None
+    ), "an email address got outside contacts.email"
 
     with open(out_path, "w") as f:
         f.write(text)

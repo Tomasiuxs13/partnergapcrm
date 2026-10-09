@@ -54,6 +54,7 @@ button,input,select{font:inherit;color:inherit}
 .nav .cnt{margin-left:auto;font-size:12px;color:#7c98b6}
 .side-foot{margin-top:auto;font-size:12px;color:#7c98b6;padding:0 10px;line-height:1.5}
 .side-foot b{color:var(--side-ink);font-weight:500}
+.side-foot .signout{color:var(--side-ink);display:inline-block;margin-top:8px}
 
 .main{min-width:0;display:flex;flex-direction:column}
 .topbar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
@@ -181,7 +182,7 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
 
 /* record drawer */
 .scrim{position:fixed;inset:0;background:rgba(15,26,36,.35);z-index:30}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);z-index:31;display:flex;flex-direction:column;box-shadow:-12px 0 32px -16px rgba(0,0,0,.35)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--panel);border-left:1px solid var(--line);z-index:31;display:flex;flex-direction:column;box-shadow:-12px 0 32px -16px rgba(0,0,0,.35)}
 .dr-h{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
 .dr-h .av{width:44px;height:44px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:18px;flex:none}
 .dr-h h2{margin:0;font-size:18px;font-weight:500;overflow-wrap:anywhere}
@@ -192,6 +193,21 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
 .props dd{margin:0;overflow-wrap:anywhere}
 .next{padding:12px;border-radius:6px;background:var(--accent-soft);border:1px solid var(--line)}
 .next .l{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.sec h3{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.sec .about{margin:0;line-height:1.5}
+.ct{border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ct+.ct{margin-top:8px}
+.ct-h{display:flex;gap:10px;align-items:center}
+.ct-h .av{width:32px;height:32px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.ct-n{overflow-wrap:anywhere}
+.ct-s{margin-left:auto;flex:none}
+.props.sm{grid-template-columns:92px minmax(0,1fr);font-size:13px}
+.em{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;overflow-wrap:anywhere}
+.btn.sm{padding:2px 8px;font-size:12px;vertical-align:baseline}
+.tl{list-style:none;margin:0;padding:0 0 0 16px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:12px;font-size:13.5px}
+.tl li{position:relative}
+.tl li::before{content:"";position:absolute;left:-23px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--panel);border:2px solid var(--accent)}
+.notes{white-space:pre-wrap;font-size:13px;line-height:1.5;background:var(--panel-2);border-radius:6px;padding:10px 12px;overflow-wrap:anywhere}
 .dr-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
 
 .note{font-size:12.5px;color:var(--faint);padding:0 16px 14px}
@@ -229,7 +245,7 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
     <div class="grp">Marketing</div>
     <a href="#campaigns"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2z"/><path d="M16 8a5 5 0 010 8"/></svg>Campaigns<span class="cnt num" data-c="campaigns"></span></a>
   </nav>
-  <div class="side-foot"><b>Data</b> from the CRM sheet, synced by the daily run.<br>Outreach is in <b>test mode</b>: nothing is sent.</div>
+  <div class="side-foot"><b>Data</b> from the CRM sheet, synced by the daily run.<br>Outreach is in <b>test mode</b>: nothing is sent.<br><a class="signout" href="/logout">Sign out</a></div>
 </aside>
 
 <div class="main">
@@ -367,26 +383,78 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
     var r=D.filter(function(x){return x.id===id;})[0];if(!r)return;
     lastFocus=document.activeElement;
     var row=parseInt(r.id.replace(/\D/g,''),10)+1;
+    var live=!window.PARTNERS;
     var dr=$('drawer');
     dr.innerHTML='<div class="dr-h"><div class="av" aria-hidden="true">'+esc(initials(r.label))+'</div><div style="min-width:0"><h2 id="dr-title">'+esc(r.label)+'</h2><div class="faint">'+esc(r.id)+(r.domain?' · <a href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">'+esc(r.domain)+'</a>':'')+'</div><div style="margin-top:8px">'+pill(r.stage)+'</div></div><button class="x" type="button" id="drx" aria-label="Close">×</button></div>'+
       '<div class="dr-b">'+
+      '<section class="sec"><h3>About</h3><p class="about faint" id="dr-about">'+(live?'Loading what they do…':(r.type&&r.type!=='Uncategorized'?esc(r.type):''))+'</p></section>'+
       (r.next?'<div class="next"><div class="l">Next step'+(r.due?' · due '+esc(r.due):'')+'</div><div>'+esc(r.next)+'</div></div>':'')+
-      '<dl class="props">'+
+      '<section class="sec"><h3>Contacts <span class="faint" id="dr-cn">'+r.contacts+'</span></h3><div id="dr-contacts" class="faint">'+(live?'Loading…':'Open the sheet for contacts.')+'</div></section>'+
+      '<section class="sec"><h3>Details</h3><dl class="props">'+
       '<dt>Owner</dt><dd>'+owner(r.owner)+'</dd>'+
       '<dt>Clients</dt><dd>'+tags(r.cl)+'</dd>'+
-      '<dt>Stage</dt><dd>'+esc(r.stage||'–')+'</dd>'+
       '<dt>Last touch</dt><dd>'+(r.touch?esc(r.touch)+' <span class="faint">('+ago(r.touch)+')</span>':'<span class="dim">Never contacted</span>')+'</dd>'+
       '<dt>Type</dt><dd>'+esc(r.type&&r.type!=='Uncategorized'?r.type:'–')+'</dd>'+
       '<dt>Domain rating</dt><dd class="num">'+(r.dr==null?'–':r.dr)+'</dd>'+
       '<dt>Organic traffic</dt><dd class="num">'+(r.traffic==null?'–':fmt(r.traffic))+'</dd>'+
       '<dt>Top country</dt><dd>'+esc(r.country||'–')+'</dd>'+
-      '<dt>Contacts</dt><dd class="num">'+r.contacts+' <span class="faint">(emails are kept in the sheet only)</span></dd>'+
-      '</dl></div>'+
+      '<dt id="dr-found-l" hidden>Found via</dt><dd id="dr-found" hidden></dd>'+
+      '</dl></section>'+
+      '<section class="sec" id="dr-act-s" hidden><h3>Activity</h3><ol class="tl" id="dr-act"></ol></section>'+
+      '<section class="sec" id="dr-notes-s" hidden><h3>Notes</h3><div class="notes" id="dr-notes"></div></section>'+
+      '</div>'+
       '<div class="dr-f"><a class="btn pri" href="'+SHEET+'#gid=0&range=A'+row+'" target="_blank" rel="noopener">Edit in sheet</a>'+(r.domain?'<a class="btn" href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">Visit site</a>':'')+'</div>';
     dr.hidden=false;$('scrim').hidden=false;
     $('drx').addEventListener('click',closeRecord);
     $('drx').focus();
+    if(live)loadProfile(r);
   }
+  var OUT={'Replied':'var(--s-replied)','Sent':'var(--s-contacted)','Queued':'var(--s-neg)','Bounced':'var(--s-lost)'};
+  function contactCard(c){
+    var nm=[c.first_name,c.last_name].filter(Boolean).join(' ');
+    var crow=parseInt(String(c.id).replace(/\D/g,''),10)+1;
+    var emails=(c.email||'').split(/\s*[,;]\s*/).filter(Boolean);
+    var st=c.outreach_status||'';
+    var head=nm||emails[0]||'Contact '+c.id;
+    var mail=emails.length?emails.map(function(e){return '<span class="em">'+esc(e)+'</span> <button class="btn sm" type="button" data-copy="'+esc(e)+'">Copy</button>';}).join('<br>')
+      :'<a href="'+SHEET+'#gid=1&range=G'+crow+'" target="_blank" rel="noopener">Not loaded yet, open the sheet</a>';
+    return '<div class="ct"><div class="ct-h"><span class="av" aria-hidden="true">'+esc(initials(nm||head))+'</span><div style="min-width:0"><b class="ct-n">'+esc(head)+'</b>'+(c.title?'<div class="faint">'+esc(c.title)+'</div>':'')+'</div>'+
+      (st?'<span class="pill ct-s"><i style="background:'+(OUT[st]||'var(--s-new)')+'"></i>'+esc(st)+'</span>':'')+'</div>'+
+      '<dl class="props sm">'+
+      '<dt>Email</dt><dd>'+mail+(c.email_status&&c.email_status!=='Unknown'?' <span class="faint">· '+esc(c.email_status)+'</span>':'')+'</dd>'+
+      (c.linkedin?'<dt>LinkedIn</dt><dd><a href="'+esc(c.linkedin)+'" target="_blank" rel="noopener">Profile</a></dd>':'')+
+      (c.last_email?'<dt>Last email</dt><dd>'+esc(c.last_email)+' <span class="faint">('+ago(c.last_email)+')</span>'+(c.replied?' · replied':'')+'</dd>':'')+
+      (c.client?'<dt>Pitched for</dt><dd>'+esc(c.client)+'</dd>':'')+
+      '</dl></div>';
+  }
+  function loadProfile(r){
+    fetch('/api/partner/'+encodeURIComponent(r.id),{credentials:'same-origin'}).then(function(x){if(!x.ok)throw 0;return x.json();}).then(function(p){
+      if($('drawer').hidden||$('dr-title').textContent!==r.label)return;
+      var P=p.partner||{},a=p.about||{};
+      var typ=r.type&&r.type!=='Uncategorized'?r.type:'';
+      var ab=$('dr-about');
+      if(a.description||a.title){ab.textContent=a.description||a.title;ab.className='about';}
+      else ab.textContent=(r.domain?'The site does not describe itself.':'A creator we reach by email, with no website on file.')+(typ?' Listed as '+typ+'.':'');
+      var found=[P.source,P.seed_keyword?'keyword “'+P.seed_keyword+'”':''].filter(Boolean).join(', ');
+      if(found){$('dr-found').textContent=found;$('dr-found').hidden=false;$('dr-found-l').hidden=false;}
+      var cs=p.contacts||[];
+      $('dr-cn').textContent=cs.length;
+      $('dr-contacts').className='';
+      $('dr-contacts').innerHTML=cs.length?cs.map(contactCard).join(''):'<span class="faint">No contact on file yet.</span>';
+      var act=p.activity||[];
+      if(act.length){$('dr-act').innerHTML=act.map(function(e){return '<li><span class="faint">'+esc(e.date)+' · '+esc(e.type)+(e.by_whom?' · '+esc(e.by_whom):'')+'</span><div>'+esc(e.summary)+'</div></li>';}).join('');$('dr-act-s').hidden=false;}
+      if(P.notes){$('dr-notes').textContent=P.notes;$('dr-notes-s').hidden=false;}
+    }).catch(function(){
+      var c=$('dr-contacts');if(c)c.textContent='Could not load details. Open the sheet instead.';
+      var ab=$('dr-about');if(ab)ab.textContent='';
+    });
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-copy]');if(!b)return;
+    var t=b.getAttribute('data-copy');
+    function sel(){var em=b.previousElementSibling;if(em){var g=document.createRange();g.selectNodeContents(em);var w=getSelection();w.removeAllRanges();w.addRange(g);}b.textContent='Selected';}
+    try{navigator.clipboard.writeText(t).then(function(){b.textContent='Copied';},sel);}catch(_){sel();}
+  });
   function closeRecord(){$('drawer').hidden=true;$('scrim').hidden=true;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
   $('scrim').addEventListener('click',closeRecord);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('drawer').hidden)closeRecord();});
