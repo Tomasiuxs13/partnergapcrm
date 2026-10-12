@@ -210,6 +210,46 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
 .notes{white-space:pre-wrap;font-size:13px;line-height:1.5;background:var(--panel-2);border-radius:6px;padding:10px 12px;overflow-wrap:anywhere}
 .dr-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
 
+/* clickables */
+.go{cursor:pointer;font:inherit;color:inherit;text-align:left}
+button.owner,button.pill,button.tag{font:inherit;font-size:inherit;cursor:pointer}
+button.owner{border:0;background:none;padding:0;color:inherit}
+button.owner:hover{color:var(--link);text-decoration:underline}
+button.pill{color:inherit;font-size:12px}
+button.pill:hover,a.tag:hover,button.tag:hover{box-shadow:inset 0 0 0 1px var(--teal)}
+a.tag,button.tag{text-decoration:none;border:0;color:var(--ink);font-size:12px}
+.lnk{border:0;background:none;padding:0;color:var(--link);cursor:pointer;font:inherit;text-align:left}
+.lnk:hover{text-decoration:underline}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:2px;padding:2px 2px 2px 9px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--line);font-size:12px;color:var(--ink)}
+.chip button{border:0;background:none;cursor:pointer;color:var(--ink-2);font-size:15px;line-height:1;padding:0 6px;border-radius:999px}
+.chip button:hover{color:var(--ink)}
+a.fr,button.fr{text-decoration:none;width:100%;border:0;background:none;padding:5px 6px;margin:-5px -6px;border-radius:6px;font:inherit;color:inherit;text-align:left;cursor:pointer;box-sizing:content-box}
+a.fr:hover,button.fr:hover{background:var(--panel-2)}
+a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);text-decoration:underline}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
+.sx{display:block;width:100%;border:0;background:var(--panel-2);border-radius:6px;padding:6px 2px;cursor:pointer;font:inherit;color:inherit;text-align:center}
+.sx:hover{box-shadow:inset 0 0 0 1px var(--line-2)}
+.sx:hover b{color:var(--link)}
+.cc h3 a{color:inherit;text-decoration:none}
+.cc h3 a:hover{color:var(--link);text-decoration:underline}
+.cc .mgr{display:flex;gap:10px;flex-wrap:wrap}
+.queues{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:10px;padding:16px}
+.qb{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;text-align:left;font:inherit;color:inherit}
+.qb:hover{border-color:var(--line-2);box-shadow:var(--shadow)}
+.qb b{font-size:22px;font-weight:400}
+.qb span{font-size:13px;color:var(--ink-2)}
+.qb.hot b{color:var(--accent)}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--link);text-decoration:none}
+.back:hover{text-decoration:underline}
+.kpis.k5{grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr))}
+.av-lg{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;flex:none}
+.tm-h{display:flex;gap:12px;align-items:center}
+.tm-h h3{margin:0}
+.gres a{display:flex;gap:10px;align-items:center;padding:8px 12px;text-decoration:none;color:var(--ink)}
+.gres a:hover,.gres a:focus{background:var(--panel-2)}
+.gres .gk{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:8px 12px 2px}
+.rec td.r .lnk{font-variant-numeric:tabular-nums}
 .note{font-size:12.5px;color:var(--faint);padding:0 16px 14px}
 .loading{padding:40px;text-align:center;color:var(--ink-2)}
 
@@ -238,12 +278,17 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
   <nav class="nav" id="nav">
     <a href="#home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a>
     <div class="grp">Records</div>
+    <a href="#sites"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>All sites<span class="cnt num" data-c="sites"></span></a>
     <a href="#prospecting"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Prospecting<span class="cnt num" data-c="prospecting"></span></a>
     <a href="#partners"><svg viewBox="0 0 24 24"><path d="M8 12l3 3 5-6"/><circle cx="12" cy="12" r="9"/></svg>Partners<span class="cnt num" data-c="partners"></span></a>
     <a href="#deals"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg>Deals<span class="cnt num" data-c="deals"></span></a>
     <a href="#clients"><svg viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Clients<span class="cnt num" data-c="clients"></span></a>
+    <div class="grp">Work</div>
+    <a href="#tasks"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/></svg>Tasks<span class="cnt num" data-c="tasks"></span></a>
+    <a href="#team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2a5 5 0 016 4.8"/></svg>Team<span class="cnt num" data-c="team"></span></a>
     <div class="grp">Marketing</div>
     <a href="#campaigns"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2z"/><path d="M16 8a5 5 0 010 8"/></svg>Campaigns<span class="cnt num" data-c="campaigns"></span></a>
+    <a href="#reports"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
   </nav>
   <div class="side-foot"><b>Data</b> from the CRM sheet, synced by the daily run.<br>Outreach is in <b>test mode</b>: nothing is sent.<br><a class="signout" href="/logout">Sign out</a></div>
 </aside>
@@ -274,9 +319,28 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
         </div>
       </div>
       <div class="card">
+        <div class="card-h"><h2>Your to-dos</h2><a class="linkbtn" href="#tasks">Open tasks</a></div>
+        <div class="queues" id="homeQueues"></div>
+      </div>
+      <div class="two">
+        <div class="card">
+          <div class="card-h"><h2>Recently updated</h2><a class="linkbtn" href="#sites">All sites</a></div>
+          <div class="lst" id="homeRecent"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Clients at a glance</h2><a class="linkbtn" href="#clients">All clients</a></div>
+          <div class="card-b"><div class="funnel" id="homeClients"></div></div>
+        </div>
+      </div>
+      <div class="card">
         <div class="card-h"><h2>Automations</h2><span class="faint">Vilnius time</span></div>
         <div id="autos"></div>
       </div>
+    </section>
+
+    <section class="page" data-page="sites" aria-labelledby="t-sites" hidden>
+      <div class="phead"><div><h1 id="t-sites">All sites</h1><p>Every site in the CRM, in every stage. Filter by client, owner, stage, country, type or domain rating, or click any name, tag or pill elsewhere to land here filtered.</p></div></div>
+      <div class="card" id="tbl-sites"></div>
     </section>
 
     <section class="page" data-page="prospecting" aria-labelledby="t-prospecting" hidden>
@@ -302,12 +366,32 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       <div class="ccards" id="ccards"></div>
     </section>
 
+    <section class="page" data-page="client" aria-labelledby="t-client" hidden>
+      <a class="back" href="#clients">← All clients</a>
+      <div id="clientPage"></div>
+    </section>
+
+    <section class="page" data-page="tasks" aria-labelledby="t-tasks" hidden>
+      <div class="phead"><div><h1 id="t-tasks">Tasks</h1><p>Who needs a follow-up. Each tab is a to-do queue; click a site to see its record and next step.</p></div></div>
+      <div class="card" id="tbl-tasks"></div>
+    </section>
+
+    <section class="page" data-page="team" aria-labelledby="t-team" hidden>
+      <div class="phead"><div><h1 id="t-team">Team</h1><p>What each account manager owns. Click any number to see those sites.</p></div></div>
+      <div class="ccards" id="team"></div>
+    </section>
+
     <section class="page" data-page="campaigns" aria-labelledby="t-campaigns" hidden>
       <div class="phead"><div><h1 id="t-campaigns">Campaigns</h1><p>Partner outreach per client: how many sites we emailed, who wrote back, and how many became deals.</p></div></div>
       <div class="card">
         <div class="tbl-wrap"><table class="rec" id="camps"></table></div>
         <div class="note">Reply rate counts every site that wrote back (including those who said no) out of the sites we emailed. Once Smartlead is connected, each Smartlead campaign will get its own row.</div>
       </div>
+    </section>
+
+    <section class="page" data-page="reports" aria-labelledby="t-reports" hidden>
+      <div class="phead"><div><h1 id="t-reports">Reports</h1><p>How the CRM breaks down. Click any bar to see the sites behind it.</p></div></div>
+      <div class="grid2" id="reports"></div>
     </section>
 
     <div class="loading" id="loading">Loading the CRM…</div>
@@ -362,14 +446,26 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       o.cl=(r[9]||'').split(/\s*[,\/]\s*/).filter(Boolean);
       o.ck=o.cl.map(clientKey);
       o.label=o.name||o.domain||'Creator (free email)';
+      o.drb=o.dr==null||o.dr===''?'':o.dr>=80?'80+':o.dr>=60?'60-79':o.dr>=40?'40-59':o.dr>=20?'20-39':'0-19';
       o.q=(o.id+' '+o.domain+' '+o.name+' '+o.next).toLowerCase();
       return o;
     });
   }
   function initials(s){return (s||'?').split(/\s+/).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();}
-  function pill(stage){return '<span class="pill"><i style="background:'+(SC[stage]||'var(--s-new)')+'"></i>'+esc(stage||'–')+'</span>';}
-  function owner(o){return o?'<span class="owner"><span class="av" aria-hidden="true">'+esc(initials(o))+'</span>'+esc(o)+'</span>':'<span class="dim">No owner</span>';}
-  function tags(cl){return cl.length?cl.map(function(c){return '<span class="tag">'+esc(c)+'</span>';}).join(''):'<span class="dim">–</span>';}
+  /* clickable bits: data-go="page" data-f="key=value&..." opens that list filtered */
+  function enc(v){return encodeURIComponent(v);}
+  function goA(page,f){return ' data-go="'+page+'" data-f="'+esc(f)+'"';}
+  function slug(k){return k.replace(/\s+/g,'-');}
+  function pill(stage,plain){var in_='<i style="background:'+(SC[stage]||'var(--s-new)')+'"></i>'+esc(stage||'–');
+    return plain||!stage?'<span class="pill">'+in_+'</span>':'<button type="button" class="pill"'+goA('sites','stage='+enc(stage))+' title="All '+esc(stage)+' sites">'+in_+'</button>';}
+  function owner(o,plain){if(!o)return '<span class="dim">No owner</span>';var in_='<span class="av" aria-hidden="true">'+esc(initials(o))+'</span>'+esc(o);
+    return plain?'<span class="owner">'+in_+'</span>':'<button type="button" class="owner"'+goA('sites','owner='+enc(o))+' title="All sites owned by '+esc(o)+'">'+in_+'</button>';}
+  function owners(m,plain){return m.split(/\s*&\s*/).map(function(o){return owner(o,plain);}).join(' ');}
+  function tag(c,plain){var C=CK[clientKey(c)];
+    if(plain)return '<span class="tag">'+esc(c)+'</span>';
+    return C?'<a class="tag" href="#client-'+slug(C.k)+'" title="Open '+esc(C.n)+'">'+esc(c)+'</a>':'<button type="button" class="tag"'+goA('sites','client='+enc(c))+'>'+esc(c)+'</button>';}
+  function tags(cl,plain){return cl.length?cl.map(function(c){return tag(c,plain);}).join(''):'<span class="dim">–</span>';}
+  function goVal(k,v,label){return v?'<button type="button" class="lnk"'+goA('sites',k+'='+enc(v))+'>'+esc(label||v)+'</button>':'<span class="dim">–</span>';}
   function siteCell(r){
     var sub=r.domain&&r.name&&r.name!==r.domain?esc(r.domain)+' · ':'';
     return '<span class="nm">'+esc(r.label)+'</span><span class="sm">'+sub+esc(r.id)+'</span>';
@@ -394,10 +490,10 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       '<dt>Owner</dt><dd>'+owner(r.owner)+'</dd>'+
       '<dt>Clients</dt><dd>'+tags(r.cl)+'</dd>'+
       '<dt>Last touch</dt><dd>'+(r.touch?esc(r.touch)+' <span class="faint">('+ago(r.touch)+')</span>':'<span class="dim">Never contacted</span>')+'</dd>'+
-      '<dt>Type</dt><dd>'+esc(r.type&&r.type!=='Uncategorized'?r.type:'–')+'</dd>'+
-      '<dt>Domain rating</dt><dd class="num">'+(r.dr==null?'–':r.dr)+'</dd>'+
+      '<dt>Type</dt><dd>'+(r.type&&r.type!=='Uncategorized'?goVal('type',r.type):'–')+'</dd>'+
+      '<dt>Domain rating</dt><dd class="num">'+(r.dr==null||r.dr===''?'–':goVal('drb',r.drb,String(r.dr)))+'</dd>'+
       '<dt>Organic traffic</dt><dd class="num">'+(r.traffic==null?'–':fmt(r.traffic))+'</dd>'+
-      '<dt>Top country</dt><dd>'+esc(r.country||'–')+'</dd>'+
+      '<dt>Top country</dt><dd>'+(r.country?goVal('country',r.country):'–')+'</dd>'+
       '<dt id="dr-found-l" hidden>Found via</dt><dd id="dr-found" hidden></dd>'+
       '</dl></section>'+
       '<section class="sec" id="dr-act-s" hidden><h3>Activity</h3><ol class="tl" id="dr-act"></ol></section>'+
@@ -455,34 +551,61 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
     function sel(){var em=b.previousElementSibling;if(em){var g=document.createRange();g.selectNodeContents(em);var w=getSelection();w.removeAllRanges();w.addRange(g);}b.textContent='Selected';}
     try{navigator.clipboard.writeText(t).then(function(){b.textContent='Copied';},sel);}catch(_){sel();}
   });
-  function closeRecord(){$('drawer').hidden=true;$('scrim').hidden=true;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+  function closeRecord(quiet){if($('drawer').hidden)return;$('drawer').hidden=true;$('scrim').hidden=true;if(!quiet&&lastFocus&&lastFocus.focus)lastFocus.focus();}
   $('scrim').addEventListener('click',closeRecord);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('drawer').hidden)closeRecord();});
-  document.addEventListener('click',function(e){var t=e.target.closest('[data-rec]');if(t){e.preventDefault();openRecord(t.getAttribute('data-rec'));}});
+  document.addEventListener('click',function(e){
+    var g=e.target.closest('[data-go]');
+    if(g){e.preventDefault();go(g.getAttribute('data-go'),g.getAttribute('data-f')||'');return;}
+    var t=e.target.closest('[data-rec]');if(!t)return;
+    var inner=e.target.closest('a,button');if(inner&&inner!==t&&t.contains(inner))return;
+    e.preventDefault();openRecord(t.getAttribute('data-rec'));
+  });
+  $('drawer').addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a)closeRecord(true);});
+  /* open a list page with filters applied */
+  var FKEYS=['client','owner','stage','country','type','drb','ck'];
+  function go(page,f){
+    var p={};f.split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)p[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1));});
+    closeRecord(true);
+    var sv=store.get('tbl-'+page)||{};
+    sv.q='';sv.page=0;sv.view=p.view||'all';
+    FKEYS.forEach(function(k){sv[k]=p[k]||'';});
+    store.set('tbl-'+page,sv);
+    built[page]=false;var el=$('tbl-'+page);if(el)el.innerHTML='';
+    if(location.hash==='#'+page)show();else location.hash=page;
+  }
   document.addEventListener('keydown',function(e){if(e.key==='Enter'){var t=e.target.closest&&e.target.closest('tr[data-rec]');if(t)openRecord(t.getAttribute('data-rec'));}});
 
   /* ---------- reusable record table (HubSpot index page) ---------- */
   function RecordTable(el,cfg){
     var key='tbl-'+cfg.id;
-    var st={view:cfg.views[0].id,q:'',client:'',owner:'',sort:cfg.sort,dir:-1,page:0};
-    var sv=store.get(key);if(sv)['view','client','owner','sort','dir'].forEach(function(k){if(sv[k]!=null)st[k]=sv[k];});
+    var st={view:cfg.views[0].id,q:'',sort:cfg.sort,dir:cfg.dir||-1,page:0};
+    FKEYS.forEach(function(k){st[k]='';});
+    var sv=store.get(key);if(sv)['view','q','sort','dir','page'].concat(FKEYS).forEach(function(k){if(sv[k]!=null)st[k]=sv[k];});
+    var fl=cfg.fl||['client','owner'];
+    var FL={client:'Client',owner:'Owner',stage:'Stage',country:'Country',type:'Type',drb:'Domain rating',ck:'Client'};
     if(!cfg.views.some(function(v){return v.id===st.view;}))st.view=cfg.views[0].id;
     var base=D.filter(cfg.base);
     function count(v){return base.filter(v.f).length;}
     function opts(f){var m={};base.forEach(function(r){[].concat(f(r)).forEach(function(v){if(v)m[v]=(m[v]||0)+1;});});return Object.keys(m).sort(function(a,b){return m[b]-m[a];});}
-    var clients=opts(function(r){return r.cl;}),owners=opts(function(r){return r.owner;});
+    var OPT={client:function(){return opts(function(r){return r.cl;});},owner:function(){return opts(function(r){return r.owner;});},
+      stage:function(){return STAGES.map(function(s){return s.n;});},country:function(){return opts(function(r){return r.country;});},
+      type:function(){return opts(function(r){return r.type;});},drb:function(){return ['80+','60-79','40-59','20-39','0-19'];}};
+    var ALL={client:'All clients',owner:'All owners',stage:'All stages',country:'All countries',type:'All types',drb:'Any DR'};
     el.innerHTML='<div class="views" role="tablist" aria-label="Views">'+cfg.views.map(function(v){return '<button type="button" role="tab" data-v="'+v.id+'">'+esc(v.n)+'<span class="vc num">'+fmt(count(v))+'</span></button>';}).join('')+'</div>'+
       '<div class="tools"><label class="fld q"><span>Search</span><input type="search" data-k="q" placeholder="Site, ID or next step" autocomplete="off"></label>'+
-      '<label class="fld"><span>Client</span><select data-k="client"><option value="">All clients</option>'+clients.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></label>'+
-      '<label class="fld"><span>Owner</span><select data-k="owner"><option value="">All owners</option><option value="__none">No owner</option>'+owners.map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></label></div>'+
-      '<div class="meta"><span data-meta></span><button class="linkbtn" type="button" data-reset>Clear filters</button></div>'+
+      fl.map(function(k){return '<label class="fld"><span>'+FL[k]+'</span><select data-k="'+k+'"><option value="">'+ALL[k]+'</option>'+(k==='owner'?'<option value="__none">No owner</option>':'')+OPT[k]().map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></label>';}).join('')+'</div>'+
+      '<div class="meta"><span class="chips"><span data-meta></span><span class="chips" data-chips></span></span><button class="linkbtn" type="button" data-reset>Clear filters</button></div>'+
       '<div class="tbl-wrap"><table class="rec"><thead><tr>'+cfg.cols.map(function(c){return '<th class="'+(c.cls||'')+'" scope="col">'+(c.s?'<button type="button" data-sort="'+c.s+'">'+esc(c.h)+'<span aria-hidden="true" data-arrow="'+c.s+'"></span></button>':esc(c.h))+'</th>';}).join('')+'</tr></thead><tbody></tbody></table></div>'+
       '<div class="pager"><span data-pos></span><div class="pb"><button type="button" data-p="-1">Previous</button><button type="button" data-p="1">Next</button></div></div>';
     var tb=el.querySelector('tbody');
-    el.querySelectorAll('[data-k]').forEach(function(i){i.value=st[i.dataset.k]||'';if(i.value!==(st[i.dataset.k]||''))st[i.dataset.k]='';i.addEventListener(i.tagName==='INPUT'?'input':'change',function(){st[i.dataset.k]=i.value;st.page=0;render();});});
+    el.querySelectorAll('[data-k]').forEach(function(i){var v=st[i.dataset.k]||'';
+      if(i.tagName==='SELECT'&&v&&![].some.call(i.options,function(o){return o.value===v;})){var o=document.createElement('option');o.textContent=v;i.appendChild(o);}
+      i.value=v;i.addEventListener(i.tagName==='INPUT'?'input':'change',function(){st[i.dataset.k]=i.value;st.page=0;render();});});
+    el.querySelector('[data-chips]').addEventListener('click',function(e){var b=e.target.closest('[data-unset]');if(!b)return;var k=b.dataset.unset;st[k]='';st.page=0;var i=el.querySelector('[data-k="'+k+'"]');if(i)i.value='';render();});
     el.querySelectorAll('[data-v]').forEach(function(b){b.addEventListener('click',function(){st.view=b.dataset.v;st.page=0;render();});});
     el.querySelectorAll('[data-sort]').forEach(function(b){b.addEventListener('click',function(){var s=b.dataset.sort;if(st.sort===s)st.dir=-st.dir;else{st.sort=s;st.dir=s==='label'?1:-1;}render();});});
-    el.querySelector('[data-reset]').addEventListener('click',function(){st.q='';st.client='';st.owner='';st.page=0;el.querySelectorAll('[data-k]').forEach(function(i){i.value='';});render();});
+    el.querySelector('[data-reset]').addEventListener('click',function(){st.q='';FKEYS.forEach(function(k){st[k]='';});st.page=0;el.querySelectorAll('[data-k]').forEach(function(i){i.value='';});render();});
     el.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){st.page+=+b.dataset.p;render();el.scrollIntoView({block:'start'});});});
     var PER=50;
     function val(r,k){var v=r[k];if(k==='label')return (v||'').toLowerCase();return v==null||v===''?null:v;}
@@ -494,8 +617,8 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       var rows=base.filter(function(r){
         if(!view.f(r))return false;
         if(q&&r.q.indexOf(q)<0)return false;
-        if(st.client&&r.cl.indexOf(st.client)<0)return false;
-        if(st.owner&&(st.owner==='__none'?r.owner:r.owner!==st.owner))return false;
+        for(var i=0;i<FKEYS.length;i++){var k=FKEYS[i],v=st[k];if(!v)continue;
+          if(k==='client'?r.cl.indexOf(v)<0:k==='ck'?r.ck.indexOf(v)<0:k==='owner'?(v==='__none'?!!r.owner:r.owner!==v):(r[k]||'')!==v)return false;}
         return true;});
       rows.sort(function(a,b){var x=val(a,st.sort),y=val(b,st.sort);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return (x<y?-1:x>y?1:0)*st.dir;});
       el.querySelectorAll('[data-arrow]').forEach(function(a){a.textContent=a.dataset.arrow===st.sort?(st.dir>0?' ↑':' ↓'):'';});
@@ -503,6 +626,9 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       var pages=Math.max(1,Math.ceil(rows.length/PER));st.page=Math.min(Math.max(0,st.page),pages-1);
       var sl=rows.slice(st.page*PER,st.page*PER+PER);
       el.querySelector('[data-meta]').innerHTML='<b class="num">'+fmt(rows.length)+'</b> '+(rows.length===1?'record':'records');
+      el.querySelector('[data-chips]').innerHTML=FKEYS.filter(function(k){return st[k];}).map(function(k){
+        var v=k==='ck'?(CK[st[k]]||{n:st[k]}).n:k==='owner'&&st[k]==='__none'?'No owner':st[k];
+        return '<span class="chip">'+FL[k]+': '+esc(v)+'<button type="button" data-unset="'+k+'" aria-label="Remove '+FL[k]+' filter">×</button></span>';}).join('');
       el.querySelector('[data-pos]').textContent=rows.length?('Page '+(st.page+1)+' of '+fmt(pages)):'';
       el.querySelector('[data-p="-1"]').disabled=st.page===0;el.querySelector('[data-p="1"]').disabled=st.page>=pages-1;
       tb.innerHTML=sl.length?sl.map(function(r){return '<tr data-rec="'+esc(r.id)+'" tabindex="0">'+cfg.cols.map(function(c){return '<td class="'+(c.cls||'')+'">'+c.v(r)+'</td>';}).join('')+'</tr>';}).join('')
@@ -519,11 +645,91 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
     traffic:{h:'Traffic',s:'traffic',cls:'r hide-sm',v:function(r){return r.traffic==null?'<span class="dim">–</span>':'<span class="num">'+fmt(r.traffic)+'</span>';}},
     touch:{h:'Last touch',s:'touch',cls:'hide-sm',v:function(r){return r.touch?'<span class="num">'+esc(r.touch)+'</span>':'<span class="dim">–</span>';}},
     next:{h:'Next step',v:function(r){return r.next?'<div class="ns">'+esc(r.next)+'</div>':'<span class="dim">–</span>';}},
-    country:{h:'Country',s:'country',cls:'hide-sm',v:function(r){return esc(r.country)||'<span class="dim">–</span>';}}
+    country:{h:'Country',s:'country',cls:'hide-sm',v:function(r){return goVal('country',r.country);}},
+    type:{h:'Type',s:'type',cls:'hide-sm',v:function(r){return r.type&&r.type!=='Uncategorized'?goVal('type',r.type):'<span class="dim">–</span>';}},
+    due:{h:'Due',s:'due',v:function(r){if(!r.due)return '<span class="dim">–</span>';var late=r.due<TODAY;return '<span class="num"'+(late?' style="color:var(--s-lost)"':'')+'>'+esc(r.due)+'</span>';}}
   };
+  var TODAY=new Date().toISOString().slice(0,10);
 
   /* ---------- pages ---------- */
   var built={};
+  function buildSites(){
+    RecordTable($('tbl-sites'),{id:'sites',sort:'dr',fl:['client','owner','stage','country','type','drb'],
+      base:function(){return true;},
+      views:[{id:'all',n:'All sites',f:function(){return true;}}].concat(STAGES.map(function(x){return {id:x.n.toLowerCase(),n:x.n,f:function(r){return r.stage===x.n;}};})),
+      cols:[COL.site,COL.stage,COL.owner,COL.clients,COL.type,COL.dr,COL.traffic,COL.country,COL.touch]});
+  }
+  var QUEUES=[
+    {id:'stale',n:'Quiet deals',d:'in talks, no touch for 7+ days',hot:1,f:function(r){var n=daysAgo(r.touch);return r.stage==='Negotiating'&&(n==null||n>=7);}},
+    {id:'due',n:'Next step due',d:'a date in the sheet has come',hot:1,f:function(r){return r.due&&r.due<=TODAY&&r.stage!=='Lost';},empty:'<b>Nothing due</b>Put a date in the sheet’s “Next step due” column and the site shows up here on that day.'},
+    {id:'replied',n:'Replied',d:'wrote back, owner follows up',f:function(r){return r.stage==='Replied';}},
+    {id:'chase',n:'No reply in 14+ days',d:'emailed, worth a follow-up',f:function(r){var n=daysAgo(r.touch);return r.stage==='Contacted'&&n!=null&&n>=14;}},
+    {id:'unowned',n:'New, no owner',d:'needs someone to claim it',f:function(r){return (r.stage==='New'||r.stage==='Researching')&&!r.owner;}}
+  ];
+  function buildTasks(){
+    RecordTable($('tbl-tasks'),{id:'tasks',sort:'touch',dir:1,fl:['client','owner'],
+      base:function(r){return QUEUES.some(function(q){return q.f(r);});},
+      views:QUEUES,
+      cols:[COL.site,COL.stage,COL.owner,COL.clients,COL.touch,COL.next,COL.due]});
+  }
+  function statBtn(n,label,page,f){return '<button type="button" class="sx"'+goA(page,f)+'><b class="num">'+fmt(n)+'</b><span>'+label+'</span></button>';}
+  function buildTeam(){
+    var m={};D.forEach(function(r){var k=r.owner||'__none';(m[k]=m[k]||[]).push(r);});
+    var ks=Object.keys(m).sort(function(a,b){return (a==='__none')-(b==='__none')||m[b].length-m[a].length;});
+    $('team').innerHTML=ks.map(function(k){
+      var rs=m[k],s=stats(rs),none=k==='__none',nm=none?'No owner':k,f='owner='+enc(k);
+      var cls=CLIENTS.filter(function(c){return c.m.split(/\s*&\s*/).indexOf(k)>-1;});
+      var fu=rs.filter(function(r){return r.stage==='Replied';}).length;
+      return '<div class="card cc"><div class="tm-h"><span class="av-lg" aria-hidden="true">'+esc(none?'?':initials(nm))+'</span><div><h3><button type="button" class="lnk"'+goA('sites',f)+' style="color:var(--ink)">'+esc(nm)+'</button></h3><div class="w num">'+fmt(rs.length)+' sites</div></div></div>'+
+        '<div class="st">'+statBtn(s.prospects,'Prospects','prospecting',f)+statBtn(s.talks,'In talks','sites',f+'&stage=Negotiating')+statBtn(s.won,'Partners','sites',f+'&stage=Active')+statBtn(s.lost,'Lost','sites',f+'&stage=Lost')+'</div>'+
+        '<div class="ft"><span>'+(cls.length?cls.map(function(c){return tag(c.n);}).join(''):'<span class="dim">No active client</span>')+'</span>'+
+        (fu?'<button type="button" class="lnk"'+goA('tasks','view=replied&'+f)+'>'+fmt(fu)+' to follow up</button>':'')+'</div></div>';
+    }).join('');
+  }
+  function bars(rows,color){
+    var max=Math.max.apply(null,rows.map(function(r){return r.v;}).concat([1]));
+    return '<div class="funnel">'+rows.map(function(r){var in_='<span>'+esc(r.n)+'</span><div class="bar"><i style="width:'+Math.max(r.v?1.5:0,r.v/max*100).toFixed(1)+'%;background:'+(r.c||color)+'"></i></div><span class="n num">'+fmt(r.v)+'</span>';
+      return r.href?'<a class="fr lk" href="#'+r.href+'">'+in_+'</a>':'<button type="button" class="fr lk"'+goA(r.page||'sites',r.f)+' title="See these sites">'+in_+'</button>';}).join('')+'</div>';
+  }
+  function top(key,n,skip){var m={};D.forEach(function(r){var v=r[key];if(v&&!(skip&&skip[v]))m[v]=(m[v]||0)+1;});
+    return Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(0,n).map(function(v){return {n:v,v:m[v],f:key+'='+enc(v)};});}
+  function rcard(t,sub,body){return '<div class="card"><div class="card-h"><h2>'+t+'</h2><span class="faint">'+sub+'</span></div><div class="card-b">'+body+'</div></div>';}
+  function buildReports(){
+    var st=STAGES.map(function(x){return {n:x.n,v:D.filter(function(r){return r.stage===x.n;}).length,f:'stage='+enc(x.n),c:x.c};});
+    var cl=CLIENTS.map(function(c){return {n:c.n,v:byClient(c.k).length,href:'client-'+slug(c.k)};}).sort(function(a,b){return b.v-a.v;});
+    var drb=['80+','60-79','40-59','20-39','0-19'].map(function(b){return {n:'DR '+b,v:D.filter(function(r){return r.drb===b;}).length,f:'drb='+enc(b)};});
+    var ow={};D.forEach(function(r){if(!r.owner)return;var o=ow[r.owner]=ow[r.owner]||{c:0,r:0};if(r.stage&&r.stage!=='New'&&r.stage!=='Researching')o.c++;if(r.stage==='Replied'||r.stage==='Negotiating'||r.stage==='Active'||r.stage==='Lost')o.r++;});
+    var rr=Object.keys(ow).filter(function(k){return ow[k].c>=10;}).map(function(k){return {n:k,v:Math.round(ow[k].r/ow[k].c*100),f:'owner='+enc(k)};}).sort(function(a,b){return b.v-a.v;});
+    $('reports').innerHTML=
+      rcard('Pipeline by stage',fmt(D.length)+' sites',bars(st))+
+      rcard('Sites per client','click to open the client',bars(cl,'var(--teal)'))+
+      rcard('Affiliate type','top 10',bars(top('type',10,{Uncategorized:1}),'var(--s-neg)'))+
+      rcard('Top traffic country','top 10',bars(top('country',10),'var(--s-contacted)'))+
+      rcard('Domain rating','Ahrefs DR',bars(drb,'var(--accent)'))+
+      rcard('Reply rate by owner','% of emailed sites that wrote back',bars(rr,'var(--s-replied)').replace(/(<span class="n num">)(\d+)(<\/span>)/g,'$1$2%$3'));
+  }
+  function buildClient(sl){
+    var c=CLIENTS.filter(function(x){return slug(x.k)===sl;})[0];
+    if(!c){$('clientPage').innerHTML='<div class="empty"><b>Client not found</b><a href="#clients">Back to clients</a></div>';return;}
+    var rs=byClient(c.k),s=stats(rs),f='ck='+enc(c.k);
+    document.title=c.n+' · PartnerGap CRM';
+    var deals=rs.filter(function(r){return r.stage==='Negotiating'||r.stage==='Active';}).sort(function(a,b){return a.touch<b.touch?1:-1;});
+    var best=rs.filter(function(r){return r.stage==='New'||r.stage==='Researching';}).sort(function(a,b){return (b.dr||0)-(a.dr||0);}).slice(0,10);
+    var li=function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.next||(r.domain||'')+(r.dr!=null&&r.dr!==''?' · DR '+r.dr:''))+'</div></div><div class="w">'+(r.touch?ago(r.touch):esc(r.owner||''))+'</div></button>';};
+    var k=[
+      {l:'Sites',v:s.sites,d:'every site pitched or found',f:f},
+      {l:'Prospects',v:s.prospects,d:'still to win over',f:f,p:'prospecting'},
+      {l:'In talks',v:s.talks,d:'talking terms',f:f+'&stage=Negotiating'},
+      {l:'Partners',v:s.won,d:'agreed to work with us',f:f+'&stage=Active'},
+      {l:'Reply rate',v:s.contacted?Math.round(s.rate*100)+'%':'–',d:fmt(s.replied)+' of '+fmt(s.contacted)+' emailed',f:f+'&stage=Replied'}
+    ];
+    $('clientPage').innerHTML='<div class="phead"><div><h1 id="t-client">'+esc(c.n)+'</h1><p>'+esc(c.w)+' · '+esc(c.mk)+' · managed by '+owners(c.m)+'</p></div>'+
+      '<button type="button" class="btn pri"'+goA('sites',f)+'>See all '+fmt(s.sites)+' sites</button></div>'+
+      '<div class="kpis k5">'+k.map(function(x){return '<a class="card kpi" href="#'+(x.p||'sites')+'"'+goA(x.p||'sites',x.f)+'><div class="l">'+x.l+'</div><div class="v num">'+(typeof x.v==='number'?fmt(x.v):x.v)+'</div><div class="d">'+x.d+'</div></a>';}).join('')+'</div>'+
+      '<div class="two"><div class="card"><div class="card-h"><h2>Deals</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=Negotiating')+'>All in talks</button></div><div class="lst">'+(deals.length?deals.map(li).join(''):'<div class="empty">No deals yet for '+esc(c.n)+'.</div>')+'</div></div>'+
+      '<div class="card"><div class="card-h"><h2>Pipeline</h2><span class="faint num">'+fmt(s.sites)+' sites</span></div><div class="card-b">'+bars(STAGES.map(function(x){return {n:x.n,v:rs.filter(function(r){return r.stage===x.n;}).length,f:f+'&stage='+enc(x.n),c:x.c};}))+'</div></div></div>'+
+      '<div class="card"><div class="card-h"><h2>Best prospects not contacted yet</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=New')+'>See all new</button></div><div class="lst">'+(best.length?best.map(li).join(''):'<div class="empty">No uncontacted sites. The Monday run adds more.</div>')+'</div></div>';
+  }
   function buildProspecting(){
     RecordTable($('tbl-prospecting'),{id:'prospecting',sort:'dr',
       base:function(r){return PROSPECT[r.stage];},
@@ -587,20 +793,19 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
   function byClient(k){return D.filter(function(r){return r.ck.indexOf(k)>-1;});}
   function buildClients(){
     $('ccards').innerHTML=CLIENTS.map(function(c){
-      var s=stats(byClient(c.k));
-      return '<a class="card cc" href="#prospecting" data-client="'+esc(c.n)+'" style="text-decoration:none;color:inherit"><div><h3>'+esc(c.n)+'</h3><div class="w">'+esc(c.w)+'</div></div>'+
-        '<div class="st"><div><b class="num">'+fmt(s.prospects)+'</b><span>Prospects</span></div><div><b class="num">'+s.talks+'</b><span>In talks</span></div><div><b class="num">'+s.won+'</b><span>Partners</span></div><div><b class="num">'+s.lost+'</b><span>Lost</span></div></div>'+
-        '<div class="ft"><span>'+owner(c.m)+'</span><span>'+esc(c.mk)+'</span></div></a>';
+      var s=stats(byClient(c.k)),f='ck='+enc(c.k);
+      return '<div class="card cc"><div><h3><a href="#client-'+slug(c.k)+'">'+esc(c.n)+'</a></h3><div class="w">'+esc(c.w)+'</div></div>'+
+        '<div class="st">'+statBtn(s.prospects,'Prospects','prospecting',f)+statBtn(s.talks,'In talks','sites',f+'&stage=Negotiating')+statBtn(s.won,'Partners','sites',f+'&stage=Active')+statBtn(s.lost,'Lost','sites',f+'&stage=Lost')+'</div>'+
+        '<div class="ft"><span class="mgr">'+owners(c.m)+'</span><span>'+esc(c.mk)+'</span></div>'+
+        '<div class="ft"><a href="#client-'+slug(c.k)+'">Open client</a><button type="button" class="lnk"'+goA('sites',f)+'>'+fmt(s.sites)+' sites</button></div></div>';
     }).join('');
-    $('ccards').querySelectorAll('[data-client]').forEach(function(a){a.addEventListener('click',function(){
-      var sv=store.get('tbl-prospecting')||{};sv.client=a.dataset.client;sv.view='all';store.set('tbl-prospecting',sv);built.prospecting=false;$('tbl-prospecting').innerHTML='';
-    });});
   }
   function buildCampaigns(){
     var rows=CLIENTS.map(function(c){var s=stats(byClient(c.k));s.c=c;return s;}).sort(function(a,b){return b.contacted-a.contacted;});
     $('camps').innerHTML='<thead><tr><th>Campaign</th><th>Owner</th><th class="r">Sites</th><th class="r">Emailed</th><th class="r">Replied</th><th>Reply rate</th><th class="r">In talks</th><th class="r">Won</th><th>Status</th></tr></thead><tbody>'+
-      rows.map(function(s){var live=s.contacted>0;return '<tr><td><span class="nm" style="cursor:default">'+esc(s.c.n)+' partner outreach</span><span class="sm">'+esc(s.c.w)+'</span></td><td>'+owner(s.c.m)+'</td><td class="r num">'+fmt(s.sites)+'</td><td class="r num">'+fmt(s.contacted)+'</td><td class="r num">'+fmt(s.replied)+'</td>'+
-        '<td><div class="rate"><div class="bar"><i style="width:'+(s.rate*100).toFixed(1)+'%"></i></div><span class="num">'+(s.contacted?Math.round(s.rate*100)+'%':'–')+'</span></div></td><td class="r num">'+s.talks+'</td><td class="r num">'+s.won+'</td><td>'+(live?'<span class="pill"><i style="background:var(--s-active)"></i>Running</span>':'<span class="pill"><i style="background:var(--s-new)"></i>Drafts only</span>')+'</td></tr>';}).join('')+'</tbody>';
+      rows.map(function(s){var live=s.contacted>0,f='ck='+enc(s.c.k),n=function(v,ff){return '<button type="button" class="lnk"'+goA('sites',ff)+'>'+fmt(v)+'</button>';};
+        return '<tr><td><a class="nm" href="#client-'+slug(s.c.k)+'" style="text-decoration:none">'+esc(s.c.n)+' partner outreach</a><span class="sm">'+esc(s.c.w)+'</span></td><td>'+owners(s.c.m)+'</td><td class="r">'+n(s.sites,f)+'</td><td class="r num">'+fmt(s.contacted)+'</td><td class="r">'+n(s.replied,f+'&stage=Replied')+'</td>'+
+        '<td><div class="rate"><div class="bar"><i style="width:'+(s.rate*100).toFixed(1)+'%"></i></div><span class="num">'+(s.contacted?Math.round(s.rate*100)+'%':'–')+'</span></div></td><td class="r">'+n(s.talks,f+'&stage=Negotiating')+'</td><td class="r">'+n(s.won,f+'&stage=Active')+'</td><td>'+(live?'<span class="pill"><i style="background:var(--s-active)"></i>Running</span>':'<span class="pill"><i style="background:var(--s-new)"></i>Drafts only</span>')+'</td></tr>';}).join('')+'</tbody>';
     $('camps').querySelectorAll('tbody tr').forEach(function(tr){tr.style.cursor='default';});
   }
   function buildHome(){
@@ -617,7 +822,11 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
     $('homeDeals').innerHTML=open.length?open.slice(0,8).map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.next||'No next step yet')+'</div></div><div class="w">'+ago(r.touch)+'</div></button>';}).join(''):'<div class="empty">No open deals.</div>';
     var tot=D.length,max=0;STAGES.forEach(function(s){s.v=cnt(function(r){return r.stage===s.n;});if(s.v>max)max=s.v;});
     $('pipeTotal').textContent=fmt(tot)+' sites';
-    $('funnel').innerHTML=STAGES.map(function(s){return '<div class="fr" title="'+esc(s.d)+'"><span>'+s.n+'</span><div class="bar"><i style="width:'+Math.max(s.v?1.5:0,s.v/max*100).toFixed(1)+'%;background:'+s.c+'"></i></div><span class="n num">'+fmt(s.v)+'</span></div>';}).join('');
+    $('funnel').outerHTML=bars(STAGES.map(function(s){return {n:s.n,v:s.v,f:'stage='+enc(s.n),c:s.c};}));
+    $('homeQueues').innerHTML=QUEUES.map(function(q){var n=D.filter(q.f).length;return '<button type="button" class="qb'+(q.hot&&n?' hot':'')+'"'+goA('tasks','view='+q.id)+'><b class="num">'+fmt(n)+'</b><strong style="font-weight:500">'+q.n+'</strong><span>'+q.d+'</span></button>';}).join('');
+    var rec=D.filter(function(r){return r.touch;}).sort(function(a,b){return a.touch<b.touch?1:a.touch>b.touch?-1:0;}).slice(0,8);
+    $('homeRecent').innerHTML=rec.map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.stage)+(r.cl.length?' · '+esc(r.cl.join(', ')):'')+(r.owner?' · '+esc(r.owner):'')+'</div></div><div class="w">'+ago(r.touch)+'</div></button>';}).join('');
+    $('homeClients').outerHTML=bars(CLIENTS.map(function(c){return {n:c.n,v:stats(byClient(c.k)).prospects,href:'client-'+slug(c.k)};}).sort(function(a,b){return b.v-a.v;}),'var(--teal)');
     var autos=[
       {n:'Find new sites',w:'Mondays 07:52',d:'Searches Ahrefs for new partner sites for each client and adds them to Prospecting.'},
       {n:'Daily run',w:'Mon–Fri 08:47',d:'Syncs Gmail replies into the sheet and this site, finds contacts and writes test emails. Nothing is sent.'},
@@ -627,7 +836,9 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
   }
   function counts(){
     var s=stats(D);
-    var c={prospecting:s.prospects,partners:s.won,deals:s.talks,clients:CLIENTS.length,campaigns:CLIENTS.length};
+    var own={};D.forEach(function(r){if(r.owner)own[r.owner]=1;});
+    var c={sites:D.length,prospecting:s.prospects,partners:s.won,deals:s.talks,clients:CLIENTS.length,campaigns:CLIENTS.length,
+      tasks:D.filter(function(r){return QUEUES[0].f(r)||QUEUES[1].f(r);}).length,team:Object.keys(own).length};
     document.querySelectorAll('[data-c]').forEach(function(e){var v=c[e.dataset.c];e.textContent=v>=1000?(v/1000).toFixed(1)+'k':v;});
   }
 
@@ -638,7 +849,12 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
       var q=inp.value.trim().toLowerCase();
       if(q.length<2){res.hidden=true;return;}
       var hits=D.filter(function(r){return r.q.indexOf(q)>-1;}).slice(0,12);
-      res.innerHTML=hits.length?hits.map(function(r){return '<button type="button" data-rec="'+esc(r.id)+'">'+pill(r.stage)+'<span>'+esc(r.label)+'</span><span class="g-id">'+esc(r.id)+'</span></button>';}).join(''):'<div class="empty">No matches</div>';
+      var jc=CLIENTS.filter(function(c){return c.n.toLowerCase().indexOf(q)>-1;}).map(function(c){return '<a href="#client-'+slug(c.k)+'"><span class="tag">Client</span>'+esc(c.n)+'</a>';});
+      var ow={};D.forEach(function(r){if(r.owner&&r.owner.toLowerCase().indexOf(q)>-1)ow[r.owner]=1;});
+      var jo=Object.keys(ow).map(function(o){return '<button type="button"'+goA('sites','owner='+enc(o))+'>'+owner(o,true)+'<span class="g-id">all their sites</span></button>';});
+      var jp=[].map.call(document.querySelectorAll('#nav a'),function(a){return a;}).filter(function(a){return a.textContent.toLowerCase().indexOf(q)>-1;}).map(function(a){return '<a href="'+a.getAttribute('href')+'"><span class="tag">Page</span>'+esc(a.childNodes[1].textContent)+'</a>';});
+      var jump=jp.concat(jc,jo);
+      res.innerHTML=(jump.length?'<div class="gk">Go to</div>'+jump.join(''):'')+(hits.length?'<div class="gk">Sites</div>'+hits.map(function(r){return '<button type="button" data-rec="'+esc(r.id)+'">'+pill(r.stage,true)+'<span>'+esc(r.label)+'</span><span class="g-id">'+esc(r.id)+'</span></button>';}).join(''):'')||'<div class="empty">No matches</div>';
       res.hidden=false;
     });
     document.addEventListener('click',function(e){if(!e.target.closest('.gsearch'))res.hidden=true;});
@@ -646,13 +862,16 @@ table.rec{width:100%;border-collapse:collapse;font-size:13.5px}
   })();
 
   /* ---------- routing ---------- */
-  var PAGES={home:buildHome,prospecting:buildProspecting,partners:buildPartners,deals:buildDeals,clients:buildClients,campaigns:buildCampaigns};
+  var PAGES={home:buildHome,sites:buildSites,prospecting:buildProspecting,partners:buildPartners,deals:buildDeals,clients:buildClients,client:function(){},tasks:buildTasks,team:buildTeam,campaigns:buildCampaigns,reports:buildReports};
   function show(){
-    var h=(location.hash||'').slice(1);if(!PAGES[h])h='home';
+    var h=(location.hash||'').slice(1),sub='';if(h.indexOf('client-')===0){sub=h.slice(7);h='client';}if(!PAGES[h])h='home';
+    closeRecord(true);
     document.querySelectorAll('[data-page]').forEach(function(p){p.hidden=p.dataset.page!==h;});
-    document.querySelectorAll('#nav a').forEach(function(a){var on=a.getAttribute('href')==='#'+h;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+    var navh=h==='client'?'clients':h;
+    document.querySelectorAll('#nav a').forEach(function(a){var on=a.getAttribute('href')==='#'+navh;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
     var t=document.getElementById('t-'+h);document.title=(t?t.textContent+' · ':'')+'PartnerGap CRM';
-    if(D.length&&!built[h]){PAGES[h]();built[h]=true;}
+    if(D.length&&h==='client'){buildClient(sub);}
+    else if(D.length&&!built[h]){PAGES[h]();built[h]=true;}
     window.scrollTo(0,0);
   }
   addEventListener('hashchange',show);
