@@ -277,6 +277,11 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
 .m-h h2{margin:0;font-size:17px;font-weight:500}
 .m-h .x{margin-left:auto;border:0;background:none;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-2)}
 .m-b{padding:16px 20px}
+.rep-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.rep{border:1px solid var(--line);border-radius:6px;padding:14px 16px;max-height:55vh;overflow:auto;background:var(--bg)}
+.rep h3{font-size:13px;margin:14px 0 6px;color:var(--ink)}.rep h3:first-child{margin-top:0}
+.rep table{width:100%;border-collapse:collapse;font-size:13px}.rep td{padding:4px 0;border-bottom:1px solid var(--line);vertical-align:top}.rep td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:12px}
+.rep ul{margin:0;padding-left:18px;font-size:13px}.rep li{margin:3px 0}
 .mform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mform label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2);min-width:0}
 .mform .w{grid-column:1/-1}
@@ -1098,7 +1103,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       {l:'Reply rate',v:s.contacted?Math.round(s.rate*100)+'%':'–',d:fmt(s.replied)+' of '+fmt(s.contacted)+' emailed',f:f+'&stage=Replied'}
     ];
     $('clientPage').innerHTML='<div class="phead"><div><h1 id="t-client">'+esc(c.n)+'</h1><p>'+esc(c.w)+' · '+esc(c.mk)+' · managed by '+owners(c.m)+'</p></div>'+
-      '<button type="button" class="btn pri"'+goA('sites',f)+'>See all '+fmt(s.sites)+' sites</button></div>'+
+      '<div class="rep-top"><button type="button" class="btn" id="repBtn">Monthly report</button><button type="button" class="btn pri"'+goA('sites',f)+'>See all '+fmt(s.sites)+' sites</button></div></div>'+
       '<div class="kpis k5">'+k.map(function(x){return '<a class="card kpi" href="#'+(x.p||'sites')+'"'+goA(x.p||'sites',x.f)+'><div class="l">'+x.l+'</div><div class="v num">'+(typeof x.v==='number'?fmt(x.v):x.v)+'</div><div class="d">'+x.d+'</div></a>';}).join('')+'</div>'+
       '<div class="two"><div class="card"><div class="card-h"><h2>Deals</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=Negotiating')+'>All in talks</button></div><div class="lst">'+(deals.length?deals.map(li).join(''):'<div class="empty">No deals yet for '+esc(c.n)+'.</div>')+'</div></div>'+
       '<div class="card"><div class="card-h"><h2>Pipeline</h2><span class="faint num">'+fmt(s.sites)+' sites</span></div><div class="card-b">'+bars(STAGES.map(function(x){return {n:x.n,v:rs.filter(function(r){return r.stage===x.n;}).length,f:f+'&stage='+enc(x.n),c:x.c};}))+'</div></div></div>'+
@@ -1106,6 +1111,36 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       '<div class="card"><div class="card-h"><h2>Partners</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=Active')+'>All partners</button></div><div class="lst">'+(won.length?won.map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(dealTxt(r)||'Deal terms not set')+(r.url?' · live':'')+'</div></div><div class="w">'+(r.value!=null?money(r.value):'')+'</div></button>';}).join(''):'<div class="empty">No partners yet for '+esc(c.n)+'.</div>')+'</div></div></div>'+
       '<div class="card"><div class="card-h"><h2>Best prospects not contacted yet</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=New')+'>See all new</button></div><div class="lst">'+(best.length?best.map(li).join(''):'<div class="empty">No uncontacted sites. The Monday run adds more.</div>')+'</div></div>';
     if(LIVE&&$('progEdit'))$('progEdit').addEventListener('click',function(){progForm(c);});
+    $('repBtn').addEventListener('click',function(){clientReport(c,new Date().toISOString().slice(0,7));});
+  }
+  /* Monthly report for a client: what moved this month plus where the pipeline stands, ready to paste into an email. */
+  function clientReport(c,ym){
+    var rs=byClient(c.k),s=stats(rs),inM=function(d){return !!d&&String(d).slice(0,7)===ym;};
+    var mName=new Date(ym+'-15').toLocaleString('en-GB',{month:'long',year:'numeric'});
+    var touched=rs.filter(function(r){return inM(r.touch);});
+    var by=function(st){return touched.filter(function(r){return r.stage===st;});};
+    var live=rs.filter(function(r){return inM(r.live);}),talks=rs.filter(function(r){return r.stage==='Negotiating';}),act=rs.filter(function(r){return r.stage==='Active';});
+    var val=act.reduce(function(a,r){return a+(r.value||0);},0);
+    var rows=[['Sites worked on this month',touched.length],['Waiting for a reply',by('Contacted').length],['Replied',by('Replied').length+by('Negotiating').length+by('Active').length+by('Lost').length],
+      ['In talks now',talks.length],['Partners signed (all time)',act.length],['Placements live this month',live.length],['Agreed deal value (all partners)',val?money(val):'–']];
+    var nm=function(r){return r.label+(r.domain&&r.label!==r.domain?' ('+r.domain+')':'');};
+    var html='<h3>'+esc(c.n)+' affiliate report, '+esc(mName)+'</h3><table>'+rows.map(function(x){return '<tr><td>'+x[0]+'</td><td class="n">'+(typeof x[1]==='number'?fmt(x[1]):esc(x[1]))+'</td></tr>';}).join('')+'</table>'+
+      '<h3>Live placements</h3>'+(live.length?'<ul>'+live.map(function(r){return '<li>'+esc(nm(r))+(r.url?': '+esc(r.url):'')+'</li>';}).join('')+'</ul>':'<p class="faint">None went live this month.</p>')+
+      '<h3>Deals in talks</h3>'+(talks.length?'<ul>'+talks.slice(0,15).map(function(r){return '<li>'+esc(nm(r))+(r.next?': '+esc(r.next):'')+'</li>';}).join('')+'</ul>':'<p class="faint">No deals in talks.</p>')+
+      '<h3>Pipeline</h3><p>'+fmt(s.sites)+' sites in total, '+fmt(s.contacted)+' contacted, '+(s.contacted?Math.round(s.rate*100):0)+'% reply rate.</p>';
+    var txt=c.n+' affiliate report, '+mName+'\n\n'+rows.map(function(x){return x[0]+': '+(typeof x[1]==='number'?fmt(x[1]):x[1]);}).join('\n')+
+      '\n\nLive placements\n'+(live.length?live.map(function(r){return '- '+nm(r)+(r.url?': '+r.url:'');}).join('\n'):'None went live this month.')+
+      '\n\nDeals in talks\n'+(talks.length?talks.slice(0,15).map(function(r){return '- '+nm(r)+(r.next?': '+r.next:'');}).join('\n'):'No deals in talks.')+
+      '\n\nPipeline\n'+fmt(s.sites)+' sites in total, '+fmt(s.contacted)+' contacted, '+(s.contacted?Math.round(s.rate*100):0)+'% reply rate.';
+    var months=[];for(var i=0;i<6;i++){var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);months.push(d.toISOString().slice(0,7));}
+    modal('Monthly report','<div class="rep-top"><label class="faint" for="repM">Month</label><select id="repM">'+months.map(function(m){return '<option value="'+m+'"'+(m===ym?' selected':'')+'>'+new Date(m+'-15').toLocaleString('en-GB',{month:'long',year:'numeric'})+'</option>';}).join('')+'</select><button type="button" class="btn pri" id="repCopy">Copy as text</button></div><div class="rep" id="repBody">'+html+'</div>'+
+      '<p class="faint" style="margin-top:8px">Counts use each site\'s last touch date, so a site touched again later counts in the later month.</p>');
+    $('repM').addEventListener('change',function(){clientReport(c,this.value);});
+    $('repCopy').addEventListener('click',function(){
+      var done=function(){toast('Report copied. Paste it into your email to '+c.n+'.');};
+      var fall=function(){var r=document.createRange();r.selectNodeContents($('repBody'));var sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('Press Ctrl+C (or Cmd+C) to copy the selected report.');};
+      try{navigator.clipboard.writeText(txt).then(done,fall);}catch(e){fall();}
+    });
   }
   function buildProspecting(){
     RecordTable($('tbl-prospecting'),{id:'prospecting',sort:'dr',
