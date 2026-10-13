@@ -250,6 +250,68 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
 .gres a:hover,.gres a:focus{background:var(--panel-2)}
 .gres .gk{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:8px 12px 2px}
 .rec td.r .lnk{font-variant-numeric:tabular-nums}
+/* editing */
+.ro-note{font-size:12.5px;color:var(--faint);background:var(--panel-2);border-radius:6px;padding:8px 10px}
+.egrp{display:flex;flex-direction:column;gap:10px}
+.egrp+.egrp{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.egrp h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.egrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.ef{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2);min-width:0}
+.ef.w{grid-column:1/-1}
+.ef input,.ef select,.ef textarea,.mform input,.mform select,.mform textarea,.logf input,.logf select{font:inherit;font-size:13.5px;color:var(--ink);padding:7px 10px;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);width:100%;min-width:0}
+.ef textarea,.mform textarea{resize:vertical;min-height:64px}
+.ef input:focus,.ef select:focus,.ef textarea:focus,.mform input:focus,.mform select:focus,.mform textarea:focus,.logf input:focus,.logf select:focus{outline:2px solid var(--teal);outline-offset:0;border-color:transparent}
+.ef .pre{position:relative}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.facts div{background:var(--panel-2);border-radius:6px;padding:8px 10px;min-width:0}
+.facts dt{font-size:11px;color:var(--ink-2);margin:0}
+.facts dd{margin:2px 0 0;font-size:13.5px;overflow-wrap:anywhere}
+.logf{display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.sm{padding:2px 8px;font-size:12px}
+.dirty-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px}
+/* modal + toast */
+.mscrim{position:fixed;inset:0;background:rgba(15,26,36,.45);z-index:40}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100% - 32px));max-height:calc(100% - 48px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;z-index:41;box-shadow:var(--shadow)}
+.m-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.m-h h2{margin:0;font-size:17px;font-weight:500}
+.m-h .x{margin-left:auto;border:0;background:none;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-2)}
+.m-b{padding:16px 20px}
+.mform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mform label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2);min-width:0}
+.mform .w{grid-column:1/-1}
+.mform .acts{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.cpick{display:flex;flex-wrap:wrap;gap:6px}
+.cpick label{flex-direction:row;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line-2);border-radius:999px;font-size:13px;color:var(--ink);cursor:pointer}
+.cpick input{width:auto;margin:0}
+.cpick label:has(input:checked){background:var(--teal-soft);border-color:var(--teal)}
+.warn{border:1px solid var(--s-replied);background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.warn b{font-weight:600}
+.err{color:var(--s-lost);font-size:13px}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.people button{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);cursor:pointer;font:inherit;color:var(--ink)}
+.people button:hover{border-color:var(--teal)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:13.5px;z-index:50;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.toast.bad{background:var(--s-lost);color:#fff}
+/* bulk + board */
+.rec th.ck,.rec td.ck{width:34px;padding-right:0}
+.rec input[type=checkbox]{width:16px;height:16px;cursor:pointer}
+.bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:var(--accent-soft);border-bottom:1px solid var(--line);font-size:13px}
+.bulk select{padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--panel);font:inherit;font-size:13px}
+.col-b.over{outline:2px dashed var(--teal);outline-offset:-4px}
+.dc[draggable=true]{cursor:grab}
+.dc.dragging{opacity:.45}
+.col-h .sum{font-size:12px;color:var(--ink-2)}
+.dchip{display:inline-block;font-size:12px;padding:1px 7px;border-radius:4px;background:var(--accent-soft);color:var(--ink);align-self:flex-start}
+.me{display:inline-flex;align-items:center;gap:6px}
+.me .av{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:600}
+.sync{display:block;margin-top:8px;color:var(--side-ink)}
+.prog{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 12px;font-size:13.5px;margin:0}
+.prog dt{color:var(--ink-2)}.prog dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.scope{display:inline-flex;border:1px solid var(--line-2);border-radius:6px;overflow:hidden}
+.scope button{border:0;background:var(--panel);padding:4px 10px;cursor:pointer;font-size:12.5px}
+.scope button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+@media (max-width:560px){.egrid,.mform{grid-template-columns:minmax(0,1fr)}.facts{grid-template-columns:repeat(2,minmax(0,1fr))}.logf{grid-template-columns:minmax(0,1fr)}}
 .note{font-size:12.5px;color:var(--faint);padding:0 16px 14px}
 .loading{padding:40px;text-align:center;color:var(--ink-2)}
 
@@ -285,12 +347,13 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
     <a href="#clients"><svg viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Clients<span class="cnt num" data-c="clients"></span></a>
     <div class="grp">Work</div>
     <a href="#tasks"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/></svg>Tasks<span class="cnt num" data-c="tasks"></span></a>
+    <a href="#changes"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>Change log<span class="cnt num" data-c="changes"></span></a>
     <a href="#team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2a5 5 0 016 4.8"/></svg>Team<span class="cnt num" data-c="team"></span></a>
     <div class="grp">Marketing</div>
     <a href="#campaigns"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2z"/><path d="M16 8a5 5 0 010 8"/></svg>Campaigns<span class="cnt num" data-c="campaigns"></span></a>
     <a href="#reports"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</a>
   </nav>
-  <div class="side-foot"><b>Data</b> from the CRM sheet, synced by the daily run.<br>Outreach is in <b>test mode</b>: nothing is sent.<br><a class="signout" href="/logout">Sign out</a></div>
+  <div class="side-foot"><b>Data</b> from the CRM sheet, synced by the daily run.<br>Outreach is in <b>test mode</b>: nothing is sent.<a class="sync" id="syncnote" href="#changes" hidden></a><a class="signout" href="/logout">Sign out</a></div>
 </aside>
 
 <div class="main">
@@ -301,6 +364,8 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       <div class="gres" id="gres" hidden></div>
     </div>
     <span class="testbadge" title="The daily run writes test emails to a file and sends nothing">● Test mode</span>
+    <button class="btn pri" type="button" id="addbtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add site</button>
+    <button class="btn" type="button" id="mebtn" hidden></button>
     <a class="btn" href="https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>Open CRM sheet</a>
   </header>
 
@@ -315,7 +380,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
         </div>
         <div class="card">
           <div class="card-h"><h2>Pipeline</h2><span class="faint num" id="pipeTotal"></span></div>
-          <div class="card-b"><div class="funnel" id="funnel"></div></div>
+          <div class="card-b" id="funnel"></div>
         </div>
       </div>
       <div class="card">
@@ -329,7 +394,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
         </div>
         <div class="card">
           <div class="card-h"><h2>Clients at a glance</h2><a class="linkbtn" href="#clients">All clients</a></div>
-          <div class="card-b"><div class="funnel" id="homeClients"></div></div>
+          <div class="card-b" id="homeClients"></div>
         </div>
       </div>
       <div class="card">
@@ -389,6 +454,11 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       </div>
     </section>
 
+    <section class="page" data-page="changes" aria-labelledby="t-changes" hidden>
+      <div class="phead"><div><h1 id="t-changes">Change log</h1><p>Every edit made on this site. The daily run copies waiting changes into the Google Sheet each weekday morning.</p></div></div>
+      <div class="card"><div class="tbl-wrap"><table class="rec" id="changesTbl"></table></div></div>
+    </section>
+
     <section class="page" data-page="reports" aria-labelledby="t-reports" hidden>
       <div class="phead"><div><h1 id="t-reports">Reports</h1><p>How the CRM breaks down. Click any bar to see the sites behind it.</p></div></div>
       <div class="grid2" id="reports"></div>
@@ -401,6 +471,10 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title" hidden></aside>
+<div class="mscrim" id="mscrim" hidden></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<datalist id="dl-clients"></datalist><datalist id="dl-types"></datalist>
 
 <!--PARTNER_DATA-->
 <script>
@@ -439,18 +513,74 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
   var store={get:function(k){try{return JSON.parse(localStorage.getItem('pgcrm-'+k)||'null');}catch(e){return null;}},set:function(k,v){try{localStorage.setItem('pgcrm-'+k,JSON.stringify(v));}catch(e){}}};
 
   var D=[];
-  /* row: [id, domain, name, type, DR, traffic, owner, stage, lastTouch, clients, country, contacts, nextStep, nextDue] */
-  function prep(rows){
-    D=rows.map(function(r){
-      var o={id:r[0],domain:r[1]||'',name:r[2]||'',type:r[3]||'',dr:r[4],traffic:r[5],owner:r[6]||'',stage:r[7]||'',touch:r[8]||'',country:r[10]||'',contacts:r[11]||0,next:r[12]||'',due:r[13]||''};
-      o.cl=(r[9]||'').split(/\s*[,\/]\s*/).filter(Boolean);
-      o.ck=o.cl.map(clientKey);
-      o.label=o.name||o.domain||'Creator (free email)';
-      o.drb=o.dr==null||o.dr===''?'':o.dr>=80?'80+':o.dr>=60?'60-79':o.dr>=40?'40-59':o.dr>=20?'20-39':'0-19';
-      o.q=(o.id+' '+o.domain+' '+o.name+' '+o.next).toLowerCase();
-      return o;
-    });
+  /* The signed-in site can edit; the snapshot copy in Claude (window.PARTNERS) is read-only. */
+  var LIVE=!window.PARTNERS;
+  var TEAM=['Jonas','Vik','Kamile','Eivyda','Monica','Mantvydas','Gaby','Sandra','Tomas'];
+  var STAGE_NAMES=['New','Researching','Contacted','Replied','Negotiating','Active','Lost'];
+  var DEAL_MODELS=['Commission (CPA)','Revenue share','Flat fee','Flat fee + commission','Free placement','Gifted product'];
+  var ACT_TYPES=['Email','Call','Meeting','Note','Deal update','Content live'];
+  var PROGRAMS={},PENDING=0;
+  var me=store.get('me')||'';
+  /* row: [id, domain, name, type, DR, traffic, owner, stage, lastTouch, clients, country, contacts, nextStep, nextDue,
+           dealModel, dealFlat, dealPct, dealValue, liveDate, contentUrl] */
+  function prepOne(r){
+    var o={id:r[0],domain:r[1]||'',name:r[2]||'',type:r[3]||'',dr:r[4],traffic:r[5],owner:r[6]||'',stage:r[7]||'',touch:r[8]||'',country:r[10]||'',contacts:r[11]||0,next:r[12]||'',due:r[13]||'',
+      model:r[14]||'',flat:r[15]==null||r[15]===''?null:+r[15],pct:r[16]==null||r[16]===''?null:+r[16],value:r[17]==null||r[17]===''?null:+r[17],live:r[18]||'',url:r[19]||''};
+    o.clients=r[9]||'';
+    o.cl=o.clients.split(/\s*[,\/]\s*/).filter(Boolean);
+    o.ck=o.cl.map(clientKey);
+    o.label=o.name||o.domain||'Creator (free email)';
+    o.drb=o.dr==null||o.dr===''?'':o.dr>=80?'80+':o.dr>=60?'60-79':o.dr>=40?'40-59':o.dr>=20?'20-39':'0-19';
+    o.q=(o.id+' '+o.domain+' '+o.name+' '+o.next).toLowerCase();
+    return o;
   }
+  function prep(rows){D=rows.map(prepOne);fillLists();}
+  /* full D1 partner row -> list row */
+  function toRow(P){return [P.id,P.domain||'',P.name||'',P.type||'',P.dr,P.traffic,P.owner||'',P.stage||'',P.last_touch||'',P.clients||'',P.country||'',P.contacts||0,P.next_step||'',P.next_due||'',
+    P.deal_model||'',P.deal_flat,P.deal_pct,P.deal_value,P.live_date||'',P.content_url||''];}
+  function setRow(arr){var o=prepOne(arr);for(var i=0;i<D.length;i++)if(D[i].id===o.id){D[i]=o;return o;}D.push(o);return o;}
+  function fillLists(){
+    var cl={},ty={};CLIENTS.forEach(function(c){cl[c.n]=1;});D.forEach(function(r){r.cl.forEach(function(c){cl[c]=1;});if(r.type)ty[r.type]=1;});
+    $('dl-clients').innerHTML=Object.keys(cl).sort().map(function(c){return '<option value="'+esc(c)+'">';}).join('');
+    $('dl-types').innerHTML=Object.keys(ty).sort().map(function(c){return '<option value="'+esc(c)+'">';}).join('');
+  }
+  function money(v){return v==null||v===''||isNaN(v)?'':'$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:2});}
+  function dealTxt(r){var t=[];if(r.flat!=null)t.push(money(r.flat));if(r.pct!=null)t.push(r.pct+'%');return (r.model||'')+(t.length?(r.model?' · ':'')+t.join(' + '):'');}
+
+  /* ---------- talking to the server ---------- */
+  function api(method,url,data){
+    return fetch(url,{method:method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:data?JSON.stringify(Object.assign({by:me},data)):undefined})
+      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){
+        if(r.status===401){location.href='/login?next='+encodeURIComponent(location.pathname+location.hash);throw new Error('Please sign in again.');}
+        if(!r.ok&&r.status!==409)throw new Error(j.error||('Could not save ('+r.status+'). Try again.'));
+        j._status=r.status;return j;});});
+  }
+  var toastT;
+  function toast(msg,bad){var t=$('toast');t.textContent=msg;t.className='toast'+(bad?' bad':'');t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},bad?6000:3500);}
+  function syncNote(n){if(n!=null)PENDING=n;var a=$('syncnote');if(!a)return;a.hidden=!LIVE;a.textContent=PENDING?PENDING+' change'+(PENDING===1?'':'s')+' waiting to sync to the sheet':'Sheet is up to date with this site';
+    var c=document.querySelector('[data-c="changes"]');if(c)c.textContent=PENDING||'';}
+  function loadPending(){if(LIVE)api('GET','/api/edits').then(function(j){syncNote(j.pending||0);}).catch(function(){});}
+
+  /* ---------- modal ---------- */
+  var mFocus=null;
+  function modal(title,inner){
+    if($('modal').hidden)mFocus=document.activeElement;
+    $('modal').innerHTML='<div class="m-h"><h2 id="m-title">'+esc(title)+'</h2><button class="x" type="button" data-mclose aria-label="Close">×</button></div><div class="m-b">'+inner+'</div>';
+    $('modal').hidden=false;$('mscrim').hidden=false;
+    var f=$('modal').querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea,button:not([data-mclose])');if(f)f.focus();
+  }
+  function closeModal(){if($('modal').hidden)return;$('modal').hidden=true;$('mscrim').hidden=true;$('modal').innerHTML='';if(mFocus&&mFocus.focus)mFocus.focus();}
+  $('mscrim').addEventListener('click',closeModal);
+  $('modal').addEventListener('click',function(e){if(e.target.closest('[data-mclose]'))closeModal();});
+
+  /* who is editing (the login is one shared password, so each person picks their name once) */
+  function meChip(){var b=$('mebtn');b.hidden=!LIVE;b.innerHTML=me?'<span class="me"><span class="av" aria-hidden="true">'+esc(initials(me))+'</span>'+esc(me)+'</span>':'Who are you?';b.title=me?'You are editing as '+me+'. Click to change.':'Pick your name so edits show who made them';}
+  function pickMe(cb){
+    modal('Who are you?','<p class="muted" style="margin:0 0 12px">Edits on this site are signed with your name, and Home can show your own work.</p><div class="people">'+TEAM.map(function(n){return '<button type="button" data-me="'+esc(n)+'"><span class="me"><span class="av" aria-hidden="true">'+esc(initials(n))+'</span>'+esc(n)+'</span></button>';}).join('')+'</div>');
+    $('modal').querySelectorAll('[data-me]').forEach(function(b){b.addEventListener('click',function(){me=b.dataset.me;store.set('me',me);meChip();closeModal();if(built.home){built.home=false;if(curPage==='home')rerender();}if(cb)cb();});});
+  }
+  function needMe(cb){if(me)cb();else pickMe(cb);}
+  $('mebtn').addEventListener('click',function(){pickMe();});
   function initials(s){return (s||'?').split(/\s+/).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();}
   /* clickable bits: data-go="page" data-f="key=value&..." opens that list filtered */
   function enc(v){return encodeURIComponent(v);}
@@ -474,46 +604,92 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
   function ago(d){var n=daysAgo(d);if(n==null)return '<span class="dim">–</span>';return n<=0?'today':n===1?'yesterday':n+' days ago';}
 
   /* ---------- record drawer ---------- */
-  var lastFocus=null;
-  function openRecord(id){
-    var r=D.filter(function(x){return x.id===id;})[0];if(!r)return;
-    lastFocus=document.activeElement;
-    var row=parseInt(r.id.replace(/\D/g,''),10)+1;
-    var live=!window.PARTNERS;
-    var dr=$('drawer');
-    dr.innerHTML='<div class="dr-h"><div class="av" aria-hidden="true">'+esc(initials(r.label))+'</div><div style="min-width:0"><h2 id="dr-title">'+esc(r.label)+'</h2><div class="faint">'+esc(r.id)+(r.domain?' · <a href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">'+esc(r.domain)+'</a>':'')+'</div><div style="margin-top:8px">'+pill(r.stage)+'</div></div><button class="x" type="button" id="drx" aria-label="Close">×</button></div>'+
-      '<div class="dr-b">'+
-      '<section class="sec"><h3>About</h3><p class="about faint" id="dr-about">'+(live?'Loading what they do…':(r.type&&r.type!=='Uncategorized'?esc(r.type):''))+'</p></section>'+
-      (r.next?'<div class="next"><div class="l">Next step'+(r.due?' · due '+esc(r.due):'')+'</div><div>'+esc(r.next)+'</div></div>':'')+
-      '<section class="sec"><h3>Contacts <span class="faint" id="dr-cn">'+r.contacts+'</span></h3><div id="dr-contacts" class="faint">'+(live?'Loading…':'Open the sheet for contacts.')+'</div></section>'+
-      '<section class="sec"><h3>Details</h3><dl class="props">'+
+  var lastFocus=null,curRec=null;
+  function opt(list,v,blank){var h=blank!=null?'<option value="">'+esc(blank)+'</option>':'',seen=!v;list.forEach(function(x){if(x===v)seen=true;h+='<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>';});if(!seen)h+='<option selected>'+esc(v)+'</option>';return h;}
+  function ef(label,inner,wide){return '<label class="ef'+(wide?' w':'')+'"><span>'+label+'</span>'+inner+'</label>';}
+  function inp(name,v,attrs){return '<input name="'+name+'" value="'+esc(v==null?'':v)+'" '+(attrs||'')+'>';}
+  function facts(r){
+    return '<dl class="facts">'+
+      '<div><dt>Last touch</dt><dd>'+(r.touch?esc(r.touch):'<span class="dim">Never</span>')+'</dd></div>'+
+      '<div><dt>Domain rating</dt><dd class="num">'+(r.dr==null||r.dr===''?'–':goVal('drb',r.drb,String(r.dr)))+'</dd></div>'+
+      '<div><dt>Traffic</dt><dd class="num">'+(r.traffic==null||r.traffic===''?'–':fmt(r.traffic))+'</dd></div>'+
+      '<div><dt>Top country</dt><dd>'+(r.country?goVal('country',r.country):'–')+'</dd></div>'+
+      '</dl>';
+  }
+  function staticDetails(r){
+    return '<section class="sec"><h3>Details</h3><dl class="props">'+
       '<dt>Owner</dt><dd>'+owner(r.owner)+'</dd>'+
       '<dt>Clients</dt><dd>'+tags(r.cl)+'</dd>'+
       '<dt>Last touch</dt><dd>'+(r.touch?esc(r.touch)+' <span class="faint">('+ago(r.touch)+')</span>':'<span class="dim">Never contacted</span>')+'</dd>'+
       '<dt>Type</dt><dd>'+(r.type&&r.type!=='Uncategorized'?goVal('type',r.type):'–')+'</dd>'+
+      (dealTxt(r)?'<dt>Deal</dt><dd>'+esc(dealTxt(r))+'</dd>':'')+
+      (r.value!=null?'<dt>Deal value</dt><dd class="num">'+money(r.value)+'</dd>':'')+
+      (r.url?'<dt>Placement</dt><dd><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a></dd>':'')+
+      (r.live?'<dt>Went live</dt><dd>'+esc(r.live)+'</dd>':'')+
       '<dt>Domain rating</dt><dd class="num">'+(r.dr==null||r.dr===''?'–':goVal('drb',r.drb,String(r.dr)))+'</dd>'+
       '<dt>Organic traffic</dt><dd class="num">'+(r.traffic==null?'–':fmt(r.traffic))+'</dd>'+
       '<dt>Top country</dt><dd>'+(r.country?goVal('country',r.country):'–')+'</dd>'+
-      '<dt id="dr-found-l" hidden>Found via</dt><dd id="dr-found" hidden></dd>'+
-      '</dl></section>'+
-      '<section class="sec" id="dr-act-s" hidden><h3>Activity</h3><ol class="tl" id="dr-act"></ol></section>'+
-      '<section class="sec" id="dr-notes-s" hidden><h3>Notes</h3><div class="notes" id="dr-notes"></div></section>'+
+      '</dl><p class="ro-note">This is a read-only snapshot. Edit records on the signed-in CRM site.</p></section>';
+  }
+  function editForm(P){
+    return '<div class="egrp"><h3>Pipeline</h3><div class="egrid">'+
+      ef('Stage','<select name="stage">'+opt(STAGE_NAMES,P.stage||'')+'</select>')+
+      ef('Owner','<select name="owner">'+opt(TEAM,P.owner||'','No owner')+'</select>')+
+      ef('Clients',inp('clients',P.clients,'list="dl-clients" placeholder="e.g. Soro, TransferGO" autocomplete="off"'))+
+      ef('Type',inp('type',P.type,'list="dl-types" autocomplete="off"'))+
+      '</div></div>'+
+      '<div class="egrp"><h3>Next step</h3><div class="egrid">'+
+      ef('What happens next',inp('next_step',P.next_step,'placeholder="e.g. Send contract, chase on Friday"'),1)+
+      ef('Due',inp('next_due',P.next_due,'type="date"'))+
+      '</div></div>'+
+      '<div class="egrp"><h3>Affiliate deal</h3><div class="egrid">'+
+      ef('Deal type','<select name="deal_model">'+opt(DEAL_MODELS,P.deal_model||'','Not agreed yet')+'</select>')+
+      ef('Deal value (USD)',inp('deal_value',P.deal_value,'inputmode="decimal" placeholder="Expected value"'))+
+      ef('Flat fee (USD)',inp('deal_flat',P.deal_flat,'inputmode="decimal" placeholder="e.g. 300"'))+
+      ef('Commission %',inp('deal_pct',P.deal_pct,'inputmode="decimal" placeholder="e.g. 30"'))+
+      ef('Tracking / Everflow ID',inp('tracking_id',P.tracking_id,'placeholder="Partner ID or tracking link"'),1)+
+      '</div></div>'+
+      '<div class="egrp"><h3>Placement</h3><div class="egrid">'+
+      ef('Content link',inp('content_url',P.content_url,'type="url" placeholder="https://… where we are featured"'),1)+
+      ef('Went live on',inp('live_date',P.live_date,'type="date"'))+
+      '</div></div>'+
+      '<p class="err" id="dr-err" hidden></p>'+
+      (P.updated_at?'<p class="faint" style="margin:10px 0 0;font-size:12px">Last edited on the site by '+esc(P.updated_by||'someone')+', '+esc(String(P.updated_at).slice(0,10))+'.</p>':'');
+  }
+  function openRecord(id){
+    var r=D.filter(function(x){return x.id===id;})[0];if(!r)return;
+    if($('drawer').hidden)lastFocus=document.activeElement;
+    curRec=r;
+    var isNew=/^NEW-/.test(r.id),row=parseInt(r.id.replace(/\D/g,''),10)+1;
+    var dr=$('drawer');
+    dr.innerHTML='<div class="dr-h"><div class="av" aria-hidden="true">'+esc(initials(r.label))+'</div><div style="min-width:0"><h2 id="dr-title">'+esc(r.label)+'</h2><div class="faint">'+esc(r.id)+(r.domain?' · <a href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">'+esc(r.domain)+'</a>':'')+'</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap" id="dr-pills">'+pill(r.stage)+(isNew?'<span class="pill" title="The next daily run gives it a PG number in the sheet">Not in the sheet yet</span>':'')+'</div></div><button class="x" type="button" id="drx" aria-label="Close">×</button></div>'+
+      '<div class="dr-b">'+
+      '<section class="sec"><h3>About</h3><p class="about faint" id="dr-about">'+(LIVE?'Loading what they do…':(r.type&&r.type!=='Uncategorized'?esc(r.type):''))+'</p></section>'+
+      (LIVE?'':(r.next?'<div class="next"><div class="l">Next step'+(r.due?' · due '+esc(r.due):'')+'</div><div>'+esc(r.next)+'</div></div>':''))+
+      (LIVE?'<section class="sec">'+facts(r)+'</section><form class="sec" id="dr-form" novalidate><div id="dr-fields"><p class="faint">Loading…</p></div></form>':staticDetails(r))+
+      '<section class="sec"><h3>Contacts <span class="faint" id="dr-cn">'+r.contacts+'</span>'+(LIVE?' <button type="button" class="lnk" id="dr-addc" style="float:right;text-transform:none;letter-spacing:0;font-weight:400">+ Add contact</button>':'')+'</h3><div id="dr-cform" hidden></div><div id="dr-contacts" class="faint">'+(LIVE?'Loading…':'Open the sheet for contacts.')+'</div></section>'+
+      '<section class="sec" id="dr-act-s"'+(LIVE?'':' hidden')+'><h3>Activity</h3>'+(LIVE?'<form class="logf" id="dr-log"><select name="type" aria-label="What happened">'+opt(ACT_TYPES,'Note')+'</select><input name="summary" placeholder="What happened? e.g. Called Rob, he wants $500 upfront" aria-label="Summary" maxlength="2000"><button class="btn" type="submit">Log</button></form>':'')+'<ol class="tl" id="dr-act"></ol></section>'+
+      '<section class="sec" id="dr-notes-s" hidden><h3>Notes from the sheet</h3><div class="notes" id="dr-notes"></div></section>'+
       '</div>'+
-      '<div class="dr-f"><a class="btn pri" href="'+SHEET+'#gid=0&range=A'+row+'" target="_blank" rel="noopener">Edit in sheet</a>'+(r.domain?'<a class="btn" href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">Visit site</a>':'')+'</div>';
+      '<div class="dr-f">'+(LIVE?'<button class="btn pri" type="submit" form="dr-form" id="dr-save" disabled>Save changes</button>':'')+
+      (isNew?'':'<a class="btn" href="'+SHEET+'#gid=0&range=A'+row+'" target="_blank" rel="noopener">Open in sheet</a>')+
+      (r.domain?'<a class="btn" href="https://'+esc(r.domain)+'" target="_blank" rel="noopener">Visit site</a>':'')+
+      '<button class="btn" type="button" id="dr-link">Copy link</button></div>';
     dr.hidden=false;$('scrim').hidden=false;
-    $('drx').addEventListener('click',closeRecord);
+    $('drx').addEventListener('click',function(){closeRecord();});
+    $('dr-link').addEventListener('click',function(){var u=location.href.split('#')[0]+'#rec-'+r.id,b=this;try{navigator.clipboard.writeText(u).then(function(){b.textContent='Link copied';},function(){b.textContent=u;});}catch(_){b.textContent=u;}});
     $('drx').focus();
-    if(live)loadProfile(r);
+    if(LIVE)loadProfile(r);
   }
   var OUT={'Replied':'var(--s-replied)','Sent':'var(--s-contacted)','Queued':'var(--s-neg)','Bounced':'var(--s-lost)'};
   function contactCard(c){
     var nm=[c.first_name,c.last_name].filter(Boolean).join(' ');
-    var crow=parseInt(String(c.id).replace(/\D/g,''),10)+1;
+    var isNew=/^NEWC-/.test(String(c.id)),crow=parseInt(String(c.id).replace(/\D/g,''),10)+1;
     var emails=(c.email||'').split(/\s*[,;]\s*/).filter(Boolean);
     var st=c.outreach_status||'';
     var head=nm||emails[0]||'Contact '+c.id;
     var mail=emails.length?emails.map(function(e){return '<span class="em">'+esc(e)+'</span> <button class="btn sm" type="button" data-copy="'+esc(e)+'">Copy</button>';}).join('<br>')
-      :'<a href="'+SHEET+'#gid=1&range=G'+crow+'" target="_blank" rel="noopener">Not loaded yet, open the sheet</a>';
+      :(isNew?'<span class="dim">No email</span>':'<a href="'+SHEET+'#gid=1&range=G'+crow+'" target="_blank" rel="noopener">Not loaded yet, open the sheet</a>');
     return '<div class="ct"><div class="ct-h"><span class="av" aria-hidden="true">'+esc(initials(nm||head))+'</span><div style="min-width:0"><b class="ct-n">'+esc(head)+'</b>'+(c.title?'<div class="faint">'+esc(c.title)+'</div>':'')+'</div>'+
       (st?'<span class="pill ct-s"><i style="background:'+(OUT[st]||'var(--s-new)')+'"></i>'+esc(st)+'</span>':'')+'</div>'+
       '<dl class="props sm">'+
@@ -523,43 +699,164 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       (c.client?'<dt>Pitched for</dt><dd>'+esc(c.client)+'</dd>':'')+
       '</dl></div>';
   }
+  function actItem(e){return '<li><span class="faint">'+esc(e.date)+' · '+esc(e.type)+(e.by_whom?' · '+esc(e.by_whom):'')+'</span><div>'+esc(e.summary)+'</div></li>';}
+  function same(r){return !$('drawer').hidden&&curRec&&curRec.id===r.id;}
   function loadProfile(r){
     fetch('/api/partner/'+encodeURIComponent(r.id),{credentials:'same-origin'}).then(function(x){if(!x.ok)throw 0;return x.json();}).then(function(p){
-      if($('drawer').hidden||$('dr-title').textContent!==r.label)return;
+      if(!same(r))return;
       var P=p.partner||{},a=p.about||{};
       var typ=r.type&&r.type!=='Uncategorized'?r.type:'';
       var ab=$('dr-about');
       if(a.description||a.title){ab.textContent=a.description||a.title;ab.className='about';}
       else ab.textContent=(r.domain?'The site does not describe itself.':'A creator we reach by email, with no website on file.')+(typ?' Listed as '+typ+'.':'');
       var found=[P.source,P.seed_keyword?'keyword “'+P.seed_keyword+'”':''].filter(Boolean).join(', ');
-      if(found){$('dr-found').textContent=found;$('dr-found').hidden=false;$('dr-found-l').hidden=false;}
+      $('dr-fields').innerHTML=editForm(P)+(found?'<p class="faint" style="margin:8px 0 0;font-size:12px">Found via '+esc(found)+'.</p>':'');
+      wireForm(r,P);
       var cs=p.contacts||[];
       $('dr-cn').textContent=cs.length;
       $('dr-contacts').className='';
       $('dr-contacts').innerHTML=cs.length?cs.map(contactCard).join(''):'<span class="faint">No contact on file yet.</span>';
+      wireContacts(r);
       var act=p.activity||[];
-      if(act.length){$('dr-act').innerHTML=act.map(function(e){return '<li><span class="faint">'+esc(e.date)+' · '+esc(e.type)+(e.by_whom?' · '+esc(e.by_whom):'')+'</span><div>'+esc(e.summary)+'</div></li>';}).join('');$('dr-act-s').hidden=false;}
+      $('dr-act').innerHTML=act.length?act.map(actItem).join(''):'';
+      wireLog(r);
       if(P.notes){$('dr-notes').textContent=P.notes;$('dr-notes-s').hidden=false;}
     }).catch(function(){
       var c=$('dr-contacts');if(c)c.textContent='Could not load details. Open the sheet instead.';
+      var f=$('dr-fields');if(f)f.innerHTML='<p class="err">Could not load this record for editing. Close it and try again.</p>';
       var ab=$('dr-about');if(ab)ab.textContent='';
     });
   }
+  function wireForm(r,P){
+    var form=$('dr-form'),save=$('dr-save'),err=$('dr-err');
+    function vals(){var o={};[].forEach.call(form.elements,function(el){if(el.name)o[el.name]=el.value.trim();});return o;}
+    var orig=vals();
+    function dirty(){var v=vals(),d={};Object.keys(v).forEach(function(k){if(v[k]!==orig[k])d[k]=v[k];});return d;}
+    form.addEventListener('input',function(){var n=Object.keys(dirty()).length;save.disabled=!n;save.innerHTML=n?'<span class="dirty-dot" aria-hidden="true"></span>Save '+n+' change'+(n===1?'':'s'):'Save changes';});
+    form.addEventListener('submit',function(e){
+      e.preventDefault();var d=dirty();if(!Object.keys(d).length)return;
+      needMe(function(){
+        save.disabled=true;save.textContent='Saving…';err.hidden=true;
+        api('PATCH','/api/partner/'+encodeURIComponent(r.id),{fields:d}).then(function(j){
+          var o=setRow(toRow(j.partner));orig=vals();save.innerHTML='Save changes';save.disabled=true;
+          $('dr-pills').innerHTML=pill(o.stage)+(/^NEW-/.test(o.id)?'<span class="pill">Not in the sheet yet</span>':'');
+          curRec=o;toast('Saved. It reaches the Google Sheet with the next daily run.');syncNote(PENDING+Object.keys(j.changed||{}).length);rerender(true);
+        }).catch(function(x){err.textContent=x.message;err.hidden=false;save.disabled=false;save.textContent='Try again';});
+      });
+    });
+  }
+  function wireLog(r){
+    var f=$('dr-log');if(!f)return;
+    f.addEventListener('submit',function(e){
+      e.preventDefault();var sm=f.elements.summary.value.trim();if(!sm){f.elements.summary.focus();return;}
+      needMe(function(){
+        var btn=f.querySelector('button');btn.disabled=true;
+        api('POST','/api/partner/'+encodeURIComponent(r.id)+'/activity',{type:f.elements.type.value,summary:sm,client:r.cl[0]||''}).then(function(j){
+          btn.disabled=false;f.elements.summary.value='';
+          $('dr-act').insertAdjacentHTML('afterbegin',actItem(j.activity));
+          if(j.last_touch){var o=D.filter(function(x){return x.id===r.id;})[0];if(o)o.touch=j.last_touch;rerender(true);}
+          syncNote(PENDING+1);toast('Logged.');
+        }).catch(function(x){btn.disabled=false;toast(x.message,1);});
+      });
+    });
+  }
+  function wireContacts(r){
+    var add=$('dr-addc'),box=$('dr-cform');if(!add)return;
+    add.addEventListener('click',function(){
+      box.hidden=!box.hidden;if(box.hidden)return;
+      box.innerHTML='<form class="mform" id="cform" style="margin-bottom:12px" novalidate>'+
+        '<label>First name<input name="first_name" autocomplete="off"></label><label>Last name<input name="last_name" autocomplete="off"></label>'+
+        '<label>Job title<input name="title" placeholder="e.g. Editor, Partnerships" autocomplete="off"></label><label>Pitched for<select name="client">'+opt(r.cl.length?r.cl:CLIENTS.map(function(c){return c.n;}),r.cl[0]||'','No client yet')+'</select></label>'+
+        '<label class="w">Email<input name="email" type="email" autocomplete="off"></label>'+
+        '<label class="w">LinkedIn<input name="linkedin" type="url" placeholder="https://www.linkedin.com/in/…" autocomplete="off"></label>'+
+        '<div class="w" id="cform-msg"></div>'+
+        '<div class="acts"><button class="btn" type="button" id="cform-x">Cancel</button><button class="btn pri" type="submit">Add contact</button></div></form>';
+      var f=$('cform');f.elements.first_name.focus();
+      $('cform-x').addEventListener('click',function(){box.hidden=true;});
+      function send(force){
+        var d={};['first_name','last_name','title','client','email','linkedin'].forEach(function(k){d[k]=f.elements[k].value.trim();});if(force)d.force=1;
+        needMe(function(){api('POST','/api/partner/'+encodeURIComponent(r.id)+'/contacts',d).then(function(j){
+          if(j._status===409){var u=j.duplicate||{};$('cform-msg').innerHTML='<div class="warn"><b>This email is already in the CRM</b><span>On '+esc(u.name||u.domain||u.account_id)+' ('+esc(u.account_id)+')'+(u.owner?', owned by '+esc(u.owner):'')+'. Ask them before you reach out.</span><span><button type="button" class="lnk" data-rec="'+esc(u.account_id)+'">Open that record</button> · <button type="button" class="lnk" id="cform-force">Add anyway</button></span></div>';
+            $('cform-force').addEventListener('click',function(){send(true);});return;}
+          box.hidden=true;var list=$('dr-contacts');if(/No contact/.test(list.textContent))list.innerHTML='';list.insertAdjacentHTML('afterbegin',contactCard(j.contact));
+          var o=D.filter(function(x){return x.id===r.id;})[0];if(o){o.contacts=(o.contacts||0)+1;$('dr-cn').textContent=o.contacts;}
+          syncNote(PENDING+1);toast('Contact added.');
+        }).catch(function(x){$('cform-msg').innerHTML='<p class="err">'+esc(x.message)+'</p>';});});
+      }
+      f.addEventListener('submit',function(e){e.preventDefault();send(false);});
+    });
+  }
+
+  /* ---------- add a site ---------- */
+  var PLATFORMS=/^(youtube\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com|facebook\.com|linkedin\.com|medium\.com|twitch\.tv|pinterest\.com)$/;
+  function normDomain(v){var raw=String(v||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^(www|m)\./,'').split(/[?#\s]/)[0],p=raw.split('/'),host=p.shift(),seg=p.filter(Boolean);
+    if(PLATFORMS.test(host)&&seg.length)return host+'/'+(/^(channel|c|user|in|company)$/.test(seg[0])&&seg[1]?seg.slice(0,2):seg.slice(0,1)).join('/');return host;}
+  function domainMatches(d){if(!d||d.indexOf('.')<0)return [];return D.filter(function(r){var x=(r.domain||'').toLowerCase().replace(/^www\./,'');if(!x)return false;
+    return x===d||x.slice(-(d.length+1))==='.'+d||d.slice(-(x.length+1))==='.'+x||x.slice(0,d.length+1)===d+'/';}).slice(0,5);}
+  function dupeHtml(list){return '<div class="warn"><b>Already in the CRM</b>'+list.map(function(r){return '<span><button type="button" class="lnk" data-rec="'+esc(r.id)+'">'+esc(r.label)+'</button> · '+esc(r.stage||'–')+' · '+(r.owner?'owned by '+esc(r.owner):'no owner')+(r.cl.length?' · '+esc(r.cl.join(', ')):'')+'</span>';}).join('')+'<span class="faint">If someone else owns it, ask them before you pitch. You can still add it as a separate record.</span></div>';}
+  function openAdd(){
+    needMe(function(){
+      modal('Add a site','<form class="mform" id="aform" novalidate>'+
+        '<label class="w">Website<input name="domain" placeholder="example.com" autocomplete="off" inputmode="url"></label>'+
+        '<div class="w" id="a-dupe"></div>'+
+        '<label class="w">Name<input name="name" placeholder="Site, creator or channel name" autocomplete="off"></label>'+
+        '<div class="w"><span class="faint" style="font-size:12px">Pitch for</span><div class="cpick">'+CLIENTS.map(function(c){return '<label><input type="checkbox" name="cl" value="'+esc(c.n)+'">'+esc(c.n)+'</label>';}).join('')+'</div></div>'+
+        '<label>Owner<select name="owner">'+opt(TEAM,me)+'</select></label>'+
+        '<label>Stage<select name="stage">'+opt(STAGE_NAMES,'New')+'</select></label>'+
+        '<label>Type<input name="type" list="dl-types" autocomplete="off" placeholder="e.g. Media / Publisher"></label>'+
+        '<label>Next step due<input name="next_due" type="date"></label>'+
+        '<label class="w">Next step<input name="next_step" placeholder="e.g. Find the partnerships contact" autocomplete="off"></label>'+
+        '<label class="w">Notes<textarea name="notes" placeholder="Why this site is a good fit"></textarea></label>'+
+        '<div class="w" id="a-msg"></div>'+
+        '<div class="acts"><button class="btn" type="button" data-mclose>Cancel</button><button class="btn pri" type="submit">Add site</button></div></form>');
+      var f=$('aform');
+      f.elements.domain.addEventListener('input',function(){var m=domainMatches(normDomain(this.value));$('a-dupe').innerHTML=m.length?dupeHtml(m):'';});
+      function send(force){
+        var d={domain:f.elements.domain.value.trim(),name:f.elements.name.value.trim(),owner:f.elements.owner.value,stage:f.elements.stage.value,type:f.elements.type.value.trim(),
+          next_step:f.elements.next_step.value.trim(),next_due:f.elements.next_due.value,notes:f.elements.notes.value.trim(),
+          clients:[].filter.call(f.querySelectorAll('input[name=cl]'),function(c){return c.checked;}).map(function(c){return c.value;}).join(', ')};
+        if(!d.domain&&!d.name){$('a-msg').innerHTML='<p class="err">Add a website or a name.</p>';return;}
+        if(force)d.force=1;
+        var btn=f.querySelector('button[type=submit]');btn.disabled=true;
+        api('POST','/api/partners',d).then(function(j){
+          btn.disabled=false;
+          if(j._status===409){$('a-msg').innerHTML='<div class="warn"><b>This site is already in the CRM</b>'+(j.duplicates||[]).map(function(u){return '<span><button type="button" class="lnk" data-rec="'+esc(u.id)+'">'+esc(u.name||u.domain)+'</button> · '+esc(u.stage||'–')+' · '+(u.owner?'owned by '+esc(u.owner):'no owner')+'</span>';}).join('')+'<span><button type="button" class="lnk" id="a-force">Add it anyway</button></span></div>';
+            $('a-force').addEventListener('click',function(){send(true);});return;}
+          var o=setRow(j.row);fillLists();closeModal();syncNote(PENDING+1);rerender(true);openRecord(o.id);
+          toast('Added as '+o.id+'. The next daily run gives it a PG number in the sheet.');
+        }).catch(function(x){btn.disabled=false;$('a-msg').innerHTML='<p class="err">'+esc(x.message)+'</p>';});
+      }
+      f.addEventListener('submit',function(e){e.preventDefault();send(false);});
+    });
+  }
+  $('addbtn').addEventListener('click',openAdd);
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-copy]');if(!b)return;
     var t=b.getAttribute('data-copy');
     function sel(){var em=b.previousElementSibling;if(em){var g=document.createRange();g.selectNodeContents(em);var w=getSelection();w.removeAllRanges();w.addRange(g);}b.textContent='Selected';}
     try{navigator.clipboard.writeText(t).then(function(){b.textContent='Copied';},sel);}catch(_){sel();}
   });
-  function closeRecord(quiet){if($('drawer').hidden)return;$('drawer').hidden=true;$('scrim').hidden=true;if(!quiet&&lastFocus&&lastFocus.focus)lastFocus.focus();}
-  $('scrim').addEventListener('click',closeRecord);
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('drawer').hidden)closeRecord();});
+  function closeRecord(quiet){
+    if($('drawer').hidden)return;
+    var d=$('dr-save');if(!quiet&&d&&!d.disabled&&!$('drawer').dataset.ok){$('drawer').dataset.ok='1';toast('You have unsaved changes. Save them, or close again to discard.',1);return;}
+    delete $('drawer').dataset.ok;
+    $('drawer').hidden=true;$('scrim').hidden=true;curRec=null;
+    if(/^#rec-/.test(location.hash))history.replaceState(null,'',location.pathname+location.search+'#'+(curPage||'home'));
+    if(!quiet&&lastFocus&&lastFocus.focus)lastFocus.focus();
+  }
+  $('scrim').addEventListener('click',function(){closeRecord();});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){if(!$('modal').hidden)closeModal();else if(!$('drawer').hidden)closeRecord();return;}
+    var tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable)return;
+    if(e.key==='/'&&!e.metaKey&&!e.ctrlKey){e.preventDefault();$('gq').focus();}
+    else if(e.key==='n'&&LIVE&&!e.metaKey&&!e.ctrlKey&&$('modal').hidden){e.preventDefault();openAdd();}
+  });
   document.addEventListener('click',function(e){
     var g=e.target.closest('[data-go]');
     if(g){e.preventDefault();go(g.getAttribute('data-go'),g.getAttribute('data-f')||'');return;}
     var t=e.target.closest('[data-rec]');if(!t)return;
-    var inner=e.target.closest('a,button');if(inner&&inner!==t&&t.contains(inner))return;
-    e.preventDefault();openRecord(t.getAttribute('data-rec'));
+    var inner=e.target.closest('a,button,input,label,select');if(inner&&inner!==t&&t.contains(inner))return;
+    e.preventDefault();if(t.closest('#modal'))closeModal();openRecord(t.getAttribute('data-rec'));
   });
   $('drawer').addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a)closeRecord(true);});
   /* open a list page with filters applied */
@@ -574,7 +871,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
     built[page]=false;var el=$('tbl-'+page);if(el)el.innerHTML='';
     if(location.hash==='#'+page)show();else location.hash=page;
   }
-  document.addEventListener('keydown',function(e){if(e.key==='Enter'){var t=e.target.closest&&e.target.closest('tr[data-rec]');if(t)openRecord(t.getAttribute('data-rec'));}});
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches&&e.target.matches('tr[data-rec]'))openRecord(e.target.getAttribute('data-rec'));});
 
   /* ---------- reusable record table (HubSpot index page) ---------- */
   function RecordTable(el,cfg){
@@ -592,11 +889,16 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       stage:function(){return STAGES.map(function(s){return s.n;});},country:function(){return opts(function(r){return r.country;});},
       type:function(){return opts(function(r){return r.type;});},drb:function(){return ['80+','60-79','40-59','20-39','0-19'];}};
     var ALL={client:'All clients',owner:'All owners',stage:'All stages',country:'All countries',type:'All types',drb:'Any DR'};
+    var bulk=LIVE&&cfg.bulk!==false,sel={},cur=[];
     el.innerHTML='<div class="views" role="tablist" aria-label="Views">'+cfg.views.map(function(v){return '<button type="button" role="tab" data-v="'+v.id+'">'+esc(v.n)+'<span class="vc num">'+fmt(count(v))+'</span></button>';}).join('')+'</div>'+
       '<div class="tools"><label class="fld q"><span>Search</span><input type="search" data-k="q" placeholder="Site, ID or next step" autocomplete="off"></label>'+
       fl.map(function(k){return '<label class="fld"><span>'+FL[k]+'</span><select data-k="'+k+'"><option value="">'+ALL[k]+'</option>'+(k==='owner'?'<option value="__none">No owner</option>':'')+OPT[k]().map(function(c){return '<option>'+esc(c)+'</option>';}).join('')+'</select></label>';}).join('')+'</div>'+
-      '<div class="meta"><span class="chips"><span data-meta></span><span class="chips" data-chips></span></span><button class="linkbtn" type="button" data-reset>Clear filters</button></div>'+
-      '<div class="tbl-wrap"><table class="rec"><thead><tr>'+cfg.cols.map(function(c){return '<th class="'+(c.cls||'')+'" scope="col">'+(c.s?'<button type="button" data-sort="'+c.s+'">'+esc(c.h)+'<span aria-hidden="true" data-arrow="'+c.s+'"></span></button>':esc(c.h))+'</th>';}).join('')+'</tr></thead><tbody></tbody></table></div>'+
+      '<div class="meta"><span class="chips"><span data-meta></span><span class="chips" data-chips></span></span><span class="chips">'+(LIVE?'<button class="linkbtn" type="button" data-csv>Export CSV</button>':'')+'<button class="linkbtn" type="button" data-reset>Clear filters</button></span></div>'+
+      (bulk?'<div class="bulk" data-bulk hidden><b data-bn></b><select data-bo aria-label="Set owner"><option value="">Set owner…</option>'+TEAM.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select>'+
+        '<select data-bs aria-label="Set stage"><option value="">Set stage…</option>'+STAGE_NAMES.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select>'+
+        '<select data-bc aria-label="Add client"><option value="">Add client…</option>'+CLIENTS.map(function(c){return '<option>'+esc(c.n)+'</option>';}).join('')+'</select>'+
+        '<button class="btn pri sm" type="button" data-bapply>Apply</button><button class="linkbtn" type="button" data-bclear>Clear selection</button></div>':'')+
+      '<div class="tbl-wrap"><table class="rec"><thead><tr>'+(bulk?'<th class="ck" scope="col"><input type="checkbox" data-all aria-label="Select all on this page"></th>':'')+cfg.cols.map(function(c){return '<th class="'+(c.cls||'')+'" scope="col">'+(c.s?'<button type="button" data-sort="'+c.s+'">'+esc(c.h)+'<span aria-hidden="true" data-arrow="'+c.s+'"></span></button>':esc(c.h))+'</th>';}).join('')+'</tr></thead><tbody></tbody></table></div>'+
       '<div class="pager"><span data-pos></span><div class="pb"><button type="button" data-p="-1">Previous</button><button type="button" data-p="1">Next</button></div></div>';
     var tb=el.querySelector('tbody');
     el.querySelectorAll('[data-k]').forEach(function(i){var v=st[i.dataset.k]||'';
@@ -608,6 +910,30 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
     el.querySelector('[data-reset]').addEventListener('click',function(){st.q='';FKEYS.forEach(function(k){st[k]='';});st.page=0;el.querySelectorAll('[data-k]').forEach(function(i){i.value='';});render();});
     el.querySelectorAll('[data-p]').forEach(function(b){b.addEventListener('click',function(){st.page+=+b.dataset.p;render();el.scrollIntoView({block:'start'});});});
     var PER=50;
+    function selN(){return Object.keys(sel).length;}
+    function bulkBar(){if(!bulk)return;var n=selN(),b=el.querySelector('[data-bulk]');b.hidden=!n;el.querySelector('[data-bn]').textContent=n+' selected';
+      var all=el.querySelector('[data-all]'),boxes=el.querySelectorAll('[data-sel]');all.checked=boxes.length&&[].every.call(boxes,function(x){return x.checked;});}
+    if(bulk){
+      tb.addEventListener('change',function(e){var c=e.target.closest('[data-sel]');if(!c)return;if(c.checked)sel[c.dataset.sel]=1;else delete sel[c.dataset.sel];bulkBar();});
+      el.querySelector('[data-all]').addEventListener('change',function(){var on=this.checked;el.querySelectorAll('[data-sel]').forEach(function(c){c.checked=on;if(on)sel[c.dataset.sel]=1;else delete sel[c.dataset.sel];});bulkBar();});
+      el.querySelector('[data-bclear]').addEventListener('click',function(){sel={};render();});
+      el.querySelector('[data-bapply]').addEventListener('click',function(){
+        var f={},o=el.querySelector('[data-bo]').value,sg=el.querySelector('[data-bs]').value,c=el.querySelector('[data-bc]').value;
+        if(o)f.owner=o;if(sg)f.stage=sg;if(c)f.add_client=c;
+        if(!Object.keys(f).length){toast('Pick an owner, stage or client to apply.',1);return;}
+        var ids=Object.keys(sel),btn=this;
+        needMe(function(){btn.disabled=true;btn.textContent='Saving…';
+          api('POST','/api/bulk',{ids:ids,fields:f}).then(function(j){toast('Updated '+j.changed+' of '+ids.length+' sites.');sel={};reload();})
+            .catch(function(x){toast(x.message,1);}).then(function(){btn.disabled=false;btn.textContent='Apply';});});
+      });
+    }
+    if(LIVE)el.querySelector('[data-csv]').addEventListener('click',function(){
+      var H=['ID','Site','Domain','Stage','Owner','Clients','Type','DR','Traffic','Country','Last touch','Next step','Next step due','Deal type','Flat fee','Commission %','Deal value','Placement','Went live'];
+      var q=function(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+      var lines=[H.join(',')].concat(cur.map(function(r){return [r.id,r.label,r.domain,r.stage,r.owner,r.cl.join(', '),r.type,r.dr,r.traffic,r.country,r.touch,r.next,r.due,r.model,r.flat,r.pct,r.value,r.url,r.live].map(q).join(',');}));
+      var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv'}));a.download='partnergap-'+cfg.id+'-'+TODAY+'.csv';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+      toast('Exported '+fmt(cur.length)+' rows.');
+    });
     function val(r,k){var v=r[k];if(k==='label')return (v||'').toLowerCase();return v==null||v===''?null:v;}
     function render(){
       store.set(key,st);
@@ -624,15 +950,16 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       el.querySelectorAll('[data-arrow]').forEach(function(a){a.textContent=a.dataset.arrow===st.sort?(st.dir>0?' ↑':' ↓'):'';});
       el.querySelectorAll('th button').forEach(function(b){var th=b.parentNode;th.setAttribute('aria-sort',b.dataset.sort===st.sort?(st.dir>0?'ascending':'descending'):'none');});
       var pages=Math.max(1,Math.ceil(rows.length/PER));st.page=Math.min(Math.max(0,st.page),pages-1);
-      var sl=rows.slice(st.page*PER,st.page*PER+PER);
+      cur=rows;var sl=rows.slice(st.page*PER,st.page*PER+PER);
       el.querySelector('[data-meta]').innerHTML='<b class="num">'+fmt(rows.length)+'</b> '+(rows.length===1?'record':'records');
       el.querySelector('[data-chips]').innerHTML=FKEYS.filter(function(k){return st[k];}).map(function(k){
         var v=k==='ck'?(CK[st[k]]||{n:st[k]}).n:k==='owner'&&st[k]==='__none'?'No owner':st[k];
         return '<span class="chip">'+FL[k]+': '+esc(v)+'<button type="button" data-unset="'+k+'" aria-label="Remove '+FL[k]+' filter">×</button></span>';}).join('');
       el.querySelector('[data-pos]').textContent=rows.length?('Page '+(st.page+1)+' of '+fmt(pages)):'';
       el.querySelector('[data-p="-1"]').disabled=st.page===0;el.querySelector('[data-p="1"]').disabled=st.page>=pages-1;
-      tb.innerHTML=sl.length?sl.map(function(r){return '<tr data-rec="'+esc(r.id)+'" tabindex="0">'+cfg.cols.map(function(c){return '<td class="'+(c.cls||'')+'">'+c.v(r)+'</td>';}).join('')+'</tr>';}).join('')
-        :'<tr><td colspan="'+cfg.cols.length+'"><div class="empty">'+(view.empty||'<b>No records match</b>Try another view or clear the filters.')+'</div></td></tr>';
+      tb.innerHTML=sl.length?sl.map(function(r){return '<tr data-rec="'+esc(r.id)+'" tabindex="0">'+(bulk?'<td class="ck"><input type="checkbox" data-sel="'+esc(r.id)+'"'+(sel[r.id]?' checked':'')+' aria-label="Select '+esc(r.label)+'"></td>':'')+cfg.cols.map(function(c){return '<td class="'+(c.cls||'')+'">'+c.v(r)+'</td>';}).join('')+'</tr>';}).join('')
+        :'<tr><td colspan="'+(cfg.cols.length+(bulk?1:0))+'"><div class="empty">'+(view.empty||'<b>No records match</b>Try another view or clear the filters.')+'</div></td></tr>';
+      bulkBar();
     }
     render();
   }
@@ -647,6 +974,10 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
     next:{h:'Next step',v:function(r){return r.next?'<div class="ns">'+esc(r.next)+'</div>':'<span class="dim">–</span>';}},
     country:{h:'Country',s:'country',cls:'hide-sm',v:function(r){return goVal('country',r.country);}},
     type:{h:'Type',s:'type',cls:'hide-sm',v:function(r){return r.type&&r.type!=='Uncategorized'?goVal('type',r.type):'<span class="dim">–</span>';}},
+    deal:{h:'Deal',v:function(r){var t=dealTxt(r);return t?'<span class="dchip">'+esc(t)+'</span>':'<span class="dim">–</span>';}},
+    value:{h:'Value',s:'value',cls:'r',v:function(r){return r.value!=null?'<span class="num">'+money(r.value)+'</span>':'<span class="dim">–</span>';}},
+    live:{h:'Went live',s:'live',cls:'hide-sm',v:function(r){return r.live?'<span class="num">'+esc(r.live)+'</span>':'<span class="dim">–</span>';}},
+    placement:{h:'Placement',v:function(r){return r.url?'<a href="'+esc(r.url)+'" target="_blank" rel="noopener">Open</a>':'<span class="dim">–</span>';}},
     due:{h:'Due',s:'due',v:function(r){if(!r.due)return '<span class="dim">–</span>';var late=r.due<TODAY;return '<span class="num"'+(late?' style="color:var(--s-lost)"':'')+'>'+esc(r.due)+'</span>';}}
   };
   var TODAY=new Date().toISOString().slice(0,10);
@@ -708,12 +1039,55 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       rcard('Domain rating','Ahrefs DR',bars(drb,'var(--accent)'))+
       rcard('Reply rate by owner','% of emailed sites that wrote back',bars(rr,'var(--s-replied)').replace(/(<span class="n num">)(\d+)(<\/span>)/g,'$1$2%$3'));
   }
+  function progView(c){
+    var g=PROGRAMS[c.k]||{};
+    var rows=[['Network',g.network],['Commission',g.commission],['Cookie length',g.cookie_days!=null?g.cookie_days+' days':''],['Payouts',g.payout_terms],['Partner sign-up link',g.signup_url],['Brief for partners',g.brief]];
+    if(!rows.some(function(x){return x[1];}))return '<p class="faint" style="margin:0">No program terms yet.'+(LIVE?' Click Edit to add the network, commission, cookie length and a brief, so everyone pitches the same offer.':'')+'</p>';
+    return '<dl class="prog">'+rows.map(function(x){return '<dt>'+x[0]+'</dt><dd>'+(x[1]?(x[0]==='Partner sign-up link'&&/^https?:/.test(x[1])?'<a href="'+esc(x[1])+'" target="_blank" rel="noopener">'+esc(x[1])+'</a>':esc(x[1])):'<span class="dim">–</span>')+'</dd>';}).join('')+'</dl>'+
+      (g.updated_at?'<p class="faint" style="margin:10px 0 0;font-size:12px">Updated by '+esc(g.updated_by||'someone')+', '+esc(String(g.updated_at).slice(0,10))+'.</p>':'');
+  }
+  function progForm(c){
+    var g=PROGRAMS[c.k]||{};
+    $('progBody').innerHTML='<form class="mform" id="pform" novalidate>'+
+      '<label>Network<input name="network" value="'+esc(g.network||'')+'" placeholder="Everflow, Impact, PartnerStack…"></label>'+
+      '<label>Cookie length (days)<input name="cookie_days" inputmode="numeric" value="'+esc(g.cookie_days==null?'':g.cookie_days)+'"></label>'+
+      '<label class="w">Commission<input name="commission" value="'+esc(g.commission||'')+'" placeholder="e.g. 30% recurring for 12 months"></label>'+
+      '<label class="w">Payouts<input name="payout_terms" value="'+esc(g.payout_terms||'')+'" placeholder="e.g. Monthly, net 30, $50 minimum"></label>'+
+      '<label class="w">Partner sign-up link<input name="signup_url" type="url" value="'+esc(g.signup_url||'')+'" placeholder="https://"></label>'+
+      '<label class="w">Brief for partners<textarea name="brief" placeholder="What to promote, key selling points, what not to say">'+esc(g.brief||'')+'</textarea></label>'+
+      '<div class="w" id="p-msg"></div><div class="acts"><button class="btn" type="button" id="p-x">Cancel</button><button class="btn pri" type="submit">Save program</button></div></form>';
+    var f=$('pform');
+    $('p-x').addEventListener('click',function(){$('progBody').innerHTML=progView(c);});
+    f.addEventListener('submit',function(e){e.preventDefault();var d={};['network','cookie_days','commission','payout_terms','signup_url','brief'].forEach(function(k){d[k]=f.elements[k].value.trim();});
+      needMe(function(){api('PUT','/api/clients/'+encodeURIComponent(c.k),d).then(function(j){PROGRAMS[c.k]=j.program;$('progBody').innerHTML=progView(c);syncNote(PENDING+1);toast('Program saved.');})
+        .catch(function(x){$('p-msg').innerHTML='<p class="err">'+esc(x.message)+'</p>';});});});
+  }
+  function buildChanges(){
+    var t=$('changesTbl');
+    if(!LIVE){t.innerHTML='<tbody><tr><td><div class="empty"><b>Read-only snapshot</b>The change log lives on the signed-in CRM site.</div></td></tr></tbody>';return;}
+    t.innerHTML='<tbody><tr><td><div class="empty">Loading…</div></td></tr></tbody>';
+    api('GET','/api/edits').then(function(j){
+      syncNote(j.pending||0);
+      var K={update:'Changed',create_account:'Added site',create_contact:'Added contact',activity:'Logged activity',client_program:'Client program'};
+      var F={stage:'Stage',owner:'Owner',clients:'Clients',type:'Type',next_step:'Next step',next_due:'Due',deal_model:'Deal type',deal_flat:'Flat fee',deal_pct:'Commission %',deal_value:'Deal value',content_url:'Placement',live_date:'Went live',tracking_id:'Tracking ID'};
+      var rows=j.recent||[];
+      t.innerHTML='<thead><tr><th>When</th><th>Who</th><th>What</th><th>Record</th><th>Sheet</th></tr></thead><tbody>'+(rows.length?rows.map(function(e){
+        var what=K[e.kind]||e.kind,det='';
+        if(e.kind==='update')det=(F[e.field]||e.field)+' → '+(e.new==null||e.new===''?'(empty)':e.new);
+        else if(e.kind==='client_program')det=(CK[e.field]||{n:e.field}).n;
+        else{try{var o=JSON.parse(e.new||'{}');det=o.summary||o.name||o.domain||[o.first_name,o.last_name].filter(Boolean).join(' ')||o.email||'';}catch(_){det='';}}
+        var r=D.filter(function(x){return x.id===e.account_id;})[0];
+        return '<tr'+(e.account_id?' data-rec="'+esc(e.account_id)+'" tabindex="0"':'')+'><td class="num">'+esc(String(e.at).replace('T',' ').slice(0,16))+'</td><td>'+esc(e.by_whom||'')+'</td><td><b style="font-weight:500">'+esc(what)+'</b><span class="sm">'+esc(det.slice(0,140))+'</span></td><td>'+(e.account_id?'<span class="nm">'+esc(r?r.label:e.account_id)+'</span><span class="sm">'+esc(e.account_id)+'</span>':'')+'</td><td>'+(e.applied?'<span class="pill"><i style="background:var(--s-active)"></i>Synced</span>':'<span class="pill"><i style="background:var(--s-replied)"></i>Waiting</span>')+'</td></tr>';
+      }).join(''):'<tr><td colspan="5"><div class="empty"><b>No edits yet</b>Changes made on this site show up here.</div></td></tr>')+'</tbody>';
+    }).catch(function(x){t.innerHTML='<tbody><tr><td><div class="empty">'+esc(x.message)+'</div></td></tr></tbody>';});
+  }
   function buildClient(sl){
     var c=CLIENTS.filter(function(x){return slug(x.k)===sl;})[0];
     if(!c){$('clientPage').innerHTML='<div class="empty"><b>Client not found</b><a href="#clients">Back to clients</a></div>';return;}
     var rs=byClient(c.k),s=stats(rs),f='ck='+enc(c.k);
     document.title=c.n+' · PartnerGap CRM';
     var deals=rs.filter(function(r){return r.stage==='Negotiating'||r.stage==='Active';}).sort(function(a,b){return a.touch<b.touch?1:-1;});
+    var won=rs.filter(function(r){return r.stage==='Active';});
     var best=rs.filter(function(r){return r.stage==='New'||r.stage==='Researching';}).sort(function(a,b){return (b.dr||0)-(a.dr||0);}).slice(0,10);
     var li=function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.next||(r.domain||'')+(r.dr!=null&&r.dr!==''?' · DR '+r.dr:''))+'</div></div><div class="w">'+(r.touch?ago(r.touch):esc(r.owner||''))+'</div></button>';};
     var k=[
@@ -728,7 +1102,10 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       '<div class="kpis k5">'+k.map(function(x){return '<a class="card kpi" href="#'+(x.p||'sites')+'"'+goA(x.p||'sites',x.f)+'><div class="l">'+x.l+'</div><div class="v num">'+(typeof x.v==='number'?fmt(x.v):x.v)+'</div><div class="d">'+x.d+'</div></a>';}).join('')+'</div>'+
       '<div class="two"><div class="card"><div class="card-h"><h2>Deals</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=Negotiating')+'>All in talks</button></div><div class="lst">'+(deals.length?deals.map(li).join(''):'<div class="empty">No deals yet for '+esc(c.n)+'.</div>')+'</div></div>'+
       '<div class="card"><div class="card-h"><h2>Pipeline</h2><span class="faint num">'+fmt(s.sites)+' sites</span></div><div class="card-b">'+bars(STAGES.map(function(x){return {n:x.n,v:rs.filter(function(r){return r.stage===x.n;}).length,f:f+'&stage='+enc(x.n),c:x.c};}))+'</div></div></div>'+
+      '<div class="two"><div class="card"><div class="card-h"><h2>Affiliate program</h2>'+(LIVE?'<button type="button" class="linkbtn" id="progEdit">Edit</button>':'')+'</div><div class="card-b" id="progBody">'+progView(c)+'</div></div>'+
+      '<div class="card"><div class="card-h"><h2>Partners</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=Active')+'>All partners</button></div><div class="lst">'+(won.length?won.map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(dealTxt(r)||'Deal terms not set')+(r.url?' · live':'')+'</div></div><div class="w">'+(r.value!=null?money(r.value):'')+'</div></button>';}).join(''):'<div class="empty">No partners yet for '+esc(c.n)+'.</div>')+'</div></div></div>'+
       '<div class="card"><div class="card-h"><h2>Best prospects not contacted yet</h2><button type="button" class="linkbtn"'+goA('sites',f+'&stage=New')+'>See all new</button></div><div class="lst">'+(best.length?best.map(li).join(''):'<div class="empty">No uncontacted sites. The Monday run adds more.</div>')+'</div></div>';
+    if(LIVE&&$('progEdit'))$('progEdit').addEventListener('click',function(){progForm(c);});
   }
   function buildProspecting(){
     RecordTable($('tbl-prospecting'),{id:'prospecting',sort:'dr',
@@ -746,8 +1123,9 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
   function buildPartners(){
     RecordTable($('tbl-partners'),{id:'partners',sort:'touch',
       base:function(r){return r.stage==='Active';},
-      views:[{id:'all',n:'All partners',f:function(){return true;},empty:'<b>No partners yet</b>When a partner agrees to work with a client, set their Stage to Active in the sheet and they appear here.'}].concat(CLIENTS.map(function(c){return {id:c.k,n:c.n,f:function(r){return r.ck.indexOf(c.k)>-1;},empty:'<b>No '+esc(c.n)+' partners yet</b>Partners show up here once their Stage is Active.'};})),
-      cols:[COL.site,COL.clients,COL.owner,COL.touch,COL.next,COL.dr,COL.country]});
+      views:[{id:'all',n:'All partners',f:function(){return true;},empty:'<b>No partners yet</b>When a partner agrees to work with a client, set their stage to Active and they appear here.'},
+        {id:'nolink',n:'Waiting to go live',f:function(r){return !r.url;}},{id:'livenow',n:'Live placements',f:function(r){return !!r.url;}}].concat(CLIENTS.map(function(c){return {id:c.k,n:c.n,f:function(r){return r.ck.indexOf(c.k)>-1;},empty:'<b>No '+esc(c.n)+' partners yet</b>Partners show up here once their Stage is Active.'};})),
+      cols:[COL.site,COL.clients,COL.deal,COL.value,COL.placement,COL.live,COL.owner,COL.next]});
   }
   var dealView=store.get('dealview')||'board';
   function buildDeals(){
@@ -767,13 +1145,26 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       if(dealView==='board'){
         body.innerHTML='<div class="board">'+COLS.map(function(c){
           var rs=rows.filter(function(r){return r.stage===c.s;});
-          return '<div class="col"><div class="col-h"><b><i style="background:'+c.c+'"></i>'+c.n+'</b><span class="faint num">'+rs.length+'</span></div><div class="col-b">'+
-            (rs.length?rs.map(function(r){return '<button type="button" class="dc" data-rec="'+esc(r.id)+'"><span class="t">'+esc(r.label)+'</span>'+(r.next?'<span class="ns">'+esc(r.next)+'</span>':'')+'<span class="f"><span>'+esc(r.cl.join(', ')||'No client')+' · '+esc(r.owner||'No owner')+'</span><span>'+ago(r.touch)+'</span></span></button>';}).join(''):'<div class="faint" style="padding:8px">None</div>')+
-            '</div></div>';}).join('')+'</div>';
+          var sum=rs.reduce(function(a,r){return a+(r.value||0);},0);
+          return '<div class="col"><div class="col-h"><b><i style="background:'+c.c+'"></i>'+c.n+'</b><span class="faint num">'+rs.length+(sum?' · <span class="sum">'+money(sum)+'</span>':'')+'</span></div><div class="col-b" data-drop="'+c.s+'">'+
+            (rs.length?rs.map(function(r){var t=dealTxt(r);return '<button type="button" class="dc" data-rec="'+esc(r.id)+'"'+(LIVE?' draggable="true" data-drag="'+esc(r.id)+'"':'')+'><span class="t">'+esc(r.label)+'</span>'+(t?'<span class="dchip">'+esc(t)+(r.value!=null?' · '+money(r.value):'')+'</span>':'')+(r.next?'<span class="ns">'+esc(r.next)+'</span>':'')+'<span class="f"><span>'+esc(r.cl.join(', ')||'No client')+' · '+esc(r.owner||'No owner')+'</span><span>'+ago(r.touch)+'</span></span></button>';}).join(''):'<div class="faint" style="padding:8px">'+(LIVE?'Drag a deal here':'None')+'</div>')+
+            '</div></div>';}).join('')+'</div>'+(LIVE?'<p class="note" style="padding-top:0">Drag a card to another column to change its stage.</p>':'');
       }else{
-        body.innerHTML='<div class="tbl-wrap"><table class="rec"><thead><tr><th>Deal</th><th>Stage</th><th>Next step</th><th>Clients</th><th>Owner</th><th>Last touch</th></tr></thead><tbody>'+
-          (rows.length?rows.map(function(r){return '<tr data-rec="'+esc(r.id)+'" tabindex="0"><td>'+siteCell(r)+'</td><td>'+pill(r.stage)+'</td><td><div class="ns">'+esc(r.next||'–')+'</div></td><td>'+tags(r.cl)+'</td><td>'+owner(r.owner)+'</td><td>'+ago(r.touch)+'</td></tr>';}).join(''):'<tr><td colspan="6"><div class="empty">No deals match.</div></td></tr>')+'</tbody></table></div>';
+        body.innerHTML='<div class="tbl-wrap"><table class="rec"><thead><tr><th>Deal</th><th>Stage</th><th>Terms</th><th class="r">Value</th><th>Next step</th><th>Clients</th><th>Owner</th><th>Last touch</th></tr></thead><tbody>'+
+          (rows.length?rows.map(function(r){return '<tr data-rec="'+esc(r.id)+'" tabindex="0"><td>'+siteCell(r)+'</td><td>'+pill(r.stage)+'</td><td>'+COL.deal.v(r)+'</td><td class="r">'+COL.value.v(r)+'</td><td><div class="ns">'+esc(r.next||'–')+'</div></td><td>'+tags(r.cl)+'</td><td>'+owner(r.owner)+'</td><td>'+ago(r.touch)+'</td></tr>';}).join(''):'<tr><td colspan="8"><div class="empty">No deals match.</div></td></tr>')+'</tbody></table></div>';
       }
+    }
+    if(LIVE){
+      var body=$('dealsBody'),dragId=null;
+      body.addEventListener('dragstart',function(e){var c=e.target.closest('[data-drag]');if(!c)return;dragId=c.dataset.drag;c.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',dragId);}catch(_){}});
+      body.addEventListener('dragend',function(e){var c=e.target.closest('[data-drag]');if(c)c.classList.remove('dragging');body.querySelectorAll('.over').forEach(function(x){x.classList.remove('over');});});
+      body.addEventListener('dragover',function(e){var z=e.target.closest('[data-drop]');if(!z||!dragId)return;e.preventDefault();body.querySelectorAll('.over').forEach(function(x){if(x!==z)x.classList.remove('over');});z.classList.add('over');});
+      body.addEventListener('drop',function(e){var z=e.target.closest('[data-drop]');if(!z||!dragId)return;e.preventDefault();z.classList.remove('over');
+        var id=dragId,stage=z.dataset.drop,r=D.filter(function(x){return x.id===id;})[0];dragId=null;if(!r||r.stage===stage)return;
+        needMe(function(){var old=r.stage;r.stage=stage;draw();
+          api('PATCH','/api/partner/'+encodeURIComponent(id),{fields:{stage:stage}}).then(function(j){setRow(toRow(j.partner));syncNote(PENDING+1);toast(r.label+' moved to '+stage+'.');rerender(true);})
+            .catch(function(x){r.stage=old;draw();toast(x.message,1);});});
+      });
     }
     draw();
   }
@@ -811,22 +1202,30 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
   function buildHome(){
     var all=stats(D);
     var cnt=function(f){return D.filter(f).length;};
+    var talks=D.filter(function(r){return r.stage==='Negotiating';}),pv=talks.reduce(function(a,r){return a+(r.value||0);},0),priced=talks.filter(function(r){return r.value!=null;}).length;
+    var livePl=cnt(function(r){return r.stage==='Active'&&r.url;});
     var k=[
-      {l:'Prospects',v:all.prospects,d:fmt(cnt(function(r){return r.stage==='Replied';}))+' replied and need a follow-up',h:'#prospecting'},
-      {l:'Open deals',v:all.talks,d:'partners talking terms',h:'#deals'},
-      {l:'Partners',v:all.won,d:'agreed to work with a client',h:'#partners'},
-      {l:'Active clients',v:CLIENTS.length,d:'brands we find partners for',h:'#clients'}
+      {l:'Prospects',v:fmt(all.prospects),d:fmt(cnt(function(r){return r.stage==='Replied';}))+' replied and need a follow-up',h:'#prospecting'},
+      {l:'Open deals',v:fmt(all.talks),d:'partners talking terms',h:'#deals'},
+      {l:'Deal value in talks',v:money(pv)||'$0',d:priced+' of '+all.talks+' deals have a value',h:'#deals'},
+      {l:'Partners',v:fmt(all.won),d:livePl+' with a live placement',h:'#partners'},
+      {l:'Active clients',v:fmt(CLIENTS.length),d:'brands we find partners for',h:'#clients'}
     ];
-    $('kpis').innerHTML=k.map(function(x){return '<a class="card kpi" href="'+x.h+'"><div class="l">'+x.l+'</div><div class="v num">'+fmt(x.v)+'</div><div class="d">'+x.d+'</div></a>';}).join('');
+    $('kpis').className='kpis k5';
+    $('kpis').innerHTML=k.map(function(x){return '<a class="card kpi" href="'+x.h+'"><div class="l">'+x.l+'</div><div class="v num">'+x.v+'</div><div class="d">'+x.d+'</div></a>';}).join('');
     var open=D.filter(function(r){return r.stage==='Negotiating';}).sort(function(a,b){return a.touch<b.touch?-1:a.touch>b.touch?1:0;});
     $('homeDeals').innerHTML=open.length?open.slice(0,8).map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.next||'No next step yet')+'</div></div><div class="w">'+ago(r.touch)+'</div></button>';}).join(''):'<div class="empty">No open deals.</div>';
     var tot=D.length,max=0;STAGES.forEach(function(s){s.v=cnt(function(r){return r.stage===s.n;});if(s.v>max)max=s.v;});
     $('pipeTotal').textContent=fmt(tot)+' sites';
-    $('funnel').outerHTML=bars(STAGES.map(function(s){return {n:s.n,v:s.v,f:'stage='+enc(s.n),c:s.c};}));
-    $('homeQueues').innerHTML=QUEUES.map(function(q){var n=D.filter(q.f).length;return '<button type="button" class="qb'+(q.hot&&n?' hot':'')+'"'+goA('tasks','view='+q.id)+'><b class="num">'+fmt(n)+'</b><strong style="font-weight:500">'+q.n+'</strong><span>'+q.d+'</span></button>';}).join('');
+    $('funnel').innerHTML=bars(STAGES.map(function(s){return {n:s.n,v:s.v,f:'stage='+enc(s.n),c:s.c};}));
+    var scope=me&&store.get('scope')!=='all'?'me':'all';
+    var qh=$('homeQueues').previousElementSibling;
+    qh.innerHTML='<h2>'+(scope==='me'?esc(me)+'’s to-dos':'Team to-dos')+'</h2><span class="chips">'+(me?'<span class="scope" role="group" aria-label="Whose to-dos"><button type="button" data-scope="me" aria-pressed="'+(scope==='me')+'">Mine</button><button type="button" data-scope="all" aria-pressed="'+(scope==='all')+'">Everyone</button></span>':'')+'<a class="linkbtn" href="#tasks">Open tasks</a></span>';
+    qh.querySelectorAll('[data-scope]').forEach(function(b){b.addEventListener('click',function(){store.set('scope',b.dataset.scope);buildHome();});});
+    $('homeQueues').innerHTML=QUEUES.map(function(q){var n=D.filter(function(r){return q.f(r)&&(scope!=='me'||r.owner===me);}).length;return '<button type="button" class="qb'+(q.hot&&n?' hot':'')+'"'+goA('tasks','view='+q.id+(scope==='me'?'&owner='+enc(me):''))+'><b class="num">'+fmt(n)+'</b><strong style="font-weight:500">'+q.n+'</strong><span>'+q.d+'</span></button>';}).join('');
     var rec=D.filter(function(r){return r.touch;}).sort(function(a,b){return a.touch<b.touch?1:a.touch>b.touch?-1:0;}).slice(0,8);
     $('homeRecent').innerHTML=rec.map(function(r){return '<button type="button" class="li" data-rec="'+esc(r.id)+'"><div style="min-width:0"><div class="t">'+esc(r.label)+'</div><div class="s">'+esc(r.stage)+(r.cl.length?' · '+esc(r.cl.join(', ')):'')+(r.owner?' · '+esc(r.owner):'')+'</div></div><div class="w">'+ago(r.touch)+'</div></button>';}).join('');
-    $('homeClients').outerHTML=bars(CLIENTS.map(function(c){return {n:c.n,v:stats(byClient(c.k)).prospects,href:'client-'+slug(c.k)};}).sort(function(a,b){return b.v-a.v;}),'var(--teal)');
+    $('homeClients').innerHTML=bars(CLIENTS.map(function(c){return {n:c.n,v:stats(byClient(c.k)).prospects,href:'client-'+slug(c.k)};}).sort(function(a,b){return b.v-a.v;}),'var(--teal)');
     var autos=[
       {n:'Find new sites',w:'Mondays 07:52',d:'Searches Ahrefs for new partner sites for each client and adds them to Prospecting.'},
       {n:'Daily run',w:'Mon–Fri 08:47',d:'Syncs Gmail replies into the sheet and this site, finds contacts and writes test emails. Nothing is sent.'},
@@ -862,22 +1261,36 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
   })();
 
   /* ---------- routing ---------- */
-  var PAGES={home:buildHome,sites:buildSites,prospecting:buildProspecting,partners:buildPartners,deals:buildDeals,clients:buildClients,client:function(){},tasks:buildTasks,team:buildTeam,campaigns:buildCampaigns,reports:buildReports};
+  var curPage='home',curSub='';
+  function rerender(keep){
+    var y=window.scrollY;built={};counts();
+    if(curPage==='client')buildClient(curSub);else{PAGES[curPage]();built[curPage]=true;}
+    if(keep)window.scrollTo(0,y);
+  }
+  function reload(){return fetch('/api/partners',{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(rows){prep(rows);rerender(true);loadPending();}).catch(function(){toast('Could not refresh the list. Reload the page.',1);});}
+  var PAGES={changes:buildChanges,home:buildHome,sites:buildSites,prospecting:buildProspecting,partners:buildPartners,deals:buildDeals,clients:buildClients,client:function(){},tasks:buildTasks,team:buildTeam,campaigns:buildCampaigns,reports:buildReports};
   function show(){
-    var h=(location.hash||'').slice(1),sub='';if(h.indexOf('client-')===0){sub=h.slice(7);h='client';}if(!PAGES[h])h='home';
-    closeRecord(true);
+    var h=(location.hash||'').slice(1),sub='';
+    if(h.indexOf('rec-')===0){var rid=h.slice(4);if(!D.length)return;if(!built[curPage]){showPage(curPage,curSub);}openRecord(rid);return;}
+    if(h.indexOf('client-')===0){sub=h.slice(7);h='client';}if(!PAGES[h])h='home';
+    closeRecord(true);showPage(h,sub);window.scrollTo(0,0);
+  }
+  function showPage(h,sub){
+    curPage=h;curSub=sub||'';
     document.querySelectorAll('[data-page]').forEach(function(p){p.hidden=p.dataset.page!==h;});
     var navh=h==='client'?'clients':h;
     document.querySelectorAll('#nav a').forEach(function(a){var on=a.getAttribute('href')==='#'+navh;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
     var t=document.getElementById('t-'+h);document.title=(t?t.textContent+' · ':'')+'PartnerGap CRM';
     if(D.length&&h==='client'){buildClient(sub);}
-    else if(D.length&&!built[h]){PAGES[h]();built[h]=true;}
-    window.scrollTo(0,0);
+    else if(D.length&&(!built[h]||h==='changes')){PAGES[h]();built[h]=true;}
   }
   addEventListener('hashchange',show);
 
   function start(rows){
-    prep(rows);$('loading').hidden=true;counts();show();
+    prep(rows);$('loading').hidden=true;counts();
+    if(LIVE){$('addbtn').hidden=false;meChip();syncNote(0);loadPending();
+      api('GET','/api/clients').then(function(list){(list||[]).forEach(function(g){PROGRAMS[g.k]=g;});if(curPage==='client')buildClient(curSub);}).catch(function(){});}
+    show();
   }
   function fail(){
     $('loading').innerHTML='<div class="empty"><b>The partner list isn’t connected</b>Open the CRM sheet for the full data.</div>';
