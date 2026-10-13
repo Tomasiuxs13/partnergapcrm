@@ -347,7 +347,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
     <a href="#clients"><svg viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/></svg>Clients<span class="cnt num" data-c="clients"></span></a>
     <div class="grp">Work</div>
     <a href="#tasks"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/></svg>Tasks<span class="cnt num" data-c="tasks"></span></a>
-    <a href="#changes"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>Change log<span class="cnt num" data-c="changes"></span></a>
+    <a href="#changes" id="nav-changes" hidden><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>Change log<span class="cnt num" data-c="changes"></span></a>
     <a href="#team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2a5 5 0 016 4.8"/></svg>Team<span class="cnt num" data-c="team"></span></a>
     <div class="grp">Marketing</div>
     <a href="#campaigns"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h2l5 4V5L7 9H5a2 2 0 00-2 2z"/><path d="M16 8a5 5 0 010 8"/></svg>Campaigns<span class="cnt num" data-c="campaigns"></span></a>
@@ -1251,7 +1251,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
       var jc=CLIENTS.filter(function(c){return c.n.toLowerCase().indexOf(q)>-1;}).map(function(c){return '<a href="#client-'+slug(c.k)+'"><span class="tag">Client</span>'+esc(c.n)+'</a>';});
       var ow={};D.forEach(function(r){if(r.owner&&r.owner.toLowerCase().indexOf(q)>-1)ow[r.owner]=1;});
       var jo=Object.keys(ow).map(function(o){return '<button type="button"'+goA('sites','owner='+enc(o))+'>'+owner(o,true)+'<span class="g-id">all their sites</span></button>';});
-      var jp=[].map.call(document.querySelectorAll('#nav a'),function(a){return a;}).filter(function(a){return a.textContent.toLowerCase().indexOf(q)>-1;}).map(function(a){return '<a href="'+a.getAttribute('href')+'"><span class="tag">Page</span>'+esc(a.childNodes[1].textContent)+'</a>';});
+      var jp=[].map.call(document.querySelectorAll('#nav a'),function(a){return a;}).filter(function(a){return !a.hidden&&a.textContent.toLowerCase().indexOf(q)>-1;}).map(function(a){return '<a href="'+a.getAttribute('href')+'"><span class="tag">Page</span>'+esc(a.childNodes[1].textContent)+'</a>';});
       var jump=jp.concat(jc,jo);
       res.innerHTML=(jump.length?'<div class="gk">Go to</div>'+jump.join(''):'')+(hits.length?'<div class="gk">Sites</div>'+hits.map(function(r){return '<button type="button" data-rec="'+esc(r.id)+'">'+pill(r.stage,true)+'<span>'+esc(r.label)+'</span><span class="g-id">'+esc(r.id)+'</span></button>';}).join(''):'')||'<div class="empty">No matches</div>';
       res.hidden=false;
@@ -1288,7 +1288,7 @@ a.fr:hover span:first-child,button.fr:hover span:first-child{color:var(--link);t
 
   function start(rows){
     prep(rows);$('loading').hidden=true;counts();
-    if(LIVE){$('addbtn').hidden=false;meChip();syncNote(0);loadPending();
+    if(LIVE){$('addbtn').hidden=false;$('nav-changes').hidden=false;meChip();syncNote(0);loadPending();
       api('GET','/api/clients').then(function(list){(list||[]).forEach(function(g){PROGRAMS[g.k]=g;});if(curPage==='client')buildClient(curSub);}).catch(function(){});}
     show();
   }
