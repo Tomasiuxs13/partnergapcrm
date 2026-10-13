@@ -2,7 +2,7 @@
 """Build the SQL import file for the website's partner data (Cloudflare D1).
 
 Inputs are the JSON dumps the Google Sheets connector saves for large reads:
-  accounts: Accounts!A1:V   contacts: Contacts!A1:Q   activity: 'Activity log'!A1:H
+  accounts: Accounts!A1:AC  contacts: Contacts!A1:Q   activity: 'Activity log'!A1:H
 Output: SQL that is loaded with
   npx wrangler d1 execute partnergap-crm-partners --remote --file <out.sql>
 
@@ -11,6 +11,10 @@ users (functions/_middleware.js keeps the whole site behind the login). Any
 Domain or Brand value containing "@" is blanked, and any address inside a
 Next step, Notes or Activity summary is replaced, so the partner list itself
 carries none.
+
+Run it only after the daily run has copied the site's waiting edits into the
+sheet (the Change log page shows none waiting): the import replaces partners,
+contacts and activity with what the sheet holds.
 
 Usage: python3 crm/scripts/build_d1_import.py <accounts.json> <contacts.json> <activity.json> <out.sql>
 """
@@ -22,10 +26,12 @@ import sqlite3
 import sys
 
 COLS = ("id,domain,name,type,dr,traffic,owner,stage,last_touch,clients,country,contacts,"
-        "next_step,next_due,source,seed_keyword,notes")
+        "next_step,next_due,source,seed_keyword,notes,deal_model,deal_flat,deal_pct,deal_value,content_url,live_date,tracking_id")
 SCHEMA = """CREATE TABLE IF NOT EXISTS partners (id TEXT PRIMARY KEY, domain TEXT, name TEXT, type TEXT,
   dr INTEGER, traffic INTEGER, owner TEXT, stage TEXT, last_touch TEXT, clients TEXT,
-  country TEXT, contacts INTEGER, next_step TEXT, next_due TEXT, source TEXT, seed_keyword TEXT, notes TEXT);
+  country TEXT, contacts INTEGER, next_step TEXT, next_due TEXT, source TEXT, seed_keyword TEXT, notes TEXT,
+  deal_model TEXT, deal_flat REAL, deal_pct REAL, deal_value REAL, content_url TEXT, live_date TEXT, tracking_id TEXT,
+  updated_at TEXT, updated_by TEXT);
 DROP TABLE IF EXISTS contacts;
 CREATE TABLE contacts (id TEXT PRIMARY KEY, account_id TEXT, first_name TEXT, last_name TEXT, title TEXT,
   email TEXT, linkedin TEXT, email_status TEXT, source TEXT, primary_contact INTEGER, outreach_status TEXT,
@@ -41,6 +47,7 @@ MIGRATE = (
     "ALTER TABLE partners ADD COLUMN next_step TEXT;", "ALTER TABLE partners ADD COLUMN next_due TEXT;",
     "ALTER TABLE partners ADD COLUMN source TEXT;", "ALTER TABLE partners ADD COLUMN seed_keyword TEXT;",
     "ALTER TABLE partners ADD COLUMN notes TEXT;",
+    # Deal columns and the edits / client_programs tables: crm/scripts/migrations/002_site_editing.sql
 )
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 CONTACT_COLS = ("id,account_id,first_name,last_name,title,email,linkedin,email_status,source,primary_contact,"
@@ -64,6 +71,14 @@ def num(s):
         return None
 
 
+def amount(s):
+    """Deal amounts keep cents and decimals: "$1,200.50" or "12.5%"."""
+    try:
+        return round(float(re.sub(r"[$,%\s]", "", s)), 2)
+    except ValueError:
+        return None
+
+
 def day(s):
     """Sheets returns some dates as serial numbers (days since 1899-12-30)."""
     if re.fullmatch(r"\d{5}(\.\d+)?", s):
@@ -78,7 +93,7 @@ def flag(s):
 def sql(v):
     if v is None:
         return "NULL"
-    if isinstance(v, int):
+    if isinstance(v, (int, float)):
         return str(v)
     return "'" + v.replace("'", "''") + "'"
 
@@ -125,6 +140,13 @@ def main(accounts_path, contacts_path, activity_path, out_path):
             cell(r, 5),            # F Source
             cell(r, 6),            # G Seed keyword
             no_email(cell(r, 19)), # T Notes
+            cell(r, 22),           # W Deal model
+            amount(cell(r, 23)),      # X Flat fee (USD)
+            amount(cell(r, 24)),      # Y Commission %
+            amount(cell(r, 25)),      # Z Deal value (USD)
+            cell(r, 26),           # AA Placement URL
+            day(cell(r, 27)),      # AB Go-live date
+            cell(r, 28),           # AC Tracking ID
         ))
 
     people = [(
