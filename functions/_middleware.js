@@ -78,6 +78,14 @@ const LOGIN_ENABLED = true;
 export async function onRequest(ctx) {
   const { request, env, next } = ctx;
   const url = new URL(request.url);
+  const writing = url.pathname.startsWith("/api/") && request.method !== "GET" && request.method !== "HEAD";
+  // Edits only come from the CRM's own pages, and only while sign-in is on.
+  if (writing) {
+    if (!LOGIN_ENABLED) return new Response("Editing needs sign-in to be on", { status: 403 });
+    const origin = request.headers.get("Origin");
+    const site = request.headers.get("Sec-Fetch-Site");
+    if ((origin && origin !== url.origin) || (!origin && site && site !== "same-origin")) return new Response("Forbidden", { status: 403 });
+  }
 
   if (!LOGIN_ENABLED) {
     if (url.pathname === "/login" || url.pathname === "/logout") return Response.redirect(new URL("/", url), 302);

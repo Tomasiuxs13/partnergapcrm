@@ -1,5 +1,6 @@
 // One partner's profile for the record panel: details, contacts (with emails; the login in
 // functions/_middleware.js covers this route), activity and what the site says about itself.
+import { json, bad, body, who, updatePartner } from "../../../lib/crm.js";
 const DOMAIN = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
 
 export async function onRequestGet({ env, params, waitUntil }) {
@@ -17,6 +18,21 @@ export async function onRequestGet({ env, params, waitUntil }) {
     { partner, contacts: contacts.results, activity: activity.results, about },
     { headers: { "Cache-Control": "private, no-store" } }
   );
+}
+
+// Saves edits from the record panel: stage, owner, next step, deal terms and placement.
+export async function onRequestPatch({ request, env, params }) {
+  const db = env.PARTNERS_DB;
+  if (!db) return bad("Not connected", 404);
+  const b = await body(request);
+  let changed;
+  try {
+    changed = await updatePartner(db, String(params.id || ""), b.fields && typeof b.fields === "object" ? b.fields : {}, who(b));
+  } catch (msg) {
+    return bad(String(msg));
+  }
+  if (changed === null) return bad("Not found", 404);
+  return json({ ok: true, changed, partner: await db.prepare("SELECT * FROM partners WHERE id = ?").bind(String(params.id)).first() });
 }
 
 // The site's own title and description, cached for a week so each site is fetched rarely.
