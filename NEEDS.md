@@ -31,3 +31,24 @@ Changes G1-B needs in files it does not own. The lib helpers they call are on cr
    now returns real v2 with a weak ETag (body up to 1 MB on Free, any size with `WORKERS_PLAN=paid`).
    G1-A's scratch shell check (store test, step 5) asserts the old v1 fallback and now fails as expected.
 6. **Release (G3-1):** `lib/meta.js` `BUILD` ("dev") must change together with `window.BUILD` in `index.html`.
+
+# NEEDS (G1-C)
+
+Changes G1-C needs in files it does not own.
+
+1. **`crm/dashboard/js/core/keys.js` (G1-A): don't count the toast region as an open layer.**
+   `layerOpen()` returns true for any `:popover-open`, and `#toasts` is a manual popover that stays open
+   for 6–8 s after every save. Until it closes, page-level Esc does nothing and J/K don't move the queue.
+   This matters most in queue mode, where every save shows a toast. Suggested change:
+   `document.querySelector(":popover-open:not(#toasts)")`.
+   Workaround in place: the record panel handles Esc on its own element. J/K still wait for the toast to go.
+2. **`crm/dashboard/js/app.js` (G1-A), optional: add the editors to `ctx.ui`.**
+   `uiKit()` doesn't merge `ui/inline-edit.js` (`bindInlineEdits`, `rowActions`) or `ui/columns.js`
+   (`COLUMNS`, `columns`, ...). Pages can import them directly, so this is only for consistency.
+3. **Backend B1 (after G1-B): `POST /api/bulk` rows mode and v2 response (spec 6.3.4).**
+   - `actions.bulk()` reads `changed_ids`, `before` and `v2` from the ids-mode response when they are
+     present. Without them it falls back to the store's values.
+   - Undo sends rows mode, `{rows: [{id, fields}]}` (≤ `limits.bulk_rows`). On d5e91d9 and on
+     `crm-easy-site-g1-b` (4bc4a4e), that request returns 400 "Select at least one site.".
+   - `tests/e2e/05-ui-kit.test.mjs` probes for rows mode and mocks it with `page.route` only when it is
+     missing. It logs `# mocked: POST /api/bulk {rows}`.
