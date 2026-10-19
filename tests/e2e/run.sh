@@ -1,17 +1,27 @@
 #!/usr/bin/env bash
-# E2E runner (spec 7.1 G1-D, 8). G0 skeleton; owner G1-D.
+# E2E runner (spec 7.1 G1-D, spec 8). Owner G1-D.
 #
-#   bash tests/e2e/run.sh                     # every tests/e2e/*.test.mjs
-#   bash tests/e2e/run.sh path/to/x.test.mjs  # only the files given
+#   bash tests/e2e/run.sh                         # every tests/e2e/*.test.mjs, one server for the run
+#   bash tests/e2e/run.sh path/to/x.test.mjs ...  # only the files given
+#   bash tests/e2e/run.sh --serve                 # start the fixture server and wait (prints BASE_URL etc.)
 #
-# Starts its own `wrangler pages dev` on a free port with a unique inspector port and a fresh
-# `mktemp -d` persist dir, applies the migrations, runs `node --test`, then stops the server.
-# Local D1 only: it never passes --remote, refuses it as an argument, and never uses port 8788.
-# Tests get BASE_URL, PORT, PERSIST_DIR, DASHBOARD_PASSWORD and the tool paths in their env.
-# KEEP=1 keeps the persist dir (its path is printed) for debugging.
+# Flags and env:
+#   --root DIR | ROOT=DIR   serve another checkout (its functions/, crm/dashboard and wrangler.toml); the
+#                           migrations, seed and tests still come from this repo. Used for the golden capture.
+#   --bare | BARE=1         skip migrations 003/004 (the T29 shape). Tests can also start their own bare
+#                           server: startServer({extra: false}) in tests/e2e/lib.mjs.
+#   --keep | KEEP=1         keep the persist dir after the run (its path is printed)
+#   PORT=n                  fixed port (default: a free one; 8788 is refused)
+#   FIXTURE_TODAY=YYYY-MM-DD   the day the fixture dates count from (default: today, local time)
+#   NO_SEED=1               migrations only, no fixture rows
 #
-# Still to do (G1-D): the fixture seed from tests/fixtures/make-seed.mjs, and a second server
-# without 003/004 for T29.
+# Each run: a free port, a unique --inspector-port, a fresh `mktemp -d` persist dir, migrations
+# 001 -> 003 -> 004 (files holding only comments are skipped), the synthetic seed from
+# tests/fixtures/make-seed.mjs (003/004 rows only when those tables exist), then
+# `wrangler pages dev --binding DASHBOARD_PASSWORD=testpass`. Tests run with `node --test --test-concurrency=1`
+# and get BASE_URL, PORT, INSPECTOR_PORT, PERSIST_DIR, SERVE_ROOT, HARNESS_ROOT, FIXTURE_TODAY, D1_TABLES,
+# OUT_DIR, DASHBOARD_PASSWORD and the tool paths in their env. The server is stopped at the end (also on Ctrl-C).
+# Local D1 only: --remote is refused, and nothing here ever talks to Cloudflare.
 set -euo pipefail
 
 for a in "$@"; do
@@ -20,14 +30,13 @@ for a in "$@"; do
   esac
 done
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$ROOT"
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 WRANGLER_BIN="${WRANGLER_BIN:-/tmp/wtest/node_modules/.bin/wrangler}"
 PW_PATH="${PW_PATH:-/opt/node22/lib/node_modules/playwright}"
 CHROME="${CHROME:-/opt/pw-browsers/chromium-1194/chrome-linux/chrome}"
 AXE_PATH="${AXE_PATH:-/tmp/claude-0/-home-claude-partnergapcrm/747cd0be-8b1d-5f07-83a7-c4a3d39a6045/scratchpad/redesign/audit/tools/node_modules/axe-core/axe.min.js}"
-export WRANGLER_BIN PW_PATH CHROME AXE_PATH
+export WRANGLER_BIN PW_PATH CHROME AXE_PATH WRANGLER_SEND_METRICS=false
 
 missing=0
 [ -x "$WRANGLER_BIN" ] || { echo "run.sh: WRANGLER_BIN not found or not executable: $WRANGLER_BIN" >&2; missing=1; }
@@ -35,78 +44,12 @@ missing=0
 [ -x "$CHROME" ] || { echo "run.sh: CHROME not found or not executable: $CHROME" >&2; missing=1; }
 [ -f "$AXE_PATH" ] || { echo "run.sh: AXE_PATH not found: $AXE_PATH" >&2; missing=1; }
 command -v node >/dev/null || { echo "run.sh: node is not on PATH" >&2; missing=1; }
-command -v curl >/dev/null || { echo "run.sh: curl is not on PATH" >&2; missing=1; }
 [ "$missing" = 0 ] || exit 3
 
-free_port() {
-  node -e 'const s=require("net").createServer();s.listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})'
-}
-
-PORT="${PORT:-$(free_port)}"
-INSPECTOR_PORT="${INSPECTOR_PORT:-$(free_port)}"
-if [ "$PORT" = 8788 ] || [ "$INSPECTOR_PORT" = 8788 ]; then
+if [ "${PORT:-}" = 8788 ] || [ "${INSPECTOR_PORT:-}" = 8788 ]; then
   echo "run.sh: port 8788 belongs to the main dev server; pick another." >&2
   exit 2
 fi
-PERSIST_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pgcrm-e2e.XXXXXX")"
-BASE_URL="http://127.0.0.1:$PORT"
-OUT_DIR="$ROOT/tests/e2e/out"
-mkdir -p "$OUT_DIR"
-export PORT INSPECTOR_PORT PERSIST_DIR BASE_URL OUT_DIR
-export DASHBOARD_PASSWORD=testpass WRANGLER_SEND_METRICS=false
 
-SERVER_PID=""
-cleanup() {
-  if [ -n "$SERVER_PID" ]; then
-    kill -TERM -- "-$SERVER_PID" 2>/dev/null || kill -TERM "$SERVER_PID" 2>/dev/null || true
-    wait "$SERVER_PID" 2>/dev/null || true
-  fi
-  if [ "${KEEP:-0}" = 1 ]; then echo "run.sh: kept $PERSIST_DIR" >&2; else rm -rf "$PERSIST_DIR"; fi
-}
-trap cleanup EXIT
-trap 'exit 130' INT TERM
-
-# Local D1 only. The binding name comes from wrangler.toml.
-d1() { "$WRANGLER_BIN" d1 execute PARTNERS_DB --local --persist-to "$PERSIST_DIR" "$@"; }
-
-# Migrations 001 -> 003 -> 004. A file with no statements yet (a G0 stub) is skipped.
-for f in 001_base.sql 003_site_meta.sql 004_suggestions_runs.sql; do
-  p="$ROOT/crm/scripts/migrations/$f"
-  if [ -f "$p" ] && grep -Eqv '^[[:space:]]*(--.*)?$' "$p"; then
-    d1 --file "$p" >"$PERSIST_DIR/migrate-$f.log" 2>&1 || { cat "$PERSIST_DIR/migrate-$f.log" >&2; exit 4; }
-  fi
-done
-
-# TODO(G1-D): node tests/fixtures/make-seed.mjs > "$PERSIST_DIR/seed.sql" && d1 --file "$PERSIST_DIR/seed.sql"
-
-# setsid puts wrangler and its workerd children in their own process group, so cleanup stops all.
-setsid "$WRANGLER_BIN" pages dev crm/dashboard --ip 127.0.0.1 --port "$PORT" \
-  --inspector-port "$INSPECTOR_PORT" --persist-to "$PERSIST_DIR" \
-  --binding DASHBOARD_PASSWORD=testpass >"$PERSIST_DIR/wrangler.log" 2>&1 &
-SERVER_PID=$!
-
-ready=0
-for _ in $(seq 1 120); do
-  if curl -s -o /dev/null --max-time 2 "$BASE_URL/login"; then ready=1; break; fi
-  if ! kill -0 "$SERVER_PID" 2>/dev/null; then break; fi
-  sleep 0.5
-done
-if [ "$ready" != 1 ]; then
-  echo "run.sh: the dev server did not start on $BASE_URL" >&2
-  tail -n 40 "$PERSIST_DIR/wrangler.log" >&2 || true
-  exit 5
-fi
-echo "run.sh: server on $BASE_URL (inspector $INSPECTOR_PORT, persist $PERSIST_DIR)" >&2
-
-if [ "$#" -gt 0 ]; then
-  files=("$@")
-else
-  shopt -s nullglob
-  files=("$ROOT"/tests/e2e/*.test.mjs)
-  shopt -u nullglob
-fi
-if [ "${#files[@]}" = 0 ]; then echo "run.sh: no test files" >&2; exit 0; fi
-
-status=0
-node --test --test-concurrency=1 "${files[@]}" || status=$?
-exit "$status"
+# The Node side (tests/e2e/lib.mjs) starts the server, runs node --test and always stops the server.
+exec node "$HARNESS/tests/e2e/lib.mjs" run "$@"

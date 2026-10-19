@@ -1,0 +1,170 @@
+{
+ "write_path": "PUT /api/clients/:k",
+ "kind": "client_program",
+ "row_order": "request",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "soro-full",
+   "about": "Every field. Full replace; the edits JSON keeps the key order network, commission, payout_terms, signup_url, brief, cookie_days (a number).",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/soro",
+    "body": {
+     "by": "Kamile",
+     "network": "Impact",
+     "commission": "30% recurring for 12 months",
+     "cookie_days": "60",
+     "payout_terms": "Monthly, net 30",
+     "signup_url": "https://soro.example.test/partners",
+     "brief": "AI SEO content platform."
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "program": {
+     "k": "soro",
+     "network": "Impact",
+     "commission": "30% recurring for 12 months",
+     "cookie_days": 60,
+     "payout_terms": "Monthly, net 30",
+     "signup_url": "https://soro.example.test/partners",
+     "brief": "AI SEO content platform.",
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "client_program",
+     "account_id": null,
+     "contact_id": null,
+     "field": "soro",
+     "old": null,
+     "new": "{\"network\":\"Impact\",\"commission\":\"30% recurring for 12 months\",\"payout_terms\":\"Monthly, net 30\",\"signup_url\":\"https://soro.example.test/partners\",\"brief\":\"AI SEO content platform.\",\"cookie_days\":60}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "partial",
+   "about": "Omitted fields become null (full replace); an empty cookie length is null.",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/soro",
+    "body": {
+     "by": "Kamile",
+     "network": "ShareASale",
+     "cookie_days": ""
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "program": {
+     "k": "soro",
+     "network": "ShareASale",
+     "commission": null,
+     "cookie_days": null,
+     "payout_terms": null,
+     "signup_url": null,
+     "brief": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "client_program",
+     "account_id": null,
+     "contact_id": null,
+     "field": "soro",
+     "old": null,
+     "new": "{\"network\":\"ShareASale\",\"commission\":null,\"payout_terms\":null,\"signup_url\":null,\"brief\":null,\"cookie_days\":null}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "key-with-space-d5e91d9-bug",
+   "about": "KNOWN BUG on d5e91d9, not a contract: the route receives the raw \"botanical%20synthesis\" (encodeURIComponent, as the old page sends it) and answers 400 \"Unknown client.\", so no program with a space in its key can be saved. T23 needs the redesign to decode the key; the row it must then write is client-program#partial with field \"botanical synthesis\" (see README).",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/botanical%20synthesis",
+    "body": {
+     "by": "Kamile",
+     "network": "ShareASale",
+     "cookie_days": ""
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Unknown client."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-link",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/soro",
+    "body": {
+     "by": "Kamile",
+     "signup_url": "soro.example.test"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "The sign-up link must start with http:// or https://."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-cookie",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/soro",
+    "body": {
+     "by": "Kamile",
+     "cookie_days": "forever"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Cookie length is a number of days."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-key",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "PUT",
+    "url": "/api/clients/so!ro",
+    "body": {
+     "by": "Kamile",
+     "network": "X"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Unknown client."
+   },
+   "edits": []
+  }
+ ]
+}
