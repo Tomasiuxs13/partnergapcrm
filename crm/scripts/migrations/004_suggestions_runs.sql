@@ -1,0 +1,1 @@
+-- G0 stub; owner B1. D1-only suggestions and runs tables (spec 6.2). Idempotent when written.

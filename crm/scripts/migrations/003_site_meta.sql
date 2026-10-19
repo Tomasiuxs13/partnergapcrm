@@ -1,0 +1,1 @@
+-- G0 stub; owner G1-B. D1-only site settings (kv_meta) and indexes (spec 6.2). Idempotent when written.

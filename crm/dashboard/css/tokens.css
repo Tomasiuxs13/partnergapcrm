@@ -1,0 +1,96 @@
+/* Design tokens (spec 4.1). G0 stub: the HubSpot palette from legacy.html plus the 4.1 table.
+   Owner G1-A. Dark mode follows the system; there is no toggle. Use tokens only, never raw colours. */
+:root {
+  color-scheme: light;
+  --bg: #f5f8fa;
+  --panel: #ffffff;
+  --panel-2: #f5f8fa;
+  --side: #213343;
+  --side-ink: #cbd6e2;
+  --side-label: #9fb3c8;
+  --side-on: #ffffff;
+  --ink: #33475b;
+  --ink-2: #516f90;
+  --faint: #7c98b6;
+  --line: #dfe3eb;
+  --line-2: #cbd6e2;
+  --accent: #ff5c35;
+  --accent-ink: #ffffff;
+  --accent-soft: #fff1ee;
+  --btn-pri: #d1401c;
+  --btn-pri-ink: #ffffff;
+  --btn-pri-hover: #b8361a;
+  --link: #0068b1;
+  --focus: #00a4bd;
+  --teal: #00a4bd;
+  --teal-soft: #e5f5f8;
+  --test-ink: #00788a;
+  --test-bg: #e5f5f8;
+  --danger: #c22f50;
+  --ok: #1f7a4d;
+  --warn-ink: #946200;
+  --warn-bg: #fff4d6;
+  --s-new: #7c98b6;
+  --s-research: #9b7fd1;
+  --s-contacted: #0091ae;
+  --s-replied: #f5c26b;
+  --s-neg: #6a78d1;
+  --s-active: #00bda5;
+  --s-lost: #f2547d;
+  --s-dnc: #425b76;
+  --shadow: 0 1px 3px rgba(45, 62, 80, .08), 0 8px 24px -12px rgba(45, 62, 80, .18);
+  --font: "Lexend Deca", "Segoe UI", system-ui, sans-serif;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-24: 24px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --r-card: 8px;
+  --r-input: 6px;
+  --r-pill: 999px;
+  --row-h: 44px;
+  --side-w: 232px;
+  --top-h: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0f1a24;
+    --panel: #162330;
+    --panel-2: #1b2b3a;
+    --side: #0b141c;
+    --side-ink: #9fb3c8;
+    --side-label: #9fb3c8;
+    --side-on: #ffffff;
+    --ink: #e3ebf3;
+    --ink-2: #a9bccf;
+    --faint: #7f97ad;
+    --line: #253747;
+    --line-2: #31475b;
+    --accent: #ff7a59;
+    --accent-ink: #1b0d08;
+    --accent-soft: rgba(255, 122, 89, .14);
+    --btn-pri: #ff7a59;
+    --btn-pri-ink: #1b0d08;
+    --btn-pri-hover: #ff7a59;
+    --link: #7cc4ff;
+    --focus: #3cc8de;
+    --teal: #3cc8de;
+    --teal-soft: rgba(60, 200, 222, .12);
+    --test-ink: #3cc8de;
+    --test-bg: rgba(60, 200, 222, .12);
+    --danger: #ff8fa8;
+    --ok: #5fd39a;
+    --warn-ink: #ffd27a;
+    --warn-bg: rgba(255, 210, 122, .12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 8px 24px -12px rgba(0, 0, 0, .6);
+  }
+}

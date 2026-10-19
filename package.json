@@ -2,7 +2,10 @@
   "name": "partnergap-crm",
   "private": true,
   "description": "PartnerGap affiliate CRM docs, scripts and static dashboard",
+  "type": "module",
   "scripts": {
-    "build": "echo \"No build step: crm/dashboard is static\""
+    "build": "echo \"No build step: crm/dashboard is static\"",
+    "test:unit": "node --test tests/unit/",
+    "test:e2e": "bash tests/e2e/run.sh"
   }
 }

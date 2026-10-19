@@ -1,0 +1,19 @@
+/* Shell layout: sidebar, top bar, main, bottom tabs. G0 stub; owner G1-A. */
+.app {
+  display: grid;
+  grid-template-columns: var(--side-w) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.side {
+  background: var(--side);
+  color: var(--side-ink);
+  padding: var(--sp-4) var(--sp-3);
+}
+.side a { display: block; padding: var(--sp-2) var(--sp-3); color: var(--side-ink); text-decoration: none; border-radius: var(--r-input); }
+.side a[aria-current="page"] { color: var(--side-on); box-shadow: inset 3px 0 0 var(--accent); }
+.main { min-width: 0; padding: var(--sp-5); }
+.main h1 { margin: 0 0 var(--sp-2); font-size: var(--fs-24); font-weight: 500; }
+@media (max-width: 1023px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { display: none; }
+}
