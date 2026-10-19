@@ -448,7 +448,7 @@ function markHandled(anchor) {
     await ctx.actions.bulk(ids, { next_step: "Check in", next_due: picked }, {
       confirm: false,
       onlyIfEmpty: ["next_step"],
-      label: "Handled · follow-up " + fmtDate(picked, "short"),
+      label: "Follow-up " + fmtDate(picked, "short"),
     });
   });
   void anchor;
