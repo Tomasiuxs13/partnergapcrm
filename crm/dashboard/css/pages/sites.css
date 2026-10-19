@@ -80,13 +80,13 @@
 
 /* ---------- Rows ---------- */
 
-.si-list { container-type: inline-size; }
 .si-list .ui-table th, .si-list .ui-table td { padding-left: 8px; padding-right: 8px; }
 .si-list .ui-table td.is-c-next { min-width: 110px; }
-/* When the list is narrower than the whole table (1440 px screens and below), Waiting for reply and All
-   keep the Next step column readable instead of scrolling sideways: Follow up moves into ⋯ (Log what
-   happened ▾ stays) and All drops Traffic (still in the CSV and the Sort menu). */
-@container (min-width: 640px) and (max-width: 1299.98px) {
+/* When the list is narrower than the whole table (about 1300 px of list: screens up to 1580 px with the
+   sidebar), Waiting for reply and All keep the Next step column readable instead of scrolling sideways:
+   Follow up moves into ⋯ (Log what happened ▾ stays) and All drops Traffic (still in the CSV and the Sort
+   menu). A media query, not a container query: it is cheaper to lay out with 7,500 sites. */
+@media (min-width: 640px) and (max-width: 1579.98px) {
   .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-acts > [data-row-act="follow"] { display: none; }
   .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-more { display: inline-flex; }
   .si-list[data-tab="all"] .ui-table .si-c-traffic { display: none; }

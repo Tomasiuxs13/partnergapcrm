@@ -62,6 +62,7 @@ function fresh(root, ctx) {
     view: null,
     key: "",
     applied: null, // {key, dir, page} the list shows
+    ranks: new Map(), // sort key -> Map(site id -> rank), until the store changes
     announced: false,
     sayTimer: 0,
   };
@@ -173,15 +174,70 @@ function claimCell(r, cx) {
   return html`<span class="si-claim"><button type="button" class="ui-btn is-sm" data-row-act="claim" data-id="${r.id}" aria-label="${"Claim " + name}" title="You become the owner, with a follow-up in 2 working days">Claim</button>${m ? html`<button type="button" class="ui-btn is-sm is-ghost" data-row-act="assign" data-id="${r.id}" aria-label="${"Assign " + name + " to " + m}" title="${m + " manages " + (client || "this client")}">Assign to ${m}</button>` : ""}</span>`;
 }
 
+// ---------- fast sort keys ----------
+// ui/list.js compares text with localeCompare(…, {numeric, sensitivity}), about 20 times slower than an
+// Intl.Collator: sorting 7,500 sites by name took 350 ms. The text and date columns here sort by numbers
+// instead, in the same order: a date as YYYYMMDD, a text as its rank among every site (one Intl.Collator
+// sort per column, kept until the store changes). See NEEDS.md (F3 1).
+const COLLATOR = typeof Intl !== "undefined" && Intl.Collator ? new Intl.Collator("en", { numeric: true, sensitivity: "base" }) : null;
+const TEXT_KEYS = {
+  site: (r) => r.label,
+  owner: (r) => r.owner,
+  clients: (r) => (r.cl || []).join(", "),
+};
+
+function dayKey(v) {
+  const s = v == null ? "" : String(v).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? Number(s.slice(0, 4) + s.slice(5, 7) + s.slice(8, 10)) : null;
+}
+
+function ranks(key) {
+  let m = st.ranks.get(key);
+  if (m) return m;
+  const get = TEXT_KEYS[key];
+  const list = [];
+  for (const r of st.ctx.store.all()) {
+    const v = get(r);
+    if (has(v)) list.push([String(v).toLowerCase(), String(r.id)]);
+  }
+  const cmp = COLLATOR ? COLLATOR.compare : (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  list.sort((a, b) => cmp(a[0], b[0]));
+  m = new Map();
+  let rank = 0;
+  let prev = null;
+  for (const [v, id] of list) {
+    if (prev === null || cmp(prev, v) !== 0) rank++;
+    prev = v;
+    m.set(id, rank);
+  }
+  st.ranks.set(key, m);
+  return m;
+}
+
+const textSort = (key) => (r) => {
+  if (!st) return null;
+  const n = ranks(key).get(String(r.id));
+  return n == null ? null : n;
+};
+
+const SORTED = {
+  site: { id: "site", sort: textSort("site") },
+  owner: { id: "owner", sort: textSort("owner") },
+  clients: { id: "clients", sort: textSort("clients") },
+  last_activity: { id: "last_activity", sort: (r) => dayKey(r.lastActivity) },
+  next: { id: "next", sort: (r) => dayKey(r.due) },
+};
+const col = (id, extra) => Object.assign({ id }, SORTED[id] || {}, extra || {});
+
 const ACTIONS_COL = { id: "actions", label: "Actions", labelHidden: true, priority: 1, className: "is-actions si-acts", cell: claimCell, csv: false };
 // Columns per tab (spec 2.2.2), minus the one that says nothing there: Owner on Mine to contact and
 // Unowned (every row has the same owner), Traffic on Waiting for reply (they're already emailed). The CSV
 // always has the full set (CSV_SITES).
 const COLUMNS = {
-  mine: ["site", "stage", "clients", "dr", "traffic", "last_activity", "next", ACTIONS_COL],
-  unowned: ["site", "stage", "clients", "dr", "traffic", "last_activity", "next", ACTIONS_COL],
-  waiting: ["site", "stage", "owner", "clients", "dr", "last_activity", "next", ACTIONS_COL],
-  all: ["site", "stage", "owner", "clients", "dr", { id: "traffic", className: "si-c-traffic" }, "last_activity", "next", ACTIONS_COL],
+  mine: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), ACTIONS_COL],
+  unowned: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), ACTIONS_COL],
+  waiting: [col("site"), "stage", col("owner"), col("clients"), "dr", col("last_activity"), col("next"), ACTIONS_COL],
+  all: [col("site"), "stage", col("owner"), col("clients"), "dr", col("traffic", { className: "si-c-traffic" }), col("last_activity"), col("next"), ACTIONS_COL],
 };
 const SORT_KEYS = ["newest", "last_activity"]; // columns.js SORTS: sortable without a column
 
@@ -542,6 +598,7 @@ export default {
       draw(w);
       return;
     }
+    st.ranks.clear();
     schedule(kind === "store" ? "store" : "all");
   },
   unmount() {
