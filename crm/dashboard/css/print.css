@@ -1,1 +1,37 @@
-/* Print styles (report modal print, spec 2.2.4). G0 stub; owner G1-A. */
+/* Print styles (loaded with media="print"). Owner G1-A.
+   The shell chrome is not printed; pages print as plain documents. A modal that should print on its
+   own (the client report, spec 2.2.4) carries data-print: while it is open only that dialog prints. */
+@page { margin: 14mm 12mm; }
+
+html, body { background: #ffffff !important; color: #000000 !important; }
+body { font-size: 11pt; }
+a { color: inherit; text-decoration: none; }
+
+.sh-skip, .sh-side, .sh-top, .sh-tabs, .sh-more, .sh-banners, #toasts, #layer-panel,
+[data-noprint], .sr-only { display: none !important; }
+
+.app, .sh-main { display: block !important; min-height: 0 !important; }
+.sh-content { padding: 0 !important; }
+
+table { page-break-inside: auto; }
+tr, li, .card { page-break-inside: avoid; break-inside: avoid; }
+h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+
+body:has(dialog[open][data-print]) .app { display: none !important; }
+dialog[open][data-print] {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  transform: none !important;
+}
+dialog[open][data-print]::backdrop { display: none !important; background: none !important; }
+dialog[open][data-print] [data-noprint] { display: none !important; }
