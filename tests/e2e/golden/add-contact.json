@@ -1,0 +1,252 @@
+{
+ "write_path": "POST /api/partner/:id/contacts",
+ "kind": "create_contact",
+ "row_order": "request",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "full",
+   "about": "Every field: the email is lower-cased; the edits JSON keeps the key order first_name, last_name, title, email, linkedin, client.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00592/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Gil",
+     "last_name": "Golden",
+     "title": "Editor",
+     "email": "Gil.Golden@C-Contact-2.contract.example.test",
+     "linkedin": "https://linkedin.example.test/in/gil-golden",
+     "client": "Soro"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "contact": {
+     "id": "{{new_contact_id}}",
+     "account_id": "PG-00592",
+     "first_name": "Gil",
+     "last_name": "Golden",
+     "title": "Editor",
+     "linkedin": "https://linkedin.example.test/in/gil-golden",
+     "email_status": "Unverified",
+     "source": "Added on site",
+     "primary_contact": 0,
+     "outreach_status": "Not contacted",
+     "last_email": null,
+     "replied": 0,
+     "client": "Soro",
+     "email": "gil.golden@c-contact-2.contract.example.test"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_contact",
+     "account_id": "PG-00592",
+     "contact_id": "{{new_contact_id}}",
+     "field": null,
+     "old": null,
+     "new": "{\"first_name\":\"Gil\",\"last_name\":\"Golden\",\"title\":\"Editor\",\"email\":\"gil.golden@c-contact-2.contract.example.test\",\"linkedin\":\"https://linkedin.example.test/in/gil-golden\",\"client\":\"Soro\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "name-only",
+   "about": "Only a first name: last_name, email and linkedin are \"\" in the JSON, title and client null.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00592/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Nameonly"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "contact": {
+     "id": "{{new_contact_id}}",
+     "account_id": "PG-00592",
+     "first_name": "Nameonly",
+     "last_name": null,
+     "title": null,
+     "linkedin": null,
+     "email_status": null,
+     "source": "Added on site",
+     "primary_contact": 0,
+     "outreach_status": "Not contacted",
+     "last_email": null,
+     "replied": 0,
+     "client": null,
+     "email": null
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_contact",
+     "account_id": "PG-00592",
+     "contact_id": "{{new_contact_id}}",
+     "field": null,
+     "old": null,
+     "new": "{\"first_name\":\"Nameonly\",\"last_name\":\"\",\"title\":null,\"email\":\"\",\"linkedin\":\"\",\"client\":null}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "duplicate",
+   "about": "The exact address is already a contact: 409 with the duplicate, nothing written.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00591/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Dupe",
+     "email": "dupe-contact@contract.example.test"
+    }
+   },
+   "status": 409,
+   "response": {
+    "error": "This email is already in the CRM",
+    "duplicate": {
+     "id": "C-00007",
+     "account_id": "PG-00591",
+     "owner": "Tomas",
+     "name": "Contract c-contact",
+     "domain": "c-contact.contract.example.test"
+    }
+   },
+   "edits": []
+  },
+  {
+   "name": "duplicate-forced",
+   "about": "Add anyway (force): written like any other new contact.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00591/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Dupe",
+     "email": "dupe-contact@contract.example.test",
+     "force": true
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "contact": {
+     "id": "{{new_contact_id}}",
+     "account_id": "PG-00591",
+     "first_name": "Dupe",
+     "last_name": null,
+     "title": null,
+     "linkedin": null,
+     "email_status": "Unverified",
+     "source": "Added on site",
+     "primary_contact": 0,
+     "outreach_status": "Not contacted",
+     "last_email": null,
+     "replied": 0,
+     "client": null,
+     "email": "dupe-contact@contract.example.test"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_contact",
+     "account_id": "PG-00591",
+     "contact_id": "{{new_contact_id}}",
+     "field": null,
+     "old": null,
+     "new": "{\"first_name\":\"Dupe\",\"last_name\":\"\",\"title\":null,\"email\":\"dupe-contact@contract.example.test\",\"linkedin\":\"\",\"client\":null}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "error-bad-email",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00591/contacts",
+    "body": {
+     "by": "Kamile",
+     "email": "not-an-email"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "That email address doesn't look right."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-empty",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00591/contacts",
+    "body": {
+     "by": "Kamile",
+     "title": "Editor"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Add at least a name or an email."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-linkedin",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00591/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Lin",
+     "linkedin": "linkedin.example.test/in/lin"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "The LinkedIn link must start with https://."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-not-found",
+   "about": "Unknown id.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-99999/contacts",
+    "body": {
+     "by": "Kamile",
+     "first_name": "Nobody"
+    }
+   },
+   "status": 404,
+   "response": {
+    "error": "Not found"
+   },
+   "edits": []
+  }
+ ]
+}

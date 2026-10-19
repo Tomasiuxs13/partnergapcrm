@@ -1,0 +1,239 @@
+{
+ "write_path": "POST /api/partners",
+ "kind": "create_account",
+ "row_order": "request",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "full",
+   "about": "Every field: the URL is cleaned to the host, clients re-joined, the edits JSON keeps the key order domain, name, stage, owner, clients, type, next_step, next_due, notes, added.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile",
+     "domain": "https://www.Golden-Full.example.test/path?x=1",
+     "name": "Golden Full Site",
+     "owner": "Kamile",
+     "stage": "Contacted",
+     "clients": "Soro,UltaHost",
+     "type": "Review",
+     "next_step": "Follow up if no reply",
+     "next_due": "2026-11-05",
+     "notes": "Met at a meetup."
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "row": [
+     "{{new_account_id}}",
+     "golden-full.example.test",
+     "Golden Full Site",
+     "Review",
+     null,
+     null,
+     "Kamile",
+     "Contacted",
+     "",
+     "Soro, UltaHost",
+     "",
+     0,
+     "Follow up if no reply",
+     "2026-11-05",
+     "",
+     null,
+     null,
+     null,
+     "",
+     ""
+    ]
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_account",
+     "account_id": "{{new_account_id}}",
+     "contact_id": null,
+     "field": null,
+     "old": null,
+     "new": "{\"domain\":\"golden-full.example.test\",\"name\":\"Golden Full Site\",\"stage\":\"Contacted\",\"owner\":\"Kamile\",\"clients\":\"Soro, UltaHost\",\"type\":\"Review\",\"next_step\":\"Follow up if no reply\",\"next_due\":\"2026-11-05\",\"notes\":\"Met at a meetup.\",\"added\":\"{{today}}\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "name-only",
+   "about": "A creator with only a name: domain is \"\" in the JSON and NULL in partners; owner defaults to by; stage New; notes \"\".",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile",
+     "name": "Golden Creator"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "row": [
+     "{{new_account_id}}",
+     "",
+     "Golden Creator",
+     "",
+     null,
+     null,
+     "Kamile",
+     "New",
+     "",
+     "",
+     "",
+     0,
+     "",
+     "",
+     "",
+     null,
+     null,
+     null,
+     "",
+     ""
+    ]
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_account",
+     "account_id": "{{new_account_id}}",
+     "contact_id": null,
+     "field": null,
+     "old": null,
+     "new": "{\"domain\":\"\",\"name\":\"Golden Creator\",\"stage\":\"New\",\"owner\":\"Kamile\",\"clients\":null,\"type\":null,\"next_step\":null,\"next_due\":null,\"notes\":\"\",\"added\":\"{{today}}\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "duplicate",
+   "about": "The site is already in the CRM: 409 with the duplicates, nothing written.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile",
+     "domain": "https://www.dupe.example.test/a/b?x=1",
+     "name": "Dupe Again"
+    }
+   },
+   "status": 409,
+   "response": {
+    "error": "Already in the CRM",
+    "duplicates": [
+     {
+      "id": "PG-00488",
+      "domain": "dupe.example.test",
+      "name": "Dupe Example",
+      "owner": "Gaby",
+      "stage": "Contacted",
+      "clients": "MailerLite/MailerSend"
+     }
+    ]
+   },
+   "edits": []
+  },
+  {
+   "name": "duplicate-forced",
+   "about": "Add anyway (force): written like any other new site.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile",
+     "domain": "dupe.example.test",
+     "name": "Dupe Again",
+     "force": true
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "row": [
+     "{{new_account_id}}",
+     "dupe.example.test",
+     "Dupe Again",
+     "",
+     null,
+     null,
+     "Kamile",
+     "New",
+     "",
+     "",
+     "",
+     0,
+     "",
+     "",
+     "",
+     null,
+     null,
+     null,
+     "",
+     ""
+    ]
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "create_account",
+     "account_id": "{{new_account_id}}",
+     "contact_id": null,
+     "field": null,
+     "old": null,
+     "new": "{\"domain\":\"dupe.example.test\",\"name\":\"Dupe Again\",\"stage\":\"New\",\"owner\":\"Kamile\",\"clients\":null,\"type\":null,\"next_step\":null,\"next_due\":null,\"notes\":\"\",\"added\":\"{{today}}\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "error-bad-domain",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile",
+     "domain": "not a domain",
+     "name": "X"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "That doesn't look like a website address."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-empty",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partners",
+    "body": {
+     "by": "Kamile"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Add a website or a name."
+   },
+   "edits": []
+  }
+ ]
+}
