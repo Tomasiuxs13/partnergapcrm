@@ -36,7 +36,7 @@ const ROUTES = [
   ["#no-such-page", /^Today$/],
 ];
 
-// Legacy redirects (spec 2.4). G1-A builds them; this stays a todo until the checkpoint.
+// Legacy redirects (spec 2.4), built by G1-A (js/core/router.js).
 const LEGACY = [
   ["#home", /^Today$/],
   ["#prospecting", /^Sites$/],
@@ -132,7 +132,7 @@ test("routes also switch in place (hash change and nav links)", async () => {
   }
 });
 
-test("legacy hashes redirect to their new pages", { todo: "G1-A builds the legacy redirects (spec 2.4)" }, async () => {
+test("legacy hashes redirect to their new pages", async () => {
   const { page } = session;
   for (const [hash, re] of LEGACY) {
     await page.goto(BASE + "/" + hash);

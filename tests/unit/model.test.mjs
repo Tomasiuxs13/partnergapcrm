@@ -19,6 +19,9 @@ function row(over = {}) {
   };
 }
 const d = (over, today = TODAY) => derive(row(over), { meta, today });
+// A full timestamp (with Z) at local noon of a calendar day, so date(updated_at) is that day in
+// every time zone (Appendix B: dates are local calendar dates).
+const noonOf = (day) => { const [y, m, dd] = day.split("-").map(Number); return new Date(y, m - 1, dd, 12).toISOString(); };
 
 test("derive keeps the v2 columns and does not change its input", () => {
   const raw = row({ next_due: "2026-10-30" });
@@ -29,13 +32,13 @@ test("derive keeps the v2 columns and does not change its input", () => {
 });
 
 test("lastActivity = max(last_touch, last_email, act_at, date(updated_at)); quietDays counts to today", () => {
-  let r = d({ last_touch: "2026-10-10", last_email: "2026-10-12", act_at: "2026-10-11", updated_at: "2026-10-09T12:00:00Z", updated_by: "Kamile" });
+  let r = d({ last_touch: "2026-10-10", last_email: "2026-10-12", act_at: "2026-10-11", updated_at: noonOf("2026-10-09"), updated_by: "Kamile" });
   assert.equal(r.lastActivity, "2026-10-12");
   assert.equal(r.quietDays, 10);
   r = d({ last_touch: "2026-10-10", act_at: "2026-10-14" });
   assert.equal(r.lastActivity, "2026-10-14");
   assert.equal(r.quietDays, 8);
-  r = d({ last_touch: "2026-10-10", updated_at: "2026-10-15T12:00:00Z", updated_by: "Kamile" });
+  r = d({ last_touch: "2026-10-10", updated_at: noonOf("2026-10-15"), updated_by: "Kamile" });
   assert.equal(r.lastActivity, "2026-10-15", "the date part of updated_at counts");
   r = d({ last_touch: "2026-10-22" });
   assert.equal(r.quietDays, 0);
@@ -74,9 +77,9 @@ test("handled: activity or a site edit on or after the reply", () => {
   assert.equal(d({ ...base, act_at: "2026-10-18" }).handled, true, "activity the same day");
   assert.equal(d({ ...base, act_at: "2026-10-20" }).handled, true, "activity after");
   assert.equal(d({ ...base, act_at: "2026-10-17" }).handled, false, "activity before");
-  assert.equal(d({ ...base, updated_at: "2026-10-19T12:00:00Z", updated_by: "Kamile" }).handled, true, "a site edit after");
-  assert.equal(d({ ...base, updated_at: "2026-10-19T12:00:00Z", updated_by: null }).handled, false, "updated_at without updated_by (a sheet import)");
-  assert.equal(d({ ...base, updated_at: "2026-10-17T12:00:00Z", updated_by: "Kamile" }).handled, false, "a site edit before");
+  assert.equal(d({ ...base, updated_at: noonOf("2026-10-19"), updated_by: "Kamile" }).handled, true, "a site edit after");
+  assert.equal(d({ ...base, updated_at: noonOf("2026-10-19"), updated_by: null }).handled, false, "updated_at without updated_by (a sheet import)");
+  assert.equal(d({ ...base, updated_at: noonOf("2026-10-17"), updated_by: "Kamile" }).handled, false, "a site edit before");
 });
 
 test("snoozed, due, closed and notContacted", () => {

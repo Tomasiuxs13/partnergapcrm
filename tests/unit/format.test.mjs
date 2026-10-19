@@ -33,8 +33,8 @@ test("date: 'Thu 22 Oct' by default (Appendix C), long style for the Today subti
   assert.equal(F.date("2026-10-19"), "Mon 19 Oct");
   assert.equal(F.date("2027-01-01"), "Fri 1 Jan");
   assert.equal(F.date("2026-10-19", "long"), "Monday 19 October");
-  // A timestamp shows its local calendar day (noon UTC is the same day from UTC-11 to UTC+11).
-  assert.equal(F.date("2026-10-22T12:00:00Z"), "Thu 22 Oct");
+  // A timestamp shows its local calendar day: local noon of 22 Oct, written as a UTC timestamp.
+  assert.equal(F.date(new Date(2026, 9, 22, 12).toISOString()), "Thu 22 Oct");
   assert.equal(F.date(""), "");
   assert.equal(F.date(null), "");
   assert.equal(F.date(undefined), "");
