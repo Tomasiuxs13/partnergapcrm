@@ -71,3 +71,29 @@ Still open:
 - G1-B 3 (B1, `functions/_middleware.js`): the read-only guard and `ctx.data.readOnly`, the sign-in team list
   from meta + kv overrides, and `PUT /api/settings` through `lib/settings.js#saveSettings`.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+
+# NEEDS (F1)
+
+Changes the record panel (F1) needs in files it does not own. Each has a local workaround, so nothing blocks.
+
+1. **`crm/dashboard/js/ui/dialog.js` (G1-C): `trapFocus()` counts controls inside a closed `<details>`.**
+   Chrome keeps a box for the content of a closed `<details>` (content-visibility), so `focusables()` lists a
+   button that cannot take focus as the last one, and Tab from the real last control leaves the trap for one
+   press. Suggested filter: skip `el` when `el.closest("details:not([open])")` and `el` is not that details'
+   own `summary`. Workaround in `css/record.css`: `.rc-details:not([open]) > :not(summary) { display: none; }`.
+2. **`crm/dashboard/js/ui/actions.js` (G1-C): `note(id, text, {throw: true})`.** `update()` and `outcome()`
+   can throw so a caller can show its own inline error; `note()` only returns null, so the panel says
+   "Not saved. Check your connection and try again." without the real reason (timeout, 400 text).
+3. **`crm/dashboard/js/ui/actions.js` (G1-C): let `runOutcome()` pass `quiet`/`throw` through to the
+   outcome form.** The outcomes with a form (Not interested…, Not a fit…, Do not contact…, Counter-offer…,
+   Signed…, Placement is live…, and Had a call without a note) use actions' own toasts and error toast. The panel words every other save itself (inline
+   "Not saved. … Retry", no toast once the panel has moved to another site). With a pass-through the panel
+   could treat all outcomes the same.
+4. **`crm/dashboard/css/components.css` (G1-C): wrap `:hover` rules in `@media (hover: hover)`.** On touch
+   screens a tapped `.ui-chipbtn` keeps its hover look and reads as picked. `record.css` resets it for the
+   panel's own chips under `@media (hover: none)`.
+5. **B1 (`functions/api/partner/[id].js` GET):** the panel reads `history.edits` (with `state`), `suggestions`
+   (null before 004), `about` and `about_pending` exactly as 6.3.8 says, and shows "Not available yet." for a
+   missing part. Suggestions come only from this response (the panel makes no separate
+   `GET /api/suggestions?account=` call). The 409 of `POST …/contacts` may add `stage` to `duplicate`; the
+   panel falls back to the store row's stage when the site is loaded.

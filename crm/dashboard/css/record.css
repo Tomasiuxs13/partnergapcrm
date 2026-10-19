@@ -1,1 +1,250 @@
-/* Record panel (spec 4.2). G0 stub; owner F1. Class prefix .rp- */
+/* Record panel (spec 4.2, 4.12). Owner F1. Class prefix .rc-; tokens only (css/tokens.css).
+   It builds on the panel shell in components.css (.ui-panel, .ui-panel-head, .ui-card, .ui-logbox, …).
+   - >= 1280 px: two inner columns (Log what happened, next step, timeline | contacts, suggestions, deal
+     terms, placement, details), so the log box, the next step, the contacts and the first 5 timeline
+     items fit at 1440 × 900 without scrolling.
+   - Narrower: one column in the phone order (log, next step, contacts, suggestions, timeline, deal,
+     placement, details).
+   - Phone (< 640 px): full-screen sheet; sticky header "‹ label [Stage ▾]" and a sticky footer
+     [Log what happened ▾] [Follow up ▾] [⋯]. */
+
+/* ---------- Header ---------- */
+
+.rc-head { gap: var(--sp-2); padding-top: var(--sp-3); padding-bottom: var(--sp-3); padding-left: var(--sp-4); }
+.rc-qrow { display: flex; }
+.rc-qrow[hidden] { display: none; }
+.rc-pq-word { display: none; }
+.rc-top { gap: var(--sp-3); }
+.rc-title h2 { line-height: 1.25; }
+.rc-sub { flex-wrap: nowrap; gap: 6px; min-width: 0; white-space: nowrap; }
+.rc-sub > * { flex: none; }
+.rc-sub > .rc-domain { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rc-tools { display: flex; flex: none; align-items: center; gap: var(--sp-2); }
+.rc-dots svg { width: 20px; height: 20px; fill: currentColor; stroke: none; }
+.rc-close .rc-ic-back { display: none; }
+.rc-close svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rc-meta { gap: var(--sp-2) var(--sp-3); }
+.rc-meta-rest { display: contents; }
+/* Lost / Do not contact: the path is one static pill, the same as the Stage ▾ pill next to it. */
+.rc-meta > .ui-path.is-closed { display: none; }
+.rc-wait { min-height: 0; padding: 2px 6px; font-size: var(--fs-13); }
+.rc-about { display: flex; align-items: baseline; gap: 4px; min-width: 0; margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.rc-about[hidden] { display: none; }
+.rc-about-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-about-more { flex: none; font-size: var(--fs-13); }
+.rc-about.is-open { display: block; }
+.rc-about.is-open .rc-about-text { white-space: normal; overflow-wrap: anywhere; }
+
+/* ---------- Body and columns ---------- */
+
+.rc-body { padding: var(--sp-3) var(--sp-4) var(--sp-6); }
+.rc-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+.rc-main, .rc-side { display: contents; }
+.rc-log { order: 1; }
+.rc-nextcard { order: 2; }
+.rc-contacts { order: 3; }
+.rc-sugg { order: 4; }
+.rc-tlcard { order: 5; }
+.rc-deal { order: 6; }
+.rc-place { order: 7; }
+.rc-detcard { order: 8; }
+@media (min-width: 1280px) {
+  .rc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 288px); align-items: start; }
+  .rc-main, .rc-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
+}
+
+.rc-card { min-width: 0; padding: var(--sp-3) var(--sp-4); }
+.rc-card[hidden] { display: none; }
+.rc-card-title { margin: 0 0 var(--sp-2); font-size: var(--fs-14); }
+.rc-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.rc-card-head .rc-card-title { margin: 0; }
+.rc-head-act { flex: none; font-size: var(--fs-13); }
+.ui-btn.rc-head-act { min-height: 28px; margin: -4px -8px -4px 0; }
+.rc-count { color: var(--ink-2); font-weight: 400; }
+.rc-muted { color: var(--ink-2); }
+.rc-more { margin-top: var(--sp-1); font-size: var(--fs-13); }
+.rc-pen { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; vertical-align: -2px; color: var(--ink-2); }
+.ui-btn .rc-pen { vertical-align: 0; }
+
+/* ---------- Log what happened ---------- */
+
+.rc-log { gap: var(--sp-2); }
+.rc-log .rc-card-title { margin: 0; }
+.rc-outs .ui-btn { min-height: 34px; padding: 0 12px; }
+textarea.rc-note { min-height: 0; height: 54px; }
+.rc-follow > legend { margin-bottom: 4px; font-size: var(--fs-12); }
+.rc-chips { gap: 4px; }
+.rc-chip { min-height: 28px; padding: 0 8px; }
+.rc-acts { gap: var(--sp-2); }
+.rc-acts .ui-btn { min-height: 32px; }
+.rc-hint { margin-right: auto; }
+.rc-err { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.rc-err[hidden] { display: none; }
+.rc-test { padding: 0 6px; border-radius: var(--r-pill); background: var(--test-bg); color: var(--test-ink); font-size: var(--fs-12); font-weight: 500; }
+
+/* ---------- Next step ---------- */
+
+.rc-nextcard { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+.rc-next-text { overflow-wrap: anywhere; }
+.rc-due { color: var(--ink-2); white-space: nowrap; }
+.rc-due.is-overdue { color: var(--danger); font-weight: 600; }
+.rc-due.is-today { color: var(--ok); font-weight: 600; }
+.rc-waitchip { margin-right: 2px; }
+
+/* ---------- Timeline ---------- */
+
+.rc-notes { margin: 0 0 var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-input); background: var(--panel-2); }
+.rc-notes-title { margin: 0; color: var(--ink-2); font-size: var(--fs-12); font-weight: 600; }
+.rc-notes-text {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: var(--fs-13);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.rc-notes.is-open .rc-notes-text { display: block; }
+.rc-tl { display: grid; margin: 0; padding: 0; list-style: none; }
+.rc-ti { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: var(--sp-2); padding: 6px 0; }
+.rc-ti + .rc-ti { border-top: 1px solid var(--line); }
+.rc-ti:first-child { padding-top: 0; }
+.rc-ti-dot { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--faint); }
+.rc-ti.is-email .rc-ti-dot { background: var(--s-contacted); }
+.rc-ti.is-call .rc-ti-dot { background: var(--s-neg); }
+.rc-ti.is-deal .rc-ti-dot { background: var(--s-active); }
+.rc-ti.is-live .rc-ti-dot { background: var(--ok); }
+.rc-ti.is-edit .rc-ti-dot { background: var(--line-2); }
+.rc-ti.is-added .rc-ti-dot { background: var(--s-research); }
+.rc-ti.is-mail .rc-ti-dot { background: var(--s-new); }
+.rc-ti-main { min-width: 0; }
+.rc-ti-head { display: flex; align-items: baseline; gap: var(--sp-2); margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.rc-ti-what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.rc-ti-what b { color: var(--ink); font-weight: 600; }
+.rc-ti-when { flex: none; font-size: var(--fs-12); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rc-ti-text { margin: 1px 0 0; font-size: var(--fs-14); overflow-wrap: anywhere; white-space: pre-line; }
+.rc-ti-text.is-clamp { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.rc-ti-changes { margin: 1px 0 0; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+.rc-ti-changes.is-clamp { display: flex; align-items: baseline; gap: 4px; }
+.rc-ti-changes.is-clamp > .rc-ti-ch { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rc-ti-more { flex: none; font-size: var(--fs-12); }
+.rc-ti-warn { margin: 1px 0 0; color: var(--warn-ink); font-size: var(--fs-12); font-weight: 500; }
+
+/* ---------- Contacts ---------- */
+
+.rc-cts, .rc-sgs { margin: 0; padding: 0; list-style: none; }
+.rc-ct, .rc-sg { padding: var(--sp-2) 0; }
+.rc-ct:first-child, .rc-sg:first-child { padding-top: 0; }
+.rc-ct + .rc-ct, .rc-sg + .rc-sg { border-top: 1px solid var(--line); }
+.rc-ct-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.rc-ct-name { min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.rc-ct-status { padding: 0 6px; border-radius: var(--r-pill); background: var(--panel-2); color: var(--ink-2); font-size: var(--fs-12); white-space: nowrap; }
+.rc-sheet { margin-left: auto; color: var(--link); font-size: var(--fs-12); white-space: nowrap; }
+.rc-ct-new { margin-left: auto; color: var(--ink-2); font-size: var(--fs-12); white-space: nowrap; }
+.rc-ct-sub { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+.rc-ct-sub a { color: var(--link); }
+.rc-emails { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.rc-emails li { display: flex; flex-wrap: wrap; align-items: center; column-gap: 4px; }
+.rc-email { min-width: 0; margin-right: auto; font-size: var(--fs-13); overflow-wrap: anywhere; }
+.rc-email-acts { display: inline-flex; gap: 2px; margin-right: -6px; }
+.ui-btn.rc-mini { min-height: 26px; padding: 0 6px; font-size: var(--fs-12); }
+.rc-addform { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-3); padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-input); background: var(--panel-2); }
+.rc-addform .ui-error[hidden] { display: none; }
+.rc-dupe { padding: var(--sp-2) var(--sp-3); border-radius: var(--r-input); background: var(--warn-bg); color: var(--warn-ink); font-size: var(--fs-13); }
+.rc-dupe p { margin: 0 0 var(--sp-2); }
+.rc-dupe b { color: var(--ink); }
+.rc-dupe-acts { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* ---------- Suggestions ---------- */
+
+.rc-sg-kind { margin: 0; color: var(--ink-2); font-size: var(--fs-12); font-weight: 500; }
+.rc-sg-main { margin: 2px 0 0; overflow-wrap: anywhere; }
+.rc-sg-main a { color: var(--link); font-size: var(--fs-13); }
+.rc-sg-sub { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+.rc-sg-body {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: var(--fs-13);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.rc-sg-body.is-open { display: block; }
+.rc-sg-acts { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+
+/* ---------- Deal terms, Placement, Details ---------- */
+
+.rc-terms { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.rc-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px var(--sp-3); margin: var(--sp-2) 0 0; font-size: var(--fs-13); }
+.rc-dl dt { color: var(--ink-2); }
+.rc-dl dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.rc-place-link { margin: 0; overflow-wrap: anywhere; }
+.rc-place-link a { color: var(--link); }
+.rc-details > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; }
+.rc-details > summary::-webkit-details-marker { display: none; }
+.rc-details > summary::before { content: "▸"; width: 12px; color: var(--ink-2); font-size: var(--fs-12); }
+.rc-details[open] > summary::before { content: "▾"; }
+/* A closed <details> hides its content with content-visibility, which keeps a size: hide it for real so
+   the focus trap does not count its controls. */
+.rc-details:not([open]) > :not(summary) { display: none; }
+.rc-details > summary .rc-card-title { margin: 0; }
+.rc-details .rc-dl { margin-top: var(--sp-2); }
+.rc-details > .ui-small { margin: var(--sp-2) 0 0; }
+.rc-type { font-size: var(--fs-13); }
+
+/* ---------- Phone footer (hidden on wider screens) ---------- */
+
+.rc-foot { display: none; }
+
+/* ---------- Phone (< 640 px): full-screen sheet, sticky header and footer ---------- */
+
+@media (max-width: 639.98px) {
+  .rc-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px var(--sp-2); }
+  .rc-top, .rc-meta { display: contents; }
+  .rc-qrow { order: 0; grid-column: 1 / -1; }
+  /* On a phone ‹ also closes the panel, so the queue buttons say Previous / Next in words. */
+  .rc-qrow .rc-queue { flex: 1; min-width: 0; }
+  .rc-queue .ui-queue-text { flex: 1; min-width: 0; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+  .rc-queue .ui-x { display: inline-flex; align-items: center; gap: 4px; width: auto; height: auto; min-height: 32px; padding: 0 12px; border-radius: var(--r-pill); font-size: var(--fs-14); white-space: nowrap; }
+  .rc-pq-word { display: inline; }
+  .rc-top .ui-avatar, .rc-tools { display: none; }
+  .rc-close { order: 1; margin-left: -6px; }
+  .rc-close .rc-ic-x { display: none; }
+  .rc-close .rc-ic-back { display: block; }
+  .rc-title { order: 2; }
+  .rc-meta > .ui-pill { order: 3; }
+  .rc-meta-rest { order: 4; display: flex; flex-wrap: wrap; grid-column: 1 / -1; align-items: center; gap: var(--sp-2); }
+  .rc-about { order: 5; grid-column: 1 / -1; }
+  .rc-foot {
+    display: flex;
+    flex: none;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3) calc(var(--sp-2) + var(--safe-b));
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    box-shadow: var(--shadow-up);
+  }
+  .rc-foot-btn { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-3); }
+  .rc-foot-more { flex: none; width: var(--tap); padding: 0; font-size: var(--fs-20); }
+  .rc-body { padding-bottom: var(--sp-4); }
+  .rc-card { padding: var(--sp-3); }
+}
+
+/* ---------- Touch: 44 px targets (the compact sizes above are for a mouse) ---------- */
+
+@media (pointer: coarse) {
+  .rc-queue .ui-x { min-height: var(--tap); }
+  .rc-outs .ui-btn, .rc-acts .ui-btn, .rc-chip, .ui-btn.rc-mini, .ui-btn.rc-head-act, .rc-wait { min-height: var(--tap); }
+  .rc-head-act.ui-linkbtn, .rc-more.ui-linkbtn, .rc-sheet { display: inline-flex; align-items: center; min-height: var(--tap); }
+  .rc-details > summary { min-height: var(--tap); }
+  /* Inline "more" links: a taller hit area without changing the line. */
+  .rc-ti-more, .rc-about-more { padding: 12px 4px; margin: -12px -4px; }
+}
+
+/* Touch screens keep :hover after a tap; don't let a chip look picked when it isn't. */
+@media (hover: none) {
+  .rc-chip:not([aria-pressed="true"]):hover { border-color: var(--line-2); background: var(--panel); }
+}
