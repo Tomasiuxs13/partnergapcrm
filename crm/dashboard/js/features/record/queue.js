@@ -65,5 +65,5 @@ export function queueHtml(q, exists) {
   const n = q.ids.length;
   const prev = neighbour(q, -1, exists);
   const next = neighbour(q, 1, exists);
-  return html`<div class="ui-queue rc-queue" role="group" aria-label="Queue"><button type="button" class="ui-x" data-pq="-1" aria-label="Previous site (K)"${prev ? "" : raw(" disabled")}>‹</button><span class="ui-queue-text">${num(q.index + 1)} of ${num(n)}${q.label ? " · " + q.label : ""}</span><button type="button" class="ui-x" data-pq="1" aria-label="Next site (J)"${next ? "" : raw(" disabled")}>›</button></div>`;
+  return html`<div class="ui-queue rc-queue" role="group" aria-label="Queue"><button type="button" class="ui-x" data-pq="-1" aria-label="Previous site (K)"${prev ? "" : raw(" disabled")}>‹<span class="rc-pq-word" aria-hidden="true"> Previous</span></button><span class="ui-queue-text">${num(q.index + 1)} of ${num(n)}${q.label ? " · " + q.label : ""}</span><button type="button" class="ui-x" data-pq="1" aria-label="Next site (J)"${next ? "" : raw(" disabled")}><span class="rc-pq-word" aria-hidden="true">Next </span>›</button></div>`;
 }
