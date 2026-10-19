@@ -658,9 +658,8 @@ test("Settings: admins only, D1 only (no edits row), the team reaches /api/meta 
 test("no email address in any GET except the partner profile and the contacts index", async () => {
   // A contact added with only an email is among /api/edits' newest rows now (create_contact).
   assert.equal((await call("POST", "/api/partner/PG-00595/contacts", { by: "Kamile", email: "only-email@scan.example.test" })).status, 201);
-  // (A 'discovery' run: /api/meta shows the latest 'daily' run, whose summary lib/freshness.js passes on as it
-  // is; see NEEDS.md.)
-  await q("INSERT INTO runs (n, name, started_at, status, summary) VALUES (99, 'discovery', '2026-10-01T05:00:00Z', 'error', '{\"error\":\"bounce from x@scan.example.test\"}')");
+  // A 'daily' run, so /api/meta's freshness.last_run carries the address too (lib/freshness.js hides it).
+  await q("INSERT INTO runs (n, name, started_at, status, summary) VALUES (99, 'daily', '2026-10-01T05:00:00Z', 'error', '{\"error\":\"bounce from x@scan.example.test\"}')");
   try {
     const urls = ["/api/meta", "/api/partners?v=2", "/api/partners", "/api/partners?v=2&ids=PG-00377,PG-00595", "/api/edits", "/api/edits?limit=200",
       "/api/edits?account=PG-00595", "/api/team-activity?days=90", "/api/suggestions", "/api/suggestions?status=all", "/api/suggestions?account=PG-00377",
@@ -675,6 +674,9 @@ test("no email address in any GET except the partner profile and the contacts in
     assert.equal(JSON.parse(row.new).email, "(email hidden)");
     const runs = await call("GET", "/api/runs?limit=50");
     assert.equal(runs.json.rows.find((r) => r.n === 99).summary.error, "bounce from (email hidden)");
+    const lastRun = (await call("GET", "/api/meta")).json.freshness.last_run;
+    assert.equal(lastRun.n, 99);
+    assert.equal(lastRun.summary.error, "bounce from (email hidden)");
     // Signed out: nothing at all.
     for (const u of ["/api/partner/PG-00377", "/api/contacts-index", "/api/edits", "/api/suggestions"]) {
       const r = await fetch(server.baseUrl + u, { redirect: "manual" });
