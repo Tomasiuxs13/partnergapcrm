@@ -151,3 +151,15 @@ Still open:
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw` so the
   panel words them like its other saves (see "Status after the F1 merge").
+
+# NEEDS (F2)
+
+Changes F2 (Today) needs in files it does not own. Today works without them.
+
+1. **`js/shell/whats-new.js` (F8): the banner hook.** `pages/today.js` calls `whatsNewBanner(ctx, slot)` once per
+   mount. `slot` is the empty `<div class="td-banner" data-td-banner>` between the header and the blocks (hidden by
+   `today.css` while empty). F8 can either return markup (Today renders it into the slot when the slot is still
+   empty) or render into `slot` itself and empty it on dismiss. A throw is caught and logged; Today still renders.
+2. **Sites (F3): the links Today makes.** The capped no-reply note links to `#sites?tab=waiting&quiet=14` (the
+   "No reply in 14+ days" chip of spec 2.2.2, owner filter left at its Me default); New prospects' "See all N in
+   Sites" and the All clear line link to `#sites?tab=mine`. Please keep those params working.
