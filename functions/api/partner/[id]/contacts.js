@@ -1,4 +1,8 @@
-// Adds a contact person to a partner. The email is checked against every contact first.
+// POST /api/partner/:id/contacts: adds a contact person to a partner (also "Add as contact" from a
+// suggestion). The email is checked against every contact first: an exact address match answers
+// 409 {error, duplicate} unless force is set. Request, response and the create_contact edits row are
+// unchanged (golden/add-contact.json). The NEWC- id comes from lib/crm.js#nextTempId, whose kv_meta mark
+// is written in the same batch as the insert.
 import { json, bad, body, who, text, validEmail, now, nextTempId } from "../../../../lib/crm.js";
 
 export async function onRequestPost({ request, env, params }) {
@@ -16,8 +20,12 @@ export async function onRequestPost({ request, env, params }) {
   const linkedin = text(b.linkedin, 300);
   if (linkedin && !/^https?:\/\//i.test(linkedin)) return bad("The LinkedIn link must start with https://.");
   if (email) {
-    const dupe = await db.prepare("SELECT c.id, c.account_id, p.owner, p.name, p.domain FROM contacts c LEFT JOIN partners p ON p.id = c.account_id WHERE lower(c.email) LIKE ? LIMIT 1")
-      .bind("%" + email + "%").first();
+    // Exact match against any address in a stored list ("a@x.test; b@x.test" or "a@x.test, b@x.test"), so
+    // ann@x.example.test no longer matches joann@x.example.test (spec 6.3.10). LIKE wildcards are escaped.
+    const pattern = email.replace(/[\\%_]/g, (ch) => "\\" + ch);
+    const dupe = await db.prepare("SELECT c.id, c.account_id, p.owner, p.name, p.domain FROM contacts c LEFT JOIN partners p ON p.id = c.account_id " +
+      "WHERE (';' || replace(replace(lower(c.email), ' ', ''), ',', ';') || ';') LIKE ('%;' || ? || ';%') ESCAPE '\\' LIMIT 1")
+      .bind(pattern).first();
     if (dupe && !b.force) return json({ error: "This email is already in the CRM", duplicate: dupe }, 409);
   }
   const { id: cid, stmts: idStmts } = await nextTempId(db, "contact");
