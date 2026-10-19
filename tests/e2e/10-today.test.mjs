@@ -477,8 +477,13 @@ test("axe: no serious or critical issues on Today (light and dark)", async () =>
 test("T3 (queue part): Interested on a Do now row is one request with the golden rows, then the next Do now site opens", async () => {
   const patch = goldenCase("patch-partner", "interested");
   const act = goldenCase("activity-log", "interested");
-  // The golden starting row, owned by Kamile and replied yesterday, so it is in her Do now.
-  await applyBefore({ [ID.interested]: Object.assign({}, patch.before[ID.interested], { owner: "Kamile", last_touch: addDays(TODAY, -1) }) });
+  // The golden starting row, owned by Kamile and replied yesterday, so it is in her Do now. A save or a note
+  // after the reply date marks a reply handled (model.derive), so earlier saves and notes on this contract row
+  // (05-ui-kit, 20-record) are moved before the reply for this test and put back after it.
+  const acts = await retry(() => d1("SELECT n, date FROM activity WHERE account_id = " + q(ID.interested)));
+  await retry(() => d1("UPDATE activity SET date = " + q(addDays(TODAY, -30)) + " WHERE account_id = " + q(ID.interested)));
+  await applyBefore({ [ID.interested]: Object.assign({}, patch.before[ID.interested],
+    { owner: "Kamile", last_touch: addDays(TODAY, -1), updated_at: null, updated_by: null }) });
   const { page, close } = await openToday({ name: "Kamile" });
   try {
     assert.equal(await heading(page, NOW), "Do now (" + (K.doNowCount + 1) + ")");
@@ -513,6 +518,7 @@ test("T3 (queue part): Interested on a Do now row is one request with the golden
   } finally {
     await close();
     await restore([ID.interested]);
+    for (const a of acts) await retry(() => d1("UPDATE activity SET date = " + (a.date == null ? "NULL" : q(a.date)) + " WHERE n = " + Number(a.n)));
   }
 });
 
