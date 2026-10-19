@@ -4,7 +4,8 @@
 //   - without 003/004 every endpoint works and the optional features are off; 003/004 applied while the
 //     server runs switch them on at the next /api/meta (lib/tables.js caches positive answers only)
 //   - /api/meta: kv_meta overrides (team, clients), allow_dnc, build = window.BUILD, read_only by host
-//   - freshness writes kv_meta only on change and never on a read-only host
+//   - freshness writes kv_meta only on change and never on a read-only host; it counts only waiting edits
+//     (not the "not copied" conflicts) and stale_pending counts those older than the last expected run
 //   - GET /api/partners?v=2: shape, labels, values, ETag + 304, ids mode; v1 byte-for-byte the d5e91d9 shape
 //   - POST /api/partner/:id/outcome = golden PATCH rows + golden activity row; activity and outcome are atomic
 //   - every golden write path (PATCH, activity, bulk, add site, add contact, program) still writes its rows
@@ -22,6 +23,7 @@ import {
 } from "./lib.mjs";
 import { buildFixture, seedSql, OPTIONAL_TABLES } from "../fixtures/make-seed.mjs";
 import { V2_COLS } from "../../lib/crm.js";
+import { lastExpectedRun } from "../../lib/freshness.js";
 
 const MIG = path.join(HARNESS_ROOT, "crm", "scripts", "migrations");
 const FILE_004 = path.join(MIG, "004_suggestions_runs.sql");
@@ -150,6 +152,15 @@ test("without 003/004 every endpoint works and the optional features are off", a
   const r2 = await replayCase(act, { client, target });
   assert.ok(r2.ok, r2.errors.join("\n"));
   await outcomeInterested("bare server");
+  // Add site and Add contact without kv_meta: the next NEW-/NEWC- number is MAX + 1 (d5e91d9's rule).
+  const [topNew] = await q("SELECT COALESCE(MAX(CAST(SUBSTR(id, 5) AS INTEGER)), 0) AS n FROM partners WHERE id LIKE 'NEW-%'");
+  const added = await call("POST", "/api/partners", { by: "Kamile", name: "Bare server site" });
+  assert.equal(added.status, 201, added.text.slice(0, 300));
+  assert.equal(added.json.row[0], "NEW-" + String(topNew.n + 1).padStart(4, "0"));
+  const [topNewc] = await q("SELECT COALESCE(MAX(CAST(SUBSTR(id, 6) AS INTEGER)), 0) AS n FROM contacts WHERE id LIKE 'NEWC-%'");
+  const person = await call("POST", "/api/partner/" + added.json.row[0] + "/contacts", { by: "Kamile", first_name: "Bare" });
+  assert.equal(person.status, 201, person.text.slice(0, 300));
+  assert.equal(person.json.contact.id, "NEWC-" + String(topNewc.n + 1).padStart(4, "0"));
 
   const after = (await q("SELECT name FROM sqlite_master WHERE type = 'table'")).map((r) => r.name);
   assert.deepEqual(after.sort(), tables.sort(), "GETs and writes create no table");
@@ -252,7 +263,8 @@ test("freshness writes kv_meta only when the sheet signature changes, and never 
   let kv = await kvRows();
   assert.equal(kv.find((r) => r.k === "sheet_sig").v, sig1);
   assert.equal(m1.freshness.last_sheet_change, kv.find((r) => r.k === "last_sheet_change").v);
-  const [p] = await q("SELECT COUNT(*) AS c, MIN(at) AS oldest FROM edits WHERE applied = 0");
+  // Waiting = applied = 0 and newer than the last applied edit (2.2.6); "not copied" conflicts are left out.
+  const [p] = await q("SELECT COUNT(*) AS c, MIN(at) AS oldest FROM edits WHERE applied = 0 AND n > (SELECT MAX(n) FROM edits WHERE applied = 1)");
   const [ap] = await q("SELECT MAX(n) AS n FROM edits WHERE applied = 1");
   assert.equal(m1.freshness.pending, p.c);
   assert.equal(m1.freshness.oldest_pending_at, p.oldest);
@@ -282,6 +294,46 @@ test("freshness writes kv_meta only when the sheet signature changes, and never 
   assert.equal(kv.find((r) => r.k === "sheet_sig").v, sig2);
   assert.notEqual(kv.find((r) => r.k === "last_sheet_change").at, "2000-01-01T00:00:00Z");
   assert.equal(m3.freshness.last_sheet_change, kv.find((r) => r.k === "last_sheet_change").v);
+});
+
+test("freshness counts only waiting edits: not-copied conflicts are left out, stale_pending counts those older than the last run", async () => {
+  const fresh = async () => (await call("GET", "/api/meta")).json.freshness;
+  const [mx] = await q("SELECT MAX(n) AS n FROM edits WHERE applied = 1");
+  const conflicts = await q(`SELECT n FROM edits WHERE applied = 0 AND n < ${mx.n}`);
+  assert.ok(conflicts.length >= 1, "the fixture has a not-copied edit (R5)");
+  const waiting = await q(`SELECT n, at FROM edits WHERE applied = 0 AND n > ${mx.n} ORDER BY n`);
+  assert.ok(waiting.length >= 1, "the fixture has waiting edits");
+
+  const f1 = await fresh();
+  const runIso = lastExpectedRun(Date.now());
+  assert.equal(f1.stale_before, runIso, "stale_before is the last weekday 08:47 Vilnius");
+  assert.equal(f1.pending, waiting.length, "pending = waiting edits only");
+  assert.equal(f1.oldest_pending_at, waiting.map((r) => r.at).sort()[0]);
+  assert.equal(f1.stale_pending, waiting.filter((r) => r.at < runIso).length);
+
+  // A waiting edit older than the run counts as stale; one made now (after the run) does not.
+  const [{ n: nMax }] = await q("SELECT MAX(n) AS n FROM edits");
+  await q("INSERT INTO edits (at, by_whom, kind, account_id, field, old, new, applied) VALUES ('2000-01-03T09:00:00Z', 'Kamile', 'update', 'PG-00590', 'next_step', NULL, 'Old waiting edit', 0)");
+  await applyBefore({ "PG-00594": { stage: "Contacted", next_step: null, next_due: null } }, target);
+  const logged = await call("POST", "/api/partner/PG-00594/activity", { by: "Kamile", type: "Note", summary: "Made after the run." });
+  assert.equal(logged.status, 201);
+  const f2 = await fresh();
+  assert.equal(f2.pending, f1.pending + 2);
+  assert.equal(f2.stale_pending, f1.stale_pending + 1);
+  assert.equal(f2.oldest_pending_at, "2000-01-03T09:00:00Z");
+
+  // Only the conflicts left (the morning run copied every waiting edit): nothing is pending.
+  const copied = (await q(`SELECT n FROM edits WHERE applied = 0 AND n > ${mx.n}`)).map((r) => r.n);
+  await q(`UPDATE edits SET applied = 1 WHERE n IN (${copied.join(",")})`);
+  try {
+    const f3 = await fresh();
+    assert.deepEqual([f3.pending, f3.stale_pending, f3.oldest_pending_at], [0, 0, null], "a not-copied conflict is never pending");
+    const [still] = await q(`SELECT COUNT(*) AS c FROM edits WHERE applied = 0 AND n IN (${conflicts.map((r) => r.n).join(",")})`);
+    assert.equal(still.c, conflicts.length, "the conflicts are still applied = 0");
+  } finally {
+    await q(`UPDATE edits SET applied = 0 WHERE n IN (${copied.join(",")})`);
+    await q(`DELETE FROM edits WHERE n > ${nMax} AND at = '2000-01-03T09:00:00Z'`);
+  }
 });
 
 // ---------- 6. GET /api/partners?v=2 ----------
@@ -530,4 +582,45 @@ test("every golden write path still writes its rows after the lib/crm.js refacto
     }
   }
   assert.ok(n >= 40, "replayed " + n + " cases");
+});
+
+// ---------- 11. NEW-/NEWC- ids are never reused (review fix) ----------
+
+// The daily run renames NEW-/NEWC- rows to PG-/C- ids (6.4 R2). The next Add site or Add contact must not
+// hand the renamed number out again: an old link to it must say "That site wasn't found" (spec 2.4).
+test("a NEW-/NEWC- id renamed by the daily run is never handed out again", async () => {
+  const [kvT] = await q("SELECT COUNT(*) AS c FROM sqlite_master WHERE type = 'table' AND name = 'kv_meta'");
+  assert.equal(kvT.c, 1, "kv_meta exists (003 was applied in test 3)");
+  const num = (id) => Number(String(id).replace(/^NEWC?-/, ""));
+  const addSite = async (name) => {
+    const r = await call("POST", "/api/partners", { by: "Kamile", name });
+    assert.equal(r.status, 201, r.text.slice(0, 300));
+    assert.match(r.json.row[0], /^NEW-\d{4}$/);
+    return r.json.row[0];
+  };
+  const addContact = async (site, first) => {
+    const r = await call("POST", "/api/partner/" + site + "/contacts", { by: "Kamile", first_name: first });
+    assert.equal(r.status, 201, r.text.slice(0, 300));
+    assert.match(r.json.contact.id, /^NEWC-\d{4}$/);
+    return r.json.contact.id;
+  };
+  const a = await addSite("Renamed site");
+  const ca = await addContact(a, "Renamed");
+  // What the daily run does (R2): partners.id, contacts.account_id, activity.account_id, edits.account_id;
+  // the same for the contact id.
+  for (const sql of [`UPDATE partners SET id = 'PG-09001' WHERE id = '${a}'`, `UPDATE contacts SET account_id = 'PG-09001' WHERE account_id = '${a}'`,
+    `UPDATE activity SET account_id = 'PG-09001' WHERE account_id = '${a}'`, `UPDATE edits SET account_id = 'PG-09001' WHERE account_id = '${a}'`,
+    `UPDATE contacts SET id = 'C-09001' WHERE id = '${ca}'`, `UPDATE edits SET contact_id = 'C-09001' WHERE contact_id = '${ca}'`]) await q(sql);
+  const [left] = await q(`SELECT COUNT(*) AS c FROM partners WHERE id = '${a}'`);
+  assert.equal(left.c, 0, "renamed");
+
+  const b = await addSite("Next site");
+  assert.ok(num(b) > num(a), b + " is a new number after the renamed " + a);
+  const cb = await addContact("PG-09001", "Next");
+  assert.ok(num(cb) > num(ca), cb + " is a new number after the renamed " + ca);
+  const kv = await q("SELECT k, v FROM kv_meta WHERE k IN ('new_site_n', 'new_contact_n') ORDER BY k");
+  assert.deepEqual(kv, [{ k: "new_contact_n", v: String(num(cb)) }, { k: "new_site_n", v: String(num(b)) }]);
+  // The edits rows keep the golden shape: create_account / create_contact with the NEW-/NEWC- id.
+  const rows = await q(`SELECT kind, account_id, contact_id FROM edits WHERE account_id = '${b}' OR contact_id = '${cb}' ORDER BY n`);
+  assert.deepEqual(rows, [{ kind: "create_account", account_id: b, contact_id: null }, { kind: "create_contact", account_id: "PG-09001", contact_id: cb }]);
 });

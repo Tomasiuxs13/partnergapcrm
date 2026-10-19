@@ -228,7 +228,7 @@ export function createList(root, opts = {}) {
     const page = visible();
     const allOn = page.length > 0 && page.every((r) => state.selected.has(keyOf(r)));
     const someOn = page.some((r) => state.selected.has(keyOf(r)));
-    return html`<thead><tr>${sel ? html`<th class="ui-sel" scope="col"><input type="checkbox" data-selall aria-label="${"Select all " + page.length + " on this page"}"${allOn ? raw(" checked") : ""}${!allOn && someOn ? raw(' data-mixed="1"') : ""}></th>` : ""}${cols.map((c) => {
+    return html`<thead><tr>${sel ? html`<th class="ui-sel" scope="col"><label class="ui-selbox"><input type="checkbox" data-selall aria-label="${"Select all " + page.length + " on this page"}"${allOn ? raw(" checked") : ""}${!allOn && someOn ? raw(' data-mixed="1"') : ""}></label></th>` : ""}${cols.map((c) => {
       const sortable = typeof c.sort === "function";
       const on = state.sort.key === c.id;
       const aria = sortable ? (on ? (state.sort.dir === "desc" ? "descending" : "ascending") : "none") : null;
@@ -243,7 +243,7 @@ export function createList(root, opts = {}) {
     const rid = recId(r);
     const sel = canSelect();
     const name = r.label || r.domain || r.id || "";
-    return html`<tr data-key="${k}"${rid ? html` data-rec="${rid}"` : ""}${state.selected.has(k) ? raw(' class="is-selected"') : ""}>${sel ? html`<td class="ui-sel"><input type="checkbox" data-sel="${k}" aria-label="${"Select " + name}"${state.selected.has(k) ? raw(" checked") : ""}></td>` : ""}${cols.map((col) => {
+    return html`<tr data-key="${k}"${rid ? html` data-rec="${rid}"` : ""}${state.selected.has(k) ? raw(' class="is-selected"') : ""}>${sel ? html`<td class="ui-sel"><label class="ui-selbox"><input type="checkbox" data-sel="${k}" aria-label="${"Select " + name}"${state.selected.has(k) ? raw(" checked") : ""}></label></td>` : ""}${cols.map((col) => {
       let cell;
       try { cell = col.cell(r, c); } catch (e) { cell = html`<span class="ui-faint">—</span>`; }
       const cls = "is-p" + (col.priority || 2) + (col.align === "num" ? " is-num" : "") + (col.className ? " " + col.className : "") + " is-c-" + col.id;

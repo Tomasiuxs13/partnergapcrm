@@ -417,6 +417,15 @@ select.ui-input { padding-right: 28px; }
   pointer-events: none;
 }
 #toasts:popover-open, .ui-toasts:popover-open { display: flex; }
+/* Desktop: bottom-left of the content area, so a toast never covers the sidebar footer (sync line,
+   Refresh, Google Sheet, Sign out). While the record panel is open the sidebar is inert under its
+   scrim, and the toast keeps the window's left edge, clear of the panel. */
+@media (min-width: 1024px) {
+  html:not([data-panel-open]) #toasts, html:not([data-panel-open]) .ui-toasts {
+    left: calc(var(--side-w) + 16px);
+    width: min(420px, calc(100vw - var(--side-w) - 32px));
+  }
+}
 .ui-toast {
   display: flex;
   align-items: center;
@@ -523,6 +532,8 @@ select.ui-input { padding-right: 28px; }
 .ui-table .is-num { text-align: right; }
 .ui-table .ui-sel { width: 40px; padding-right: 0; }
 .ui-sel input { width: 16px; height: 16px; margin: 0; vertical-align: middle; accent-color: var(--btn-pri); }
+/* The row checkbox's label: the tap target on touch screens (44 px, below). */
+.ui-selbox { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; cursor: pointer; }
 .ui-table .is-actions { width: 1%; white-space: nowrap; text-align: right; }
 /* The row buttons stay in view when a wide table scrolls sideways. */
 .ui-table td.is-actions, .ui-table th.is-actions { position: sticky; right: 0; background: var(--panel); }
@@ -875,13 +886,29 @@ html[data-panel-open] { overflow: hidden; }
   .ui-grid2 { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* ---------- Touch: 44 px targets (spec 4.1, 4.12) ---------- */
+/* ---------- Touch: 44 px targets and 16 px inputs (spec 4.1, 4.12) ---------- */
 
 @media (pointer: coarse) {
   .ui-btn, .ui-btn.is-sm, .ui-chipbtn, .ui-fbtn, .ui-x, .ui-toast-btn, .ui-toast-x { min-height: var(--tap); }
   .ui-x, .ui-toast-x { min-width: var(--tap); }
-  .ui-pill, .ui-owner, button.ui-tags, .ui-sortbtn { min-height: 36px; }
+  .ui-linkbtn { display: inline-flex; align-items: center; min-height: var(--tap); }
+  /* Row controls: the site link, the stage, owner and clients pills, the next step, type and due
+     buttons, the checkbox (its label is the target) and the table's sort buttons. */
+  .ui-row-link { display: inline-flex; align-items: center; min-height: var(--tap); }
+  button.ui-pill, button.ui-owner, button.ui-tags { min-width: var(--tap); min-height: var(--tap); }
+  button.ui-tags { margin: 0; }
+  button.ui-next { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: var(--tap); min-height: var(--tap); margin: 0; }
+  .ui-selbox { min-width: var(--tap); min-height: var(--tap); }
+  .ui-sortbtn { min-height: var(--tap); }
   .ui-mi, .ui-radio, .ui-check { min-height: var(--tap); }
-  .ui-fchip-x { width: 36px; height: 36px; }
+  .ui-fchip { min-height: var(--tap); }
+  .ui-fchip-x { width: var(--tap); height: var(--tap); }
   .ui-sel input, .ui-radio input, .ui-check input { width: 20px; height: 20px; }
+  /* 16 px, so iOS Safari doesn't zoom when a field gets focus. base.css sets it for bare inputs; these
+     classes set their own size, so they repeat it. */
+  .ui-input, .ui-fsearch .ui-input, .ui-msearch, .ui-sortsel select, .ui-pager-per select { min-height: var(--tap); font-size: var(--fs-16); }
+}
+/* Phone cards: the checkbox stays in line with the pills; its target reaches into the card padding. */
+@media (pointer: coarse) and (max-width: 639.98px) {
+  .ui-table td.ui-sel .ui-selbox { margin-left: calc(-1 * var(--sp-3)); }
 }

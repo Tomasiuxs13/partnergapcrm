@@ -5,6 +5,8 @@
 // (reason 'refresh' when a cached list was shown, else 'load'). load() resolves after the cache
 // step; whenLoaded() resolves once the network answer (or its failure) has been applied.
 // upsert()/patchLocal() merge column by column and notify {reason:'edit'|'bulk', ids}.
+// A full list that was requested before a local write and arrives after it keeps the written columns
+// (and rows added or removed since) from the store, and is cached without its ETag (see keepLocal()).
 // Notifications are coalesced per microtask and held while setBusy()'s check says the UI is busy
 // (an open menu, popover or inline editor, or a dirty record panel), then flushed.
 import { api, readPartners } from "./api.js";
@@ -33,6 +35,56 @@ let networkDone = false;
 let refreshing = null;
 let lastCheck = 0;
 let listening = false;
+
+// Local writes made while a full-list request is in flight. Each request gets a Map (id -> Set of
+// columns written, or REMOVED) from the moment it is sent until its answer has been applied.
+const watches = new Set();
+const REMOVED = "removed";
+
+function watchWrites() {
+  const w = new Map();
+  watches.add(w);
+  return w;
+}
+
+function noteWrite(id, fields) {
+  if (!watches.size) return;
+  const keys = Object.keys(fields || {}).filter((k) => k !== "id" && fields[k] !== undefined && !DERIVED_KEYS.has(k));
+  for (const w of watches) {
+    let set = w.get(id);
+    if (!set || set === REMOVED) w.set(id, (set = new Set()));
+    for (const k of keys) set.add(k);
+  }
+}
+
+function noteRemove(id) {
+  for (const w of watches) w.set(id, REMOVED);
+}
+
+// The list may have been generated before the writes in w: the columns written since the request was
+// sent keep their local values, rows removed since stay removed and rows added since stay. Returns
+// the objects to store, or null when nothing was written meanwhile.
+function keepLocal(objs, w) {
+  if (!w || !w.size) return null;
+  const out = [];
+  const seen = new Set();
+  for (const o of objs) {
+    const id = o && o.id != null ? String(o.id) : "";
+    const t = w.get(id);
+    if (t === REMOVED) continue;
+    seen.add(id);
+    const cur = t ? raws.get(id) : null;
+    if (!cur) {
+      out.push(o);
+      continue;
+    }
+    const m = Object.assign({}, o);
+    for (const k of t) if (k in cur) m[k] = cur[k];
+    out.push(m);
+  }
+  for (const [id, t] of w) if (t !== REMOVED && !seen.has(id) && raws.has(id)) out.push(Object.assign({}, raws.get(id)));
+  return out;
+}
 
 // loadedAt: when the shown list was generated (X-Generated-At, else when it arrived).
 // fromCache: the shown list came from Cache Storage (still true after a 304 confirmed it).
@@ -147,13 +199,22 @@ export function setBusy(fn) {
 
 const isV2 = (d) => d && typeof d === "object" && !Array.isArray(d) && Array.isArray(d.cols) && Array.isArray(d.rows);
 
-function applyResult(r, reason) {
+function applyResult(r, reason, w) {
   const d = r && r.data;
   if (isV2(d)) {
     cols = d.cols.slice();
-    setAll(d.rows.map((row) => fromV2Row(row, cols)), reason);
-    status.etag = r.etag || null;
-    cache.write(r.text != null ? r.text : d, { etag: r.etag || null, generatedAt: r.generatedAt || null });
+    const objs = d.rows.map((row) => fromV2Row(row, cols));
+    const merged = keepLocal(objs, w);
+    setAll(merged || objs, reason);
+    if (merged) {
+      // Not the server's body: cache what the store holds, without an ETag, so the next load asks in full.
+      status.etag = null;
+      const rows = merged.map((o) => cols.map((k) => (o[k] === undefined ? null : o[k])));
+      cache.write({ v: d.v, cols, rows }, { etag: null, generatedAt: r.generatedAt || null });
+    } else {
+      status.etag = r.etag || null;
+      cache.write(r.text != null ? r.text : d, { etag: r.etag || null, generatedAt: r.generatedAt || null });
+    }
   } else {
     throw new Error("The site list isn't available.");
   }
@@ -174,7 +235,8 @@ function failText(e) {
 }
 
 // Applies a partners result; on a 304 that the shown list can't answer, asks again without ETag.
-async function settle(promise, { cachedEtag, sentEtag }) {
+// w: the writes watch started when the request was sent (always released here).
+async function settle(promise, { cachedEtag, sentEtag, w }) {
   try {
     let r = await promise;
     if (r && r.status === 304) {
@@ -186,13 +248,17 @@ async function settle(promise, { cachedEtag, sentEtag }) {
       r = await api.partners({});
     }
     if (!r || r.status === 304) throw new Error("The site list isn't available.");
-    applyResult(r, raws.size ? "refresh" : "load");
+    applyResult(r, raws.size ? "refresh" : "load", w);
   } catch (e) {
     status.error = failText(e);
+  } finally {
+    watches.delete(w);
   }
 }
 
 export async function load() {
+  // The boot request in index.html is already on its way: watch writes from now on.
+  const w = snapshot() ? null : watchWrites();
   const m = meta.get();
   status.build = m.build == null ? null : m.build;
   status.pending = m.freshness && m.freshness.pending != null ? Number(m.freshness.pending) : null;
@@ -230,7 +296,7 @@ export async function load() {
   // The boot fetch in index.html sent localStorage's ETag; without it, ask with the cached one.
   const sentEtag = boot ? cache.etag() : cached ? cached.etag : null;
   const promise = boot ? readPartners(boot) : api.partners({ etag: sentEtag });
-  network = settle(promise, { cachedEtag: cached ? cached.etag : null, sentEtag }).then(() => {
+  network = settle(promise, { cachedEtag: cached ? cached.etag : null, sentEtag, w }).then(() => {
     networkDone = true;
     status.loading = false;
     emitStatus();
@@ -276,6 +342,7 @@ export function upsert(v2RowOrObject, { reason = "edit" } = {}) {
   const raw = mergeInto(Object.assign({}, raws.get(id) || {}), obj);
   raw.id = id;
   raws.set(id, raw);
+  noteWrite(id, obj);
   const rec = derive(raw, ctxNow());
   recs.set(id, rec);
   list = null;
@@ -291,6 +358,7 @@ export function patchLocal(id, fields, { reason = "edit" } = {}) {
   const raw = mergeInto(Object.assign({}, cur), fields);
   raw.id = key;
   raws.set(key, raw);
+  noteWrite(key, fields);
   const rec = derive(raw, ctxNow());
   recs.set(key, rec);
   list = null;
@@ -301,6 +369,7 @@ export function patchLocal(id, fields, { reason = "edit" } = {}) {
 export function remove(id) {
   const key = String(id);
   if (!raws.delete(key)) return;
+  noteRemove(key);
   recs.delete(key);
   list = null;
   notify("edit", [key]);
@@ -320,7 +389,8 @@ export function refresh({ full = false } = {}) {
   status.loading = true;
   emitStatus();
   const etag = full ? null : status.etag;
-  refreshing = settle(api.partners({ etag }), { cachedEtag: status.etag, sentEtag: etag }).then(() => {
+  const w = watchWrites();
+  refreshing = settle(api.partners({ etag }), { cachedEtag: status.etag, sentEtag: etag, w }).then(() => {
     refreshing = null;
     status.loading = false;
     emitStatus();

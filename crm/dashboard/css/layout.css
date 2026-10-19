@@ -457,5 +457,6 @@
 
 @media (pointer: coarse) {
   .sh-nav-a { min-height: var(--tap); }
-  .sh-bbtn { min-height: 32px; }
+  .sh-bbtn { display: inline-flex; align-items: center; min-height: var(--tap); }
+  .sh-x { min-width: var(--tap); min-height: var(--tap); }
 }

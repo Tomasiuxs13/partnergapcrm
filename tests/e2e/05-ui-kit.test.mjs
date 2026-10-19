@@ -803,6 +803,41 @@ test("dialogs: focus trap, a menu inside is clickable, a toast shown meanwhile i
   assert.equal(await p, true);
 });
 
+test("after a save the footer's waiting count comes from freshness, without the not-copied conflicts (spec 4.11, 2.2.6)", async () => {
+  const { page } = session;
+  const n0 = await lastEdit();
+  await page.evaluate((id) => window.__uk.actions.update(id, { next_step: "Footer count check" }, { undo: false }), ID.spare4);
+  await waitEdits(n0, 1);
+  const m = await pageFetch(page, "GET", "/api/meta");
+  const e = await pageFetch(page, "GET", "/api/edits");
+  const waiting = m.json.freshness.pending;
+  assert.ok(e.json.pending > waiting, "the fixture has a not-copied conflict: /api/edits counts " + e.json.pending + ", freshness " + waiting);
+  await page.waitForFunction((n) => {
+    const el = document.querySelector(".sh-side [data-sync]");
+    return !!el && new RegExp("· " + n + " changes? copy to the Google Sheet").test(el.textContent);
+  }, waiting, { timeout: 10000 });
+});
+
+test("desktop: a toast sits at the bottom left of the content, clear of the sidebar footer (spec 4.9)", async () => {
+  const { page } = session;
+  await page.evaluate(() => window.__uk.toast.toast("Saved next to the footer", { kind: "success", undo: () => {} }));
+  const t = await toastWith(page, "Saved next to the footer");
+  await settled(page);
+  const box = await t.boundingBox();
+  const vp = page.viewportSize();
+  const sideRight = await page.evaluate(() => document.querySelector(".sh-side").getBoundingClientRect().right);
+  assert.ok(box.x >= sideRight, "the toast starts right of the sidebar (" + box.x + " >= " + sideRight + ")");
+  assert.ok(box.x <= sideRight + 32, "at the left of the content area");
+  assert.ok(box.y + box.height >= vp.height - 80, "at the bottom");
+  const clear = await page.evaluate(() => Array.from(document.querySelectorAll(".sh-side .sh-foot a, .sh-side .sh-foot button")).map((el) => {
+    const r = el.getBoundingClientRect();
+    const h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return { what: el.textContent.trim(), top: !!h && el.contains(h) };
+  }));
+  assert.ok(clear.length >= 3, "the footer has its controls");
+  assert.deepEqual(clear.filter((c) => !c.top), [], "every sidebar footer control takes clicks while the toast shows");
+});
+
 test("the record panel: its stage menu is clickable, a toast while it is open is visible, Esc closes it", async () => {
   const { page } = session;
   await page.evaluate((id) => window.__uk.record.openRecord(id), ID.spare3);
@@ -830,6 +865,8 @@ test("the record panel: its stage menu is clickable, a toast while it is open is
     return !!h && el.contains(h);
   });
   assert.equal(top, true, "the toast is above the panel");
+  const [tb, pb] = [await t.boundingBox(), await page.locator("#layer-panel .ui-panel").boundingBox()];
+  assert.ok(tb.x + tb.width <= pb.x, "with the panel open the toast stays at the window's left edge, clear of the panel");
   // Esc closes the panel even while the toast is showing.
   await page.focus("#layer-panel [data-pnote]");
   await page.keyboard.press("Escape");
@@ -978,6 +1015,67 @@ test("phone (390 px): cards, no horizontal scroll, filter sheet with a working m
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => !document.querySelector("dialog.sh-more").open);
     assert.equal(await page.evaluate(() => document.getElementById("toasts").parentNode === document.body), true, "the region goes back to <body>");
+    assert.deepEqual(s.watch.pageErrors, [], "no page errors");
+  } finally {
+    await s.close();
+  }
+});
+
+test("touch (390 px, coarse pointer): list and filter controls are at least 44 px, inputs are 16 px (spec 4.1, 4.12)", async () => {
+  const s = await signedInPage({ name: "Kamile", viewport: { width: 390, height: 844 }, contextOptions: { isMobile: true, hasTouch: true, deviceScaleFactor: 2 } });
+  try {
+    const { page } = s;
+    await openApp(page);
+    assert.equal(await page.evaluate(() => matchMedia("(pointer: coarse)").matches), true, "a coarse pointer");
+    await mountKamileList(page);
+    await page.evaluate(() => {
+      const { filters, router } = window.__uk;
+      const host = document.createElement("div");
+      host.id = "uk-tfilters";
+      document.getElementById("uk-list").prepend(host);
+      filters.createFilterBar(host, { fields: ["q", "owner", "stage", "client"], params: Object.assign({}, router.current().params, { stage: "Contacted" }), label: "Filters" });
+    });
+    // The checkbox's target is its label; a hidden control (width 0) is not a target.
+    const measure = (scope) => page.evaluate((scope) => {
+      const out = { small: [], fonts: [] };
+      for (const root of document.querySelectorAll(scope)) {
+        for (const el of root.querySelectorAll("a[href], button, input, select, textarea, [tabindex='0']")) {
+          const box = el.matches("input[type=checkbox], input[type=radio]") && el.closest("label") ? el.closest("label") : el;
+          const r = box.getBoundingClientRect();
+          if (!r.width || !r.height || getComputedStyle(el).visibility === "hidden") continue;
+          const what = el.tagName.toLowerCase() + "." + String(box.className || "").split(" ")[0] + " " + (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30);
+          if (r.width < 43.5 || r.height < 43.5) out.small.push(what + " " + Math.round(r.width) + "x" + Math.round(r.height));
+          if (el.matches("input:not([type=checkbox]):not([type=radio]), select, textarea")) {
+            const fs = parseFloat(getComputedStyle(el).fontSize);
+            if (fs < 16) out.fonts.push(what + " " + fs + "px");
+          }
+        }
+      }
+      return out;
+    }, scope);
+    const list = await measure("#uk-list, [data-banners]");
+    assert.deepEqual(list.small, [], "list, filter bar and banner targets under 44 px");
+    assert.deepEqual(list.fonts, [], "inputs under 16 px");
+    await shot(page, "touch-list-390");
+
+    // The filter sheet and a menu with a search box opened from it.
+    await page.click("#uk-tfilters [data-fsheet]");
+    await page.waitForSelector("dialog.ui-modal[open] [data-fbtns-sheet]");
+    const sheet = await measure("dialog.ui-modal[open]");
+    assert.deepEqual(sheet, { small: [], fonts: [] }, "filter sheet");
+    await page.click('dialog.ui-modal[open] [data-ffield="client"]');
+    await page.waitForSelector(".ui-menu:popover-open .ui-msearch");
+    const menu = await measure(".ui-menu:popover-open");
+    assert.deepEqual(menu, { small: [], fonts: [] }, "menu with search");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await page.waitForSelector("dialog.ui-modal", { state: "detached" });
+    // The label toggles the row checkbox (and does not open the row).
+    const first = "#uk-list tbody tr:first-child";
+    const lb = await page.locator(first + " .ui-selbox").boundingBox();
+    await page.touchscreen.tap(lb.x + 3, lb.y + 3);
+    assert.equal(await page.isChecked(first + " input[data-sel]"), true, "a tap near the label's corner selects the row");
+    assert.equal(await page.locator("#layer-panel .ui-panel").count(), 0, "and opens nothing");
     assert.deepEqual(s.watch.pageErrors, [], "no page errors");
   } finally {
     await s.close();

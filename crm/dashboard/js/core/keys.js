@@ -4,6 +4,8 @@
 //   Esc            close the innermost layer: menus, popovers and dialogs close themselves (Popover
 //                  API and <dialog>); the record panel closes through handlers.escape()
 //   J / K          next / previous site in queue mode (handlers.queue(+1 | -1))
+// Search, Add site and J/K do nothing while a menu, popover or modal dialog is open (layerOpen()), so
+// they never open on top of a confirm or a menu.
 // app.js passes the handlers, so this core module never imports feature modules.
 let handlers = {};
 let started = false;
@@ -36,7 +38,7 @@ function onKey(e) {
   if (e.defaultPrevented || e.isComposing) return;
   const k = e.key;
   if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (k === "k" || k === "K")) {
-    if (call("search")) e.preventDefault();
+    if (!layerOpen() && call("search")) e.preventDefault();
     return;
   }
   if (k === "Escape") {
@@ -46,9 +48,9 @@ function onKey(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (typing(e.target)) return;
   if (k === "/") {
-    if (call("search")) e.preventDefault();
+    if (!layerOpen() && call("search")) e.preventDefault();
   } else if (k === "n") {
-    if (call("addSite")) e.preventDefault();
+    if (!layerOpen() && call("addSite")) e.preventDefault();
   } else if (k === "j" || k === "J") {
     if (!layerOpen()) call("queue", 1);
   } else if (k === "k" || k === "K") {

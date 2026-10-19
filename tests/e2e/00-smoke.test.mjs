@@ -151,6 +151,58 @@ test("GET /api/nope is a 404 JSON (catch-all)", async () => {
   assert.deepEqual(fromNode.json, { error: "Not available yet", unavailable: true });
 });
 
+// Spec 4.6 and 4.13 (review fixes). Add site, Search and the Help page are stubbed in this context only, so
+// the test counts the shortcut calls and controls the page's own announcement.
+test("shortcuts wait while a modal or menu is open; a page's own announcement replaces its title", async () => {
+  const s = await signedInPage({ name: "Kamile" });
+  try {
+    const { page } = s;
+    const stub = (body) => (route) => route.fulfill({ contentType: "text/javascript", body });
+    await page.route("**/js/features/add-site.js", stub("export function openAddSite() { window.__smokeAdd = (window.__smokeAdd || 0) + 1; }"));
+    await page.route("**/js/features/search.js", stub("export function openSearch() { window.__smokeSearch = (window.__smokeSearch || 0) + 1; }"));
+    await page.route("**/js/pages/help.js", stub("export default { id: 'help', title: () => 'Help', " +
+      "mount(root, ctx) { root.innerHTML = '<h1 tabindex=\"-1\">Help</h1>'; ctx.announce('Help, 5 shortcuts'); }, update() {}, unmount() {} };"));
+    await page.goto("about:blank"); // a fresh document, so the stubs load
+    await page.goto(BASE + "/#today");
+    await waitTitle(page, /^Today$/);
+    const counts = () => page.evaluate(() => ({ add: window.__smokeAdd || 0, search: window.__smokeSearch || 0 }));
+
+    await page.keyboard.press("n");
+    await page.keyboard.press("/");
+    await page.keyboard.press("Control+k");
+    assert.deepEqual(await counts(), { add: 1, search: 2 }, "the shortcuts work with no layer open");
+
+    await page.evaluate(async () => { const d = await import("/js/ui/dialog.js"); window.__smokeConfirm = d.confirm({ title: "Change 64 sites?", confirmLabel: "Change" }); });
+    await page.waitForSelector("dialog[open]");
+    await page.keyboard.press("n");
+    await page.keyboard.press("/");
+    await page.keyboard.press("Control+k");
+    assert.deepEqual(await counts(), { add: 1, search: 2 }, "nothing opens on top of a confirm");
+    await page.keyboard.press("Escape");
+    await page.waitForSelector("dialog[open]", { state: "detached" });
+
+    await page.evaluate(async () => { const m = await import("/js/ui/menu.js"); m.openMenu(document.querySelector("main h1"), { items: [{ label: "New", value: "New" }, { label: "Lost", value: "Lost" }] }); });
+    await page.waitForSelector(".ui-menu:popover-open");
+    await page.keyboard.press("n");
+    await page.keyboard.press("Control+k");
+    assert.deepEqual(await counts(), { add: 1, search: 2 }, "nothing opens on top of a menu");
+    await page.keyboard.press("Escape");
+
+    const announced = (text) => page.waitForFunction((t) => document.querySelector("[data-announce]").textContent === t, text, { timeout: 5000 });
+    await page.evaluate(() => { location.hash = "#help"; });
+    await waitTitle(page, /^Help$/);
+    await announced("Help, 5 shortcuts");
+    await page.waitForTimeout(200);
+    assert.equal(await page.textContent("[data-announce]"), "Help, 5 shortcuts", "the title did not replace it");
+    await page.evaluate(() => { location.hash = "#deals"; });
+    await waitTitle(page, /^Deals$/);
+    await announced("Deals");
+    assert.deepEqual(s.watch.pageErrors, [], "no page errors");
+  } finally {
+    await s.close();
+  }
+});
+
 test("no uncaught page errors and no unexpected failed requests", () => {
   const { watch } = session;
   assert.deepEqual(watch.pageErrors, [], "uncaught page errors");

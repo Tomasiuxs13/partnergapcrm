@@ -5,7 +5,7 @@
 //   GET /api/partners?v=2&ids=a,b  the same shape for up to 90 ids; no ETag, never 304
 //   POST /api/partners             Add site: request, checks and the create_account edits row unchanged;
 //                                  the response adds "v2" (the new row in cols order)
-import { json, bad, body, who, text, cleanDomain, fieldValue, findDomain, now, today, V2_COLS, v2Sql, v2Row } from "../../lib/crm.js";
+import { json, bad, body, who, text, cleanDomain, fieldValue, findDomain, now, today, V2_COLS, v2Sql, v2Row, nextTempId } from "../../lib/crm.js";
 import { hasTable } from "../../lib/tables.js";
 
 // CPU check (spec 6.3.2, Workers Free: 10 ms CPU per request). On a production-size list (7,500 synthetic
@@ -68,7 +68,8 @@ export function row(r) {
     r.deal_model || "", r.deal_flat ?? null, r.deal_pct ?? null, r.deal_value ?? null, r.live_date || "", r.content_url || ""];
 }
 
-// New sites get a temporary NEW-n id; the daily run gives them the next PG id in the sheet.
+// New sites get a temporary NEW-n id (never reused, lib/crm.js#nextTempId); the daily run gives them the
+// next PG id in the sheet.
 export async function onRequestPost({ request, env }) {
   const db = env.PARTNERS_DB;
   if (!db) return bad("Partner list not connected", 404);
@@ -95,8 +96,7 @@ export async function onRequestPost({ request, env }) {
   } catch (msg) {
     return bad(String(msg));
   }
-  const last = await db.prepare("SELECT COALESCE(MAX(CAST(SUBSTR(id, 5) AS INTEGER)), 0) AS n FROM partners WHERE id LIKE 'NEW-%'").first();
-  const id = "NEW-" + String((last ? last.n : 0) + 1).padStart(4, "0");
+  const { id, stmts: idStmts } = await nextTempId(db, "site");
   const at = now();
   await db.batch([
     db.prepare(`INSERT INTO partners (id, domain, name, type, owner, stage, clients, contacts, next_step, next_due, source, notes, updated_at, updated_by)
@@ -105,6 +105,7 @@ export async function onRequestPost({ request, env }) {
         text(b.notes, 2000) || null, at, by),
     db.prepare("INSERT INTO edits (at, by_whom, kind, account_id, new) VALUES (?, ?, 'create_account', ?, ?)")
       .bind(at, by, id, JSON.stringify({ domain, name: name || domain, ...vals, notes: text(b.notes, 2000), added: today() })),
+    ...idStmts,
   ]);
   const created = await db.prepare("SELECT * FROM partners WHERE id = ?").bind(id).first();
   return json({ ok: true, row: row(created), v2: await v2Row(db, created) }, 201);

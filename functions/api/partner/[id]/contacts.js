@@ -1,5 +1,5 @@
 // Adds a contact person to a partner. The email is checked against every contact first.
-import { json, bad, body, who, text, validEmail, now } from "../../../../lib/crm.js";
+import { json, bad, body, who, text, validEmail, now, nextTempId } from "../../../../lib/crm.js";
 
 export async function onRequestPost({ request, env, params }) {
   const db = env.PARTNERS_DB;
@@ -20,8 +20,7 @@ export async function onRequestPost({ request, env, params }) {
       .bind("%" + email + "%").first();
     if (dupe && !b.force) return json({ error: "This email is already in the CRM", duplicate: dupe }, 409);
   }
-  const lastId = await db.prepare("SELECT COALESCE(MAX(CAST(SUBSTR(id, 6) AS INTEGER)), 0) AS n FROM contacts WHERE id LIKE 'NEWC-%'").first();
-  const cid = "NEWC-" + String((lastId ? lastId.n : 0) + 1).padStart(4, "0");
+  const { id: cid, stmts: idStmts } = await nextTempId(db, "contact");
   const c = { id: cid, account_id: id, first_name: first || null, last_name: last || null, title: text(b.title, 100) || null, linkedin: linkedin || null,
     email_status: email ? "Unverified" : null, source: "Added on site", primary_contact: 0, outreach_status: "Not contacted", last_email: null,
     replied: 0, client: text(b.client, 60) || null, email: email || null };
@@ -33,6 +32,7 @@ export async function onRequestPost({ request, env, params }) {
     db.prepare("UPDATE partners SET contacts = COALESCE(contacts, 0) + 1, updated_at = ?, updated_by = ? WHERE id = ?").bind(at, by, id),
     db.prepare("INSERT INTO edits (at, by_whom, kind, account_id, contact_id, new) VALUES (?, ?, 'create_contact', ?, ?, ?)")
       .bind(at, by, id, cid, JSON.stringify({ first_name: first, last_name: last, title: c.title, email, linkedin, client: c.client })),
+    ...idStmts,
   ]);
   return json({ ok: true, contact: c }, 201);
 }

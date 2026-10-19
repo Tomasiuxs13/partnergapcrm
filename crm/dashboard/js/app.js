@@ -5,6 +5,8 @@
 //   {kind:'route', route, prev}   same page and sub, other params (rec-only changes are skipped)
 //   {kind:'store', reason, ids?}  a store notification ('load'|'refresh'|'edit'|'bulk')
 //   {kind:'meta'}  {kind:'me'}    /api/meta was re-read, or the person changed
+// ctx.announce(text) makes a polite screen-reader announcement (spec 4.13, "Sites, 36 sites"). Called
+// during mount(), it replaces the page-title announcement of the route change; later calls announce at once.
 import * as meta from "./core/meta.js";
 import * as me from "./core/me.js";
 import * as store from "./core/store.js";
@@ -64,6 +66,12 @@ const NOT_FOUND = "That site wasn't found (it may have been renamed after the mo
 let ui = null;
 let main = null;
 let active = null; // {page, root, sub}
+let mounting = null; // {text} while a page mounts: what it passed to ctx.announce()
+
+function announce(text) {
+  if (mounting) mounting.text = text == null ? "" : String(text);
+  else shell.announce(text);
+}
 
 function uiKit() {
   return Object.assign({}, toastUi, dialogUi, menuUi, pillsUi, listUi, filtersUi, emptyUi, skeletonUi, chartsUi,
@@ -84,6 +92,7 @@ export function makeCtx(route = router.current()) {
     ui: ui || (ui = uiKit()),
     openRecord: record.openRecord,
     today: todayIso(),
+    announce,
   };
 }
 
@@ -139,23 +148,29 @@ function show(route, prev) {
   main.replaceChildren(root);
   if (typeof window !== "undefined" && window.scrollTo) window.scrollTo(0, 0);
   active = { page, root, sub: route.sub };
+  const said = (mounting = { text: null });
   try {
     page.mount(root, ctx);
   } catch (err) {
     pageFailed(root, err);
+  } finally {
+    mounting = null;
   }
   let title = "";
   try { title = page.title(ctx) || ""; } catch (err) { title = ""; }
   document.title = (title ? title + " · " : "") + "PartnerGap CRM";
   shell.setTitle(title);
-  // Spec 4.13: on a route change the page h1 gets focus and a polite announcement.
+  // Spec 4.13: on a route change the page h1 gets focus and a polite announcement: the page's own
+  // (ctx.announce during mount, "Sites, 36 sites"), else its title.
   if (prev && prev.page) {
     const h1 = root.querySelector("h1");
     if (h1) {
       if (!h1.hasAttribute("tabindex")) h1.setAttribute("tabindex", "-1");
       h1.focus({ preventScroll: true });
     }
-    shell.announce(title);
+    shell.announce(said.text || title);
+  } else if (said.text) {
+    shell.announce(said.text);
   }
 }
 

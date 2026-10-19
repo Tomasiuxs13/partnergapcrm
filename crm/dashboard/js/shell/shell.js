@@ -119,14 +119,16 @@ function updateSyncLine() {
   for (const el of $$("[data-sync]", app)) el.textContent = syncText();
 }
 
-// After writes settle, re-read the waiting count (GET /api/edits without params = {pending, recent}).
+// After writes settle, re-read the waiting count from /api/meta freshness.pending. (GET /api/edits'
+// `pending` also counts the "not copied" conflict edits, which never copy.)
 function refreshPending(delay = 1500) {
   if (meta.get().read_only) return;
   clearTimeout(pendingTimer);
   pendingTimer = setTimeout(async () => {
     try {
-      const r = await api.edits();
-      if (r && r.pending != null) store.setPending(r.pending);
+      const r = await api.meta();
+      const f = r && r.freshness;
+      if (f && f.pending != null) store.setPending(f.pending);
     } catch (e) { /* the footer keeps its last count */ }
   }, delay);
 }
@@ -134,7 +136,9 @@ function refreshPending(delay = 1500) {
 // ---------- Banners ----------
 
 // The amber "didn't pick up N changes" banner (spec 4.11): now >= the last weekday run + 2 h and a
-// pending edit is older than that run, or the latest daily run ended with an error.
+// waiting edit is older than that run, or the latest daily run ended with an error. freshness counts
+// only waiting edits (not the "not copied" conflicts); N is stale_pending, the waiting edits older than
+// stale_before. A freshness read before this run (stale_before earlier) counted only older edits: N = pending.
 export function morningCopyBanner(nowMs = Date.now()) {
   const m = meta.get();
   const f = m.freshness;
@@ -146,7 +150,8 @@ export function morningCopyBanner(nowMs = Date.now()) {
   if (!isFinite(run) || nowMs < run + 2 * 3600000) return null;
   const oldest = f.oldest_pending_at ? Date.parse(f.oldest_pending_at) : NaN;
   if (!(oldest < run)) return null;
-  const n = Number(f.stale_pending != null ? f.stale_pending : f.pending) || 0;
+  const before = f.stale_before ? Date.parse(f.stale_before) : NaN;
+  const n = Number(f.stale_pending != null && before >= run ? f.stale_pending : f.pending) || 0;
   if (n <= 0) return null;
   return "This morning's copy to the Google Sheet didn't pick up " + num(n) + " " + plural(n, "change") +
     ". They're saved here. If this is still showing tomorrow, tell Jonas.";
