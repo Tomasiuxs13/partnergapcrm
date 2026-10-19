@@ -133,3 +133,21 @@ Status of the B1 items above: G1-B 2 and G1-C 3 (`functions/api/bulk.js` ids mod
 and `v2`, rows mode, `allow_dnc` read once) and G1-B 3 (`functions/_middleware.js` read-only guard,
 `ctx.data.readOnly`, the sign-in team list, `PUT /api/settings` through `saveSettings`) are done on
 crm-easy-site-b1. `05-ui-kit` no longer mocks rows mode.
+
+# Status after the B1 merge (crm-easy-site)
+
+Applied or closed at the B1 merge:
+- G1-B 2 and G1-C 3 (`functions/api/bulk.js`), G1-B 3 (`functions/_middleware.js`, `PUT /api/settings`): done in B1
+  (merged as is). `05-ui-kit` runs rows mode against the real endpoint.
+- B1 1: `lib/freshness.js` hides email addresses in `last_run.summary` with the same replace as `GET /api/runs`.
+  `90-api-contract`'s email scan now inserts a `daily` run and checks `/api/meta` `freshness.last_run` too.
+- F1 5, profile part: `GET /api/partner/:id` returns `history.edits` (with `state`), `suggestions` (null before
+  004, `to_email` kept), `about` from the cache only and `about_pending`, as the panel reads them.
+- F1 5, `stage` in the 409 `duplicate` of `POST …/contacts`: not applied. Spec 6.3.10 keeps that response
+  unchanged and `golden/add-contact.json#duplicate` fixes its body; the panel's fallback (the store row's stage)
+  covers it. Closed unless the spec changes (owner then: B1's `contacts.js` plus the golden file, G1-D).
+
+Still open:
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw` so the
+  panel words them like its other saves (see "Status after the F1 merge").
