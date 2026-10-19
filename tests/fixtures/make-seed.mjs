@@ -40,6 +40,68 @@ export const COLUMNS = {
 export const TEAM = ["Jonas", "Vik", "Kamile", "Eivyda", "Monica", "Mantvydas", "Gaby", "Sandra", "Tomas", "Denisse", "Egle"];
 export const PAST_OWNER = "Jay";
 
+/**
+ * The GET /api/meta body (spec 6.3.1) that the fixture's numbers assume, for pure unit tests of
+ * js/core and js/rules. A fresh object on every call, so a test may change it. The e2e server serves
+ * its own lib/meta.js; e2e tests read /api/meta instead of this.
+ * @param {{dnc?: boolean, features?: object}} [opts]
+ */
+export function fixtureMeta({ dnc = false, features = {} } = {}) {
+  const stage = (name, desc, color, order, extra = {}) => ({ name, desc, color, order,
+    not_contacted: order <= 2, closed: name === "Lost" || name === "Do not contact", in_path: ![2, 7, 8].includes(order), ...extra });
+  const c = (k, name, managers, extra = {}) => ({ k, slug: k.replace(/\s+/g, "-"), name, managers, aliases: [], ...extra });
+  return {
+    v: 2, build: "fixture", read_only: false,
+    stages: [
+      stage("New", "Found, not contacted yet", "new", 1),
+      stage("Researching", "Finding the right contact", "research", 2),
+      stage("Contacted", "Emailed, waiting for an answer", "contacted", 3),
+      stage("Replied", "Wrote back; the owner answers next", "replied", 4),
+      stage("Negotiating", "Talking terms", "neg", 5),
+      stage("Active", "Agreed to work with us", "active", 6),
+      stage("Lost", "Said no or went quiet", "lost", 7),
+      stage("Do not contact", "Never email this site again", "dnc", 8, { flag: "dnc" }),
+    ],
+    deal_models: ["Commission (CPA)", "Revenue share", "Flat fee", "Flat fee + commission", "Free placement", "Gifted product"],
+    activity_types: ["Email", "Call", "Meeting", "Note", "Deal update", "Content live"],
+    affiliate_types: ["Media / Publisher", "Coupon / Deals", "Review", "Influencer / Social", "Affiliate Network", "Loyalty / Rewards",
+      "Marketplace Partner", "Web Hosting", "Email Marketing", "WP / Web Platform", "Tech / SaaS", "Agency", "Other"],
+    team: TEAM.map((name) => (name === "Vik" ? { name, home: "team" } : { name })),
+    admins: ["Jonas", "Vik"],
+    clients: [
+      c("soro", "Soro", ["Jonas", "Vik"], { what: "AI SEO content platform", markets: "US" }),
+      c("transfergo", "TransferGO", ["Jonas", "Vik"]),
+      c("ultahost", "UltaHost", ["Kamile"], { aliases: ["ultahost"] }),
+      c("mailerlite", "MailerLite", ["Kamile"]),
+      c("mailersend", "MailerSend", ["Kamile"]),
+      c("headway", "Headway", ["Kamile"]),
+      c("guardblinds", "GuardBlinds", ["Kamile"]),
+      c("fiverr", "Fiverr", ["Mantvydas"]),
+      c("raibu", "Raibu", ["Monica"]),
+      c("desktronic", "Desktronic", ["Eivyda"]),
+      c("botanical synthesis", "Botanical Synthesis", ["Eivyda"]),
+      c("melograno", "Melograno", ["Eivyda"], { products: ["Trafft", "Amelia", "wpDataTables", "IvyForms"], token: "Melograno - {product}" }),
+    ],
+    past_clients: [{ k: "weglot", slug: "weglot", name: "Weglot" }, { k: "termly", slug: "termly", name: "Termly" }],
+    sla: { Contacted: 14, Replied: 3, Negotiating: 7, ActiveNotLive: 14 },
+    follow_up_days: { New: 2, Researching: 2, Contacted: 7, Replied: 2, Negotiating: 3, Active: 14 },
+    reply_window: { email: 30, touch: 7 }, noreply_cap: 10,
+    lost_reasons: ["No budget", "Only paid placements", "Price too high", "Not a fit", "No reply after follow-ups",
+      "Already works with a competitor", "Other"],
+    platform_domains: ["google.com", "drive.google.com", "docs.google.com", "wordpress.org", "wordpress.com", "pinterest.com", "adobe.com",
+      "shopify.com", "bit.ly", "wix.com", "forbes.com", "medium.com", "trustpilot.com", "nytimes.com", "cnn.com", "healthline.com",
+      "webmd.com", "amazon.com", "apple.com", "microsoft.com", "github.com", "youtube.com", "facebook.com", "instagram.com",
+      "linkedin.com", "x.com", "twitter.com", "reddit.com", "wikipedia.org", "blogspot.com"],
+    platform_dr: 90,
+    schedule: [{ name: "Find new sites", when: "Mondays 07:52" }, { name: "Morning copy (daily run)", when: "Mon–Fri 08:47" },
+      { name: "Weekly digest", when: "Fridays 15:51" }],
+    timezone: "Europe/Vilnius", prod_host: "partnergap-crm.pages.dev", sheet_url: "", test_mode: true,
+    limits: { plan: "free", bulk_ids: 90, bulk_rows: 20 },
+    features: { settings: true, suggestions: true, runs: true, dnc, ...features },
+    freshness: null,
+  };
+}
+
 // ---------- dates ----------
 
 /** The local calendar date, the same rule as js/core/format.js todayIso(). */
@@ -179,7 +241,7 @@ export function buildFixture({ today } = {}) {
   site(["K-rep-stale", "kamile-today"], { owner: "Kamile", stage: "Replied", clients: "Ultahost", last_touch: d(-9) });
   site(["K-neg-decision", "kamile-today"], { owner: "Kamile", stage: "Negotiating", clients: "Ultahost", last_touch: d(-2),
     deal_model: "Commission (CPA)", deal_value: 2000 });
-  site(["K-neg-waiting", "kamile-today"], { owner: "Kamile", stage: "Negotiating", clients: "UltaHost", last_touch: d(-9),
+  site(["K-neg-waiting", "kamile-today", "waiting-on-client"], { owner: "Kamile", stage: "Negotiating", clients: "UltaHost", last_touch: d(-9),
     next_step: "Waiting on client: pricing approval from UltaHost", deal_model: "Flat fee", deal_flat: 750, deal_value: 750 });
   site(["K-neg-snoozed", "kamile-today"], { owner: "Kamile", stage: "Negotiating", clients: "Ultahost", last_touch: d(-1), next_due: d(5),
     next_step: "Agree terms" });

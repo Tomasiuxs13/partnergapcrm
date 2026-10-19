@@ -358,15 +358,19 @@ export async function closeBrowser() {
 }
 
 /**
- * Collects what a page reports: uncaught errors, console errors, and failed responses (status >= 400).
- * Returns {pageErrors, consoleErrors, failed, clear()}.
+ * Collects what a page reports: uncaught errors, console errors, and failed requests (status >= 400, or
+ * no response). Requests the browser aborts because the page navigated away (net::ERR_ABORTED) are left
+ * out unless keepAborted is set. Returns {pageErrors, consoleErrors, failed, clear()}.
  */
-export function watchPage(page) {
+export function watchPage(page, { keepAborted = false } = {}) {
   const w = { pageErrors: [], consoleErrors: [], failed: [] };
   page.on("pageerror", (e) => w.pageErrors.push(String((e && e.stack) || e)));
   page.on("console", (m) => { if (m.type() === "error") w.consoleErrors.push({ text: m.text(), url: (m.location() || {}).url || "" }); });
   page.on("response", (r) => { if (r.status() >= 400) w.failed.push({ url: r.url(), status: r.status(), method: r.request().method() }); });
-  page.on("requestfailed", (r) => w.failed.push({ url: r.url(), status: 0, method: r.method(), error: (r.failure() || {}).errorText || "" }));
+  page.on("requestfailed", (r) => {
+    const error = (r.failure() || {}).errorText || "";
+    if (keepAborted || !/ERR_ABORTED/.test(error)) w.failed.push({ url: r.url(), status: 0, method: r.method(), error });
+  });
   w.clear = () => { w.pageErrors.length = 0; w.consoleErrors.length = 0; w.failed.length = 0; };
   return w;
 }
