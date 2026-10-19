@@ -16,6 +16,11 @@ function focusables(root) {
   return Array.from(root.querySelectorAll(FOCUSABLE)).filter((el) => {
     if (el.closest("[popover]") && !el.closest("[popover]").matches(":popover-open")) return false;
     if (el.closest("[inert]")) return false;
+    // Chrome keeps a box for the content of a closed <details> that can't take focus. A details'
+    // own summary stays focusable unless an outer details is closed.
+    const own = el.matches("summary") && el.parentElement && el.parentElement.matches("details");
+    const from = own ? el.parentElement.parentElement : el;
+    if (from && from.closest("details:not([open])")) return false;
     const r = el.getBoundingClientRect();
     return r.width > 0 || r.height > 0;
   });

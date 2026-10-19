@@ -97,3 +97,23 @@ Changes the record panel (F1) needs in files it does not own. Each has a local w
    missing part. Suggestions come only from this response (the panel makes no separate
    `GET /api/suggestions?account=` call). The 409 of `POST …/contacts` may add `stage` to `duplicate`; the
    panel falls back to the store row's stage when the site is loaded.
+
+# Status after the F1 merge (crm-easy-site)
+
+Applied at the F1 merge:
+- F1 1: `js/ui/dialog.js` `focusables()` skips controls inside a closed `<details>` (a details' own `summary`
+  stays focusable unless an outer details is closed). The `record.css` workaround stays; it is harmless.
+- F1 2: `js/ui/actions.js` `note(id, text, {throw: true})` rethrows the error. The panel's Save note now uses
+  it, so "Not saved. …" names the real reason (timeout, 400 text) and a 401 no longer shows an inline error.
+- F1 3: `actions.outcomeForm()` (so `runOutcome()`) rejects with the error when `opts.throw` is set; `quiet`
+  already reached `outcome()`. The panel still sends the outcomes with a form through actions' own form
+  toasts (no `quiet`/`throw`), as F1 shipped it. Switching them to the panel's wording and inline
+  "Not saved. … Retry" is open for the panel owner (F1, or G3-1 at integration).
+- F1 4: every `:hover` rule in `css/components.css` sits in `@media (hover: hover)` at its old place (rules
+  that also held `:focus-visible` or `[aria-expanded]` were split; the cascade order is unchanged).
+  `record.css`'s `@media (hover: none)` chip reset is now redundant but harmless.
+
+Still open:
+- F1 5 (B1, `functions/api/partner/[id].js` GET and `POST …/contacts` 409): the profile shape the panel reads
+  (6.3.8) and an optional `stage` in the 409 `duplicate`.
+- G1-B 2, G1-C 3, G1-B 3 (B1) and G1-B 6 (G3-1) as listed above.

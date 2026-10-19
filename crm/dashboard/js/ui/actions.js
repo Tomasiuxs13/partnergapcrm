@@ -210,7 +210,9 @@ export async function outcome(id, outcomeId, opts = {}) {
 }
 
 // A note on its own ("Save note" in the Log box): POST /api/partner/:id/activity, type Note.
-export async function note(id, text, { type = "Note", quiet = false } = {}) {
+// opts: type, quiet (no toasts), throw (rethrow the error instead of resolving to null).
+export async function note(id, text, opts = {}) {
+  const { type = "Note", quiet = false } = opts;
   const summary = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
   if (!summary) return null;
   if (guardReadOnly()) return null;
@@ -225,7 +227,8 @@ export async function note(id, text, { type = "Note", quiet = false } = {}) {
     if (!quiet) toast("Note saved.", { kind: "success" });
     return r.activity || r;
   } catch (e) {
-    if (!quiet) failToast(e, () => note(id, text, { type, quiet }));
+    if (!quiet) failToast(e, () => note(id, text, opts));
+    if (opts.throw) throw e;
     return null;
   }
 }
@@ -516,11 +519,12 @@ function showError(form, msg, field, id) {
 
 // The small form for Not interested / Not a fit / Do not contact (reason), Counter-offer / Signed
 // (terms), Placement is live (link + date) and Had a call (note). One Save. opts are passed on to
-// outcome() (note, followUp, onAddTerms). Resolves to the Record, or null when cancelled or failed.
+// outcome() (note, followUp, onAddTerms, quiet, throw). Resolves to the Record, or null when cancelled
+// or failed; with opts.throw a failed save rejects with the error instead.
 export function outcomeForm(anchorEl, record, outcomeId, opts = {}) {
   const o = outcomeDef(outcomeId);
   if (!o || !record) return Promise.resolve(null);
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let settled = false;
     const done = (v) => {
       if (settled) return;
@@ -546,7 +550,7 @@ export function outcomeForm(anchorEl, record, outcomeId, opts = {}) {
           const p = outcome(record.id, o.id, callOpts);
           settled = true;
           pop.close();
-          p.then(resolve, () => resolve(null));
+          p.then(resolve, (err) => (opts.throw ? reject(err) : resolve(null)));
         });
       },
     });
@@ -555,6 +559,7 @@ export function outcomeForm(anchorEl, record, outcomeId, opts = {}) {
 }
 
 // Runs an outcome picked from a menu or a button: the small form when it needs one, else at once.
+// opts (quiet, throw included) reach outcome() either way.
 export function runOutcome(anchorEl, record, outcomeId, opts = {}) {
   const o = outcomeDef(outcomeId);
   if (!o || !record) return Promise.resolve(null);

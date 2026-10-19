@@ -755,7 +755,14 @@ async function saveFollow(id, label, iso, prefix = "") {
 async function saveNote(id, label, text, iso) {
   clearErr(id);
   setBusy(id, true);
-  const r = await actions.note(id, text, { quiet: true });
+  let r = null;
+  try {
+    r = await actions.note(id, text, { quiet: true, throw: true });
+  } catch (e) {
+    setBusy(id, false);
+    failed(id, label, e, () => saveNote(id, label, text, iso));
+    return;
+  }
   setBusy(id, false);
   if (!r) {
     failed(id, label, null, () => saveNote(id, label, text, iso));
