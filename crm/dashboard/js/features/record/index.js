@@ -10,7 +10,7 @@
 // - It opens at once from the store. The profile (GET /api/partner/:id: contacts, activity, history,
 //   suggestions, about) loads in the background with skeletons; in queue mode the next site's profile is
 //   fetched ahead. Every response is tagged with its site id: a late one never writes into another site's
-//   panel (the store row still updates, and its toast names the site).
+//   panel and shows no success toast there (the store row still updates; a failure toast names the site).
 // - Saves from the Log what happened box run quietly through actions.js; the panel words the toast (with
 //   Undo), shows a failure inline ("Not saved. … Retry"), and in queue mode always moves on to the next site
 //   after a save ("All done for now." at the end). The 5 outcomes with a form use actions' own form and toasts.
@@ -60,6 +60,7 @@ let pendingOpener = null;
 let pendingFocus = null;
 let profileSeq = 0;
 let state = null;
+let leaving = false; // a 401 is sending the page to sign-in
 
 const meta = () => metaMod.get();
 const readOnly = () => !!meta().read_only;
@@ -109,7 +110,7 @@ export function currentRecordId() {
 }
 
 export function isDirty() {
-  return !!state && dirtyKind() !== "";
+  return !!state && !leaving && dirtyKind() !== "";
 }
 
 // Called once by app.js (after the page listener, so a reload with rec mounts the page first).
@@ -130,7 +131,11 @@ export function start(makeCtx) {
     const dir = d && typeof d === "object" ? d.dir : d;
     if (state && state.queue) step(dir > 0 ? 1 : -1);
   });
-  bus.on("unauthorized", () => saveDraft());
+  bus.on("unauthorized", () => {
+    // The draft is kept for after sign-in, so the page may leave without asking (beforeunload).
+    saveDraft();
+    leaving = true;
+  });
 }
 
 // ---------- Unsaved guard ----------
@@ -371,7 +376,7 @@ ${renderHeader(r, head, { readOnly: ro, roText, exists })}
 <section class="ui-card rc-card rc-detcard" aria-labelledby="rc-det-h" data-psec="details">${renderDetails(r, state, { today, readOnly: ro })}</section>
 </div>
 </div></div>
-<footer class="rc-foot" data-pfoot>${footHtml(ro)}</footer>
+<footer class="rc-foot" data-pfootbar>${footHtml(ro)}</footer>
 </section>`;
 }
 
@@ -545,7 +550,7 @@ function draw(parts) {
         break;
       }
       case "details": put('[data-psec="details"]', renderDetails(r, state, { today, readOnly: ro })); break;
-      case "foot": put("[data-pfoot]", footHtml(ro)); break;
+      case "foot": put("[data-pfootbar]", footHtml(ro)); break;
       default: break;
     }
   }
@@ -591,10 +596,12 @@ function clearErr(id) {
   draw(["err"]);
 }
 
-// A success toast; it names the site when the panel has moved on to another one.
+// A success toast, only while that site is still open: a save that lands after the panel moved on to
+// another site updates the store quietly (spec T16). Failures always say so (failed()).
 function say(id, label, text, opts = {}) {
-  const here = state && state.id === id;
-  toast(here ? text : label + " · " + text, Object.assign({ kind: "success" }, opts));
+  void label;
+  if (!state || state.id !== id) return;
+  toast(text, Object.assign({ kind: "success" }, opts));
 }
 
 // A failed save: inline ("Not saved. … Retry") while the site is open, else a toast that names it.
@@ -799,7 +806,7 @@ async function moreOutcomes(b) {
   const rec = store.get(state.id);
   if (!rec || state.busy) return;
   const { more } = outcomesFor(rec, { meta: meta() });
-  const picked = await openMenu(b, { label: "More outcomes", items: moreItems(rec, more, { meta: meta(), today: todayIso() }) });
+  const picked = await openMenu(b, { label: "More", items: moreItems(rec, more, { meta: meta(), today: todayIso() }) });
   if (picked && state) clickOutcome(b, picked);
 }
 
@@ -855,6 +862,7 @@ async function moreMenu(b) {
     toast(ok ? r.id + " copied" : "Couldn't copy the ID.", { kind: ok ? "success" : "error" });
   } else if (v === "all") {
     state.showAll = !state.showAll;
+    state.detailsOpen = false;
     draw(["deal", "place", "details"]);
     if (state.showAll) {
       const d = state.el.querySelector('[data-psec="deal"]');

@@ -158,17 +158,25 @@ const KIND_CLASS = {
 };
 
 const CLAMP = 220;
+const CHANGES_CLAMP = 80; // about one line of the changes in the main column
 
 function itemHtml(it, today, open) {
   const cls = KIND_CLASS[it.type] || "is-note";
   const inline = it.kind === "email" || it.kind === "contact";
-  const long = !inline && it.text.length > CLAMP;
+  const changes = it.changes.join(" · ");
+  const longText = !inline && it.text.length > CLAMP;
+  const longChanges = changes.length > CHANGES_CLAMP;
   const k = String(it.key) + ":" + it.i;
   const isOpen = !!(open && open[k]);
+  const toggle = (cls, a, b) => html`<button type="button" class="ui-linkbtn ${cls}" data-pti="${k}" aria-expanded="${isOpen ? "true" : "false"}">${isOpen ? b : a}</button>`;
+  // A long note gets "Show more" under it; long changes alone get a short "more" at the end of their line.
+  const more = longText ? toggle("rc-more", "Show more", "Show less") : "";
+  const chMore = longChanges && !longText ? html` ${toggle("rc-ti-more", "more", "less")}` : "";
+  const clampCh = (longText || longChanges) && !isOpen;
   const dt = it.at || it.day || "";
   return html`<li class="rc-ti ${cls}"><span class="rc-ti-dot" aria-hidden="true"></span><div class="rc-ti-main"><p class="rc-ti-head"><span class="rc-ti-what"><b>${it.type}</b>${inline && it.text ? html` ${it.text}` : ""}${it.by ? html` · ${it.by}` : ""}</span><time class="rc-ti-when"${dt ? html` datetime="${dt}"` : ""}>${whenText(it, today)}</time></p>${it.text && !inline
-    ? html`<p class="rc-ti-text${long && !isOpen ? " is-clamp" : ""}">${it.text}</p>${long ? html`<button type="button" class="ui-linkbtn rc-more" data-pti="${k}" aria-expanded="${isOpen ? "true" : "false"}">${isOpen ? "Show less" : "Show more"}</button>` : ""}` : ""}${it.changes.length
-    ? html`<p class="rc-ti-changes">${it.changes.join(" · ")}</p>` : ""}${it.notCopied ? html`<p class="rc-ti-warn">Not copied – a sheet edit won; check the sheet</p>` : ""}</div></li>`;
+    ? html`<p class="rc-ti-text${longText && !isOpen ? " is-clamp" : ""}">${it.text}</p>` : ""}${changes
+    ? html`<p class="rc-ti-changes${clampCh ? " is-clamp" : ""}"><span class="rc-ti-ch">${changes}</span>${chMore}</p>` : ""}${it.notCopied ? html`<p class="rc-ti-warn">Not copied – a sheet edit won; check the sheet</p>` : ""}${more}</div></li>`;
 }
 
 function notesHtml(st) {

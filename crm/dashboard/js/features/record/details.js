@@ -11,10 +11,11 @@ function row(label, value, title) {
   return html`<dt${title ? html` title="${title}"` : ""}>${label}</dt><dd>${v}</dd>`;
 }
 
-// "Last edited on the site by Gaby, Thu 15 Oct", or "".
+// "Last edited on the site by Gaby, Thu 15 Oct" ("…, today"), or "".
 export function lastEdited(r, today) {
   if (!r || !r.updated_by) return "";
-  const at = r.updated_at ? fmtDate(r.updated_at, today && String(r.updated_at).slice(0, 4) !== today.slice(0, 4) ? "year" : "short") : "";
+  const day = r.updated_at ? String(r.updated_at).slice(0, 10) : "";
+  const at = !day ? "" : day === today ? "today" : fmtDate(r.updated_at, today && day.slice(0, 4) !== today.slice(0, 4) ? "year" : "short");
   return "Last edited on the site by " + r.updated_by + (at ? ", " + at : "");
 }
 

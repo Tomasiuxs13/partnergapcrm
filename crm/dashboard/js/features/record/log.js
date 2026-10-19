@@ -68,7 +68,7 @@ export function chipsHtml(st, today) {
     let label = c.label;
     if (c.id === "pick" && st.pickIso && on) label = short(st.pickIso);
     let tip = "";
-    if (c.id === "auto") tip = "Each outcome sets its own follow-up date";
+    if (c.id === "auto") tip = "Each button above sets its own follow-up date";
     else if (c.id === "none") tip = "No follow-up date";
     else if (c.id !== "pick") tip = short(chipDate(c.id, today));
     return html`<button type="button" class="ui-chipbtn rc-chip" data-pchip="${c.id}" aria-pressed="${on ? "true" : "false"}"${tip ? html` title="${tip}"` : ""}${st.busy ? raw(" disabled") : ""}>${label}</button>`;

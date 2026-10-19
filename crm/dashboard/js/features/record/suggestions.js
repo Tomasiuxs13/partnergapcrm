@@ -41,7 +41,7 @@ function itemHtml(s, st, readOnly) {
   if (s.kind === "candidate") {
     const li = safeUrl(s.linkedin);
     const who = s.name ? String(s.name) : "Someone at this site";
-    return html`<li class="rc-sg"><p class="rc-sg-kind">Suggested contact${s.source ? " · " + s.source : ""}${date ? html` <span class="rc-muted">· ${date}</span>` : ""}</p><p class="rc-sg-main"><b>${who}</b>${s.title ? ", " + s.title : ""}${li ? html` · <a href="${li}" target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>` : ""}</p><div class="rc-sg-acts">${readOnly ? "" : html`<button type="button" class="ui-btn is-sm" data-psugg-add="${id}">Add as contact</button>`}${dismiss}</div></li>`;
+    return html`<li class="rc-sg"><p class="rc-sg-kind">Suggested contact${sourceText(s.source) ? " · " + sourceText(s.source) : ""}${date ? html` <span class="rc-muted">· ${date}</span>` : ""}</p><p class="rc-sg-main"><b>${who}</b>${s.title ? ", " + s.title : ""}${li ? html` · <a href="${li}" target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>` : ""}</p><div class="rc-sg-acts">${readOnly ? "" : html`<button type="button" class="ui-btn is-sm" data-psugg-add="${id}">Add as contact</button>`}${dismiss}</div></li>`;
   }
   if (s.kind === "email") {
     const open = !!(st.suggOpen && st.suggOpen[id]);
@@ -57,6 +57,12 @@ function itemHtml(s, st, readOnly) {
 }
 
 // The Suggestions card body, or an empty string when there is nothing open (the card is then hidden).
+// Where a candidate came from ("Apollo"); internal job names are left out of the page.
+function sourceText(src) {
+  const t = String(src || "").trim();
+  return /daily|run|script|cron/i.test(t) ? "" : t;
+}
+
 export function renderSuggestions(r, st, { readOnly = false } = {}) {
   const rows = openRows(st.sugg).filter((s) => ["candidate", "email", "slack_ask"].includes(s.kind));
   if (!rows.length) return raw("");

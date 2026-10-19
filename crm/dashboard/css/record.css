@@ -125,6 +125,9 @@ textarea.rc-note { min-height: 0; height: 54px; }
 .rc-ti-text { margin: 1px 0 0; font-size: var(--fs-14); overflow-wrap: anywhere; white-space: pre-line; }
 .rc-ti-text.is-clamp { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .rc-ti-changes { margin: 1px 0 0; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+.rc-ti-changes.is-clamp { display: flex; align-items: baseline; gap: 4px; }
+.rc-ti-changes.is-clamp > .rc-ti-ch { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rc-ti-more { flex: none; font-size: var(--fs-12); }
 .rc-ti-warn { margin: 1px 0 0; color: var(--warn-ink); font-size: var(--fs-12); font-weight: 500; }
 
 /* ---------- Contacts ---------- */
@@ -137,7 +140,7 @@ textarea.rc-note { min-height: 0; height: 54px; }
 .rc-ct-name { min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
 .rc-ct-status { padding: 0 6px; border-radius: var(--r-pill); background: var(--panel-2); color: var(--ink-2); font-size: var(--fs-12); white-space: nowrap; }
 .rc-sheet { margin-left: auto; color: var(--link); font-size: var(--fs-12); white-space: nowrap; }
-.rc-ct-new { margin-left: auto; color: var(--test-ink); font-size: var(--fs-12); }
+.rc-ct-new { margin-left: auto; color: var(--ink-2); font-size: var(--fs-12); white-space: nowrap; }
 .rc-ct-sub { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
 .rc-ct-sub a { color: var(--link); }
 .rc-emails { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
@@ -183,6 +186,9 @@ textarea.rc-note { min-height: 0; height: 54px; }
 .rc-details > summary::-webkit-details-marker { display: none; }
 .rc-details > summary::before { content: "▸"; width: 12px; color: var(--ink-2); font-size: var(--fs-12); }
 .rc-details[open] > summary::before { content: "▾"; }
+/* A closed <details> hides its content with content-visibility, which keeps a size: hide it for real so
+   the focus trap does not count its controls. */
+.rc-details:not([open]) > :not(summary) { display: none; }
 .rc-details > summary .rc-card-title { margin: 0; }
 .rc-details .rc-dl { margin-top: var(--sp-2); }
 .rc-details > .ui-small { margin: var(--sp-2) 0 0; }
@@ -227,4 +233,6 @@ textarea.rc-note { min-height: 0; height: 54px; }
   .rc-outs .ui-btn, .rc-acts .ui-btn, .rc-chip, .ui-btn.rc-mini, .ui-btn.rc-head-act, .rc-wait { min-height: var(--tap); }
   .rc-head-act.ui-linkbtn, .rc-more.ui-linkbtn, .rc-sheet { display: inline-flex; align-items: center; min-height: var(--tap); }
   .rc-details > summary { min-height: var(--tap); }
+  /* Inline "more" links: a taller hit area without changing the line. */
+  .rc-ti-more, .rc-about-more { padding: 12px 4px; margin: -12px -4px; }
 }
