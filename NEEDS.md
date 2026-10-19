@@ -117,3 +117,19 @@ Still open:
 - F1 5 (B1, `functions/api/partner/[id].js` GET and `POST …/contacts` 409): the profile shape the panel reads
   (6.3.8) and an optional `stage` in the 409 `duplicate`.
 - G1-B 2, G1-C 3, G1-B 3 (B1) and G1-B 6 (G3-1) as listed above.
+
+# NEEDS (B1)
+
+Changes B1 needs in files it does not own.
+
+1. **`lib/freshness.js` (G1-B): hide email addresses in `last_run.summary`.** `/api/meta` passes the latest
+   `daily` runs row's summary on as it is. The daily run writes counts there today, but an `error` text such as
+   "bounce from x@…" would put an address in `/api/meta` (spec 6.7: emails only in the profile and the contacts
+   index). `/api/runs` already replaces addresses with "(email hidden)"; the same one-line replace before
+   `parseSummary` would do (regex in `functions/api/runs.js`). `90-api-contract` uses a `discovery` run for its
+   email probe until then.
+
+Status of the B1 items above: G1-B 2 and G1-C 3 (`functions/api/bulk.js` ids mode with `changed_ids`, `before`
+and `v2`, rows mode, `allow_dnc` read once) and G1-B 3 (`functions/_middleware.js` read-only guard,
+`ctx.data.readOnly`, the sign-in team list, `PUT /api/settings` through `saveSettings`) are done on
+crm-easy-site-b1. `05-ui-kit` no longer mocks rows mode.

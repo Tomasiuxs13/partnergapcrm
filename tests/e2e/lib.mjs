@@ -312,10 +312,16 @@ async function waitReady(server, child, ms = 90000) {
  */
 export async function apiClient(base = baseUrl(), { password = PASSWORD, name } = {}) {
   if (!base) throw new Error("e2e: no BASE_URL");
-  const form = new URLSearchParams({ password, next: "/" });
-  if (name) form.set("who", name);
-  const r = await fetch(base + "/login", { method: "POST", body: form, redirect: "manual" });
-  await r.arrayBuffer();
+  const post = async (extra) => {
+    const form = new URLSearchParams({ password, next: "/", ...extra });
+    const res = await fetch(base + "/login", { method: "POST", body: form, redirect: "manual" });
+    await res.arrayBuffer();
+    return res;
+  };
+  // Without a name the form has no "who" field (an API client). A name off the team list goes in as
+  // "Someone else" (who=__other, who_other=name), as the sign-in form sends it.
+  let r = await post(name ? { who: name } : {});
+  if (name && r.status === 400) r = await post({ who: "__other", who_other: name });
   const cookie = r.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
   if (!/pg_session=/.test(cookie)) throw new Error("e2e: sign-in failed (" + r.status + ")");
   const client = {
@@ -388,14 +394,22 @@ export async function fixClock(page, when, { mode = "fixed" } = {}) {
 
 /**
  * Signs a page in through the real /login form. With `name`, the pg_me cookie is set first (spec 6.3.14 format)
- * and, when the form has the "Your name" select (B1), that name is picked there too.
+ * and that name is picked in the form's "Your name" select (or typed after "Someone else" when it is not
+ * on the team list). Without `name` the page signs in like an API client: the form is posted without a
+ * name (no pg_me), then `next` is opened.
  */
 export async function signIn(page, { base = baseUrl(), name, password = PASSWORD, next = "/" } = {}) {
-  if (name) await page.context().addCookies([{ name: "pg_me", value: encodeURIComponent(name), url: base }]);
+  if (!name) {
+    const r = await page.request.post(base + "/login", { form: { password, next }, maxRedirects: 0 });
+    if (r.status() !== 303) throw new Error("e2e: sign-in failed (" + r.status() + ")");
+    await page.goto(base + next);
+    return;
+  }
+  await page.context().addCookies([{ name: "pg_me", value: encodeURIComponent(name), url: base }]);
   await page.goto(base + "/login?next=" + encodeURIComponent(next));
   await page.fill('input[name="password"]', password);
   const who = await page.$('select[name="who"]');
-  if (who && name) {
+  if (who) {
     const values = await who.$$eval("option", (os) => os.map((o) => ({ v: o.value, t: o.textContent.trim() })));
     const hit = values.find((o) => o.v === name || o.t === name);
     if (hit) await who.selectOption(hit.v);

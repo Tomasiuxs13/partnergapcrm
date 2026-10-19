@@ -9,8 +9,7 @@
 //   - POST /api/partner/:id/outcome (G1-B, spec 6.3.3): when it answers the catch-all 404, page.route
 //     answers it by sending the real PATCH /api/partner/:id and then the real POST .../activity, which
 //     write the golden rows in the same order. Used by "Log what happened in the panel".
-//   - POST /api/bulk rows mode (B1, spec 6.3.4, Undo): when the server rejects {rows}, page.route sends
-//     each row as the real PATCH /api/partner/:id. Used by "bulk with Undo". ids mode is never mocked.
+// POST /api/bulk is never mocked: ids mode and the rows mode Undo uses are real (B1).
 // The tests write only to the contract rows (PG-00577..PG-00596) and put them back at the end.
 import { test, before, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
@@ -47,7 +46,7 @@ const TOUCHED = [ID.interested, ID.assign, ID.note, ID.spare1, ID.spare2, ID.spa
 
 let original = {};
 let session = null;
-const mocked = { outcome: 0, bulkRows: 0, needOutcome: false, needRows: false };
+const mocked = { outcome: 0, needOutcome: false };
 
 // ---------- helpers ----------
 
@@ -156,27 +155,6 @@ async function setup(page) {
       return route.fulfill({ status: body.activity ? 201 : 200, json: out });
     });
   }
-  if (mocked.needRows) {
-    await page.route("**/api/bulk", async (route) => {
-      const req = route.request();
-      const body = JSON.parse(req.postData() || "{}");
-      if (!Array.isArray(body.rows)) return route.continue();
-      const u = new URL(req.url());
-      const out = { ok: true, changed: 0, changed_ids: [], before: {}, v2: {}, failed: [] };
-      for (const row of body.rows) {
-        const r = await route.fetch({ url: u.origin + "/api/partner/" + encodeURIComponent(row.id), method: "PATCH", postData: JSON.stringify({ by: body.by, fields: row.fields }) });
-        const j = await r.json();
-        if (r.status() >= 400) out.failed.push({ ids: [row.id], error: j.error || "Failed" });
-        else if (j.changed && Object.keys(j.changed).length) {
-          out.changed++;
-          out.changed_ids.push(row.id);
-        }
-      }
-      out.ok = out.failed.length === 0;
-      mocked.bulkRows++;
-      return route.fulfill({ status: 200, json: out });
-    });
-  }
   await page.evaluate(async () => {
     if (window.__uk) return;
     const [dom, store, router, list, filters, actions, toast, dialog, menu, record, columns, meta, me] = await Promise.all([
@@ -268,10 +246,7 @@ before(async () => {
   // Which endpoints are missing on this backend (the probes write nothing).
   const o = await pageFetch(page, "POST", "/api/partner/" + ID.spare4 + "/outcome", {});
   mocked.needOutcome = o.status === 404 && !!(o.json && o.json.unavailable);
-  const b = await pageFetch(page, "POST", "/api/bulk", { rows: [{ id: ID.spare4, fields: {} }] });
-  mocked.needRows = b.status === 400 && !!(b.json && /select at least one site/i.test(b.json.error || ""));
-  console.log("# mocks: /outcome " + (mocked.needOutcome ? "MOCKED (endpoint unavailable)" : "real") +
-    ", /api/bulk rows mode " + (mocked.needRows ? "MOCKED (rows mode unsupported)" : "real"));
+  console.log("# mocks: /outcome " + (mocked.needOutcome ? "MOCKED (endpoint unavailable)" : "real"));
   await openApp(page);
 });
 
@@ -703,7 +678,7 @@ test("actions.followUp from the row menu, actions.claim, both with Undo", async 
   await waitStore(page, ID.assign, (r) => !r.owner);
 });
 
-test("actions.bulk: confirm over 20, progress-free small run, toast and Undo (bulk rows mode is mocked only when the server lacks it)", async () => {
+test("actions.bulk: confirm over 20, progress-free small run, toast and Undo (rows mode)", async () => {
   const { page } = session;
   // More than 20 sites asks first; Cancel writes nothing.
   const many = fx.groups["kamile-contacted-nodate"].slice(0, 25);
@@ -726,17 +701,12 @@ test("actions.bulk: confirm over 20, progress-free small run, toast and Undo (bu
   const rows = await waitEdits(n0, changed.length);
   assert.deepEqual(sortEdits(rows), sortEdits(changed.map((id) => upd(id, "owner", owners[id], "Gaby"))));
   for (const id of ids) await waitStore(page, id, (r) => r.owner === "Gaby");
-  const before = mocked.bulkRows;
   n0 = await lastEdit();
   await t.locator('[data-t="undo"]').click();
   await toastWith(page, "Restored");
   const back = await waitEdits(n0, changed.length);
   assert.deepEqual(sortEdits(back), sortEdits(changed.map((id) => upd(id, "owner", "Gaby", owners[id]))));
   for (const id of changed) assert.equal((await storeGet(page, id)).owner || null, owners[id] || null);
-  if (mocked.needRows) {
-    assert.ok(mocked.bulkRows > before, "the mock answered rows mode");
-    console.log("# mocked: POST /api/bulk {rows} (bulk Undo)");
-  }
 });
 
 // ---------- dialogs and the top layer ----------

@@ -1,21 +1,61 @@
 // One partner's profile for the record panel: details, contacts (with emails; the login in
-// functions/_middleware.js covers this route), activity and what the site says about itself.
-import { json, bad, body, who, updatePartner, v2Row } from "../../../lib/crm.js";
-const DOMAIN = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
+// functions/_middleware.js covers this route), activity, the site's edit history and open suggestions.
+//   GET   /api/partner/:id (spec 6.3.8)
+//         {partner, contacts, activity, about, about_pending, history: {edits}, suggestions}
+//         - activity rows: n, date, contact_id, type, by_whom, summary, client (newest first)
+//         - history.edits: [{n, at, by_whom, kind, field, old, new, state, contact_id}], newest first, max 200.
+//           state: copied (applied = 1), not_copied (applied = 0 below the highest applied n: a sheet edit
+//           won, R5) or waiting
+//         - suggestions: the site's open daily-run suggestions; null before migration 004
+//         - about: only from the 7-day cache, never fetched inline. On a miss about is null and
+//           about_pending is true (GET /api/partner/:id/about answers it); the cache is warmed in the
+//           background, so the next open has it.
+//         404 {"error":"Not found"}.
+//   PATCH /api/partner/:id: unchanged, plus "v2" (the row in /api/partners?v=2 column order).
+import { json, bad, body, who, updatePartner, readPartner, v2Row } from "../../../lib/crm.js";
+import { hasTable } from "../../../lib/tables.js";
+import { cachedAbout, siteAbout, aboutable } from "../../../lib/about.js";
+
+const HISTORY_MAX = 200;
 
 export async function onRequestGet({ env, params, waitUntil }) {
   if (!env.PARTNERS_DB) return new Response("Partner list not connected", { status: 404 });
   const id = String(params.id || "");
   const db = env.PARTNERS_DB;
-  const partner = await db.prepare("SELECT * FROM partners WHERE id = ?").bind(id).first();
-  if (!partner) return new Response("Not found", { status: 404 });
-  const [contacts, activity] = await Promise.all([
-    db.prepare("SELECT * FROM contacts WHERE account_id = ? ORDER BY primary_contact DESC, replied DESC, last_email DESC").bind(id).all(),
-    db.prepare("SELECT date, contact_id, type, by_whom, summary, client FROM activity WHERE account_id = ? ORDER BY date DESC, n DESC").bind(id).all(),
-  ]);
-  const about = DOMAIN.test(partner.domain || "") ? await siteAbout(partner.domain, waitUntil) : null;
+  const partner = await readPartner(db, id);
+  if (!partner) return bad("Not found", 404);
+  const sugg = await hasTable(db, "suggestions");
+  const stmts = [
+    db.prepare("SELECT * FROM contacts WHERE account_id = ? ORDER BY primary_contact DESC, replied DESC, last_email DESC").bind(id),
+    db.prepare("SELECT n, date, contact_id, type, by_whom, summary, client FROM activity WHERE account_id = ? ORDER BY date DESC, n DESC").bind(id),
+    db.prepare(`SELECT n, at, by_whom, kind, field, old, new,
+        CASE WHEN applied = 1 THEN 'copied'
+             WHEN n < COALESCE((SELECT MAX(n) FROM edits WHERE applied = 1), 0) THEN 'not_copied'
+             ELSE 'waiting' END AS state, contact_id
+      FROM edits WHERE account_id = ?1 ORDER BY n DESC LIMIT ${HISTORY_MAX}`).bind(id),
+  ];
+  if (sugg) stmts.push(db.prepare("SELECT * FROM suggestions WHERE account_id = ? AND status = 'open' ORDER BY run_date DESC, id").bind(id));
+  const res = await db.batch(stmts);
+  const rows = (i) => (res[i] && res[i].results) || [];
+  let about = null, aboutPending = false;
+  if (aboutable(partner.domain)) {
+    about = await cachedAbout(partner.domain);
+    if (!about) {
+      aboutPending = true;
+      // Warm the cache without making this answer wait (the old page shows it on the next open).
+      if (waitUntil && typeof caches !== "undefined") waitUntil(siteAbout(String(partner.domain)).catch(() => null));
+    }
+  }
   return Response.json(
-    { partner, contacts: contacts.results, activity: activity.results, about },
+    {
+      partner,
+      contacts: rows(0),
+      activity: rows(1),
+      about,
+      about_pending: aboutPending,
+      history: { edits: rows(2) },
+      suggestions: sugg ? rows(3) : null,
+    },
     { headers: { "Cache-Control": "private, no-store" } }
   );
 }
@@ -35,54 +75,4 @@ export async function onRequestPatch({ request, env, params }) {
   const partner = await db.prepare("SELECT * FROM partners WHERE id = ?").bind(String(params.id)).first();
   // v2: the row in /api/partners?v=2 column order, so the page can upsert it (spec 6.3.2).
   return json({ ok: true, changed, partner, v2: await v2Row(db, partner) });
-}
-
-// The site's own title and description, cached for a week so each site is fetched rarely.
-async function siteAbout(domain, waitUntil) {
-  const cache = caches.default;
-  const key = new Request("https://partnergap-crm.pages.dev/__about/" + domain.toLowerCase());
-  const hit = await cache.match(key);
-  if (hit) return hit.json();
-  let about = { title: "", description: "" };
-  try {
-    const res = await fetch("https://" + domain, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; PartnerGapCRM/1.0)", Accept: "text/html" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(4000),
-    });
-    if (res.ok && (res.headers.get("content-type") || "").includes("html")) {
-      const html = (await res.text()).slice(0, 300000);
-      about = {
-        title: clean(pick(html, /<title[^>]*>([^<]*)<\/title>/i)),
-        description: clean(
-          meta(html, "description") || meta(html, "og:description") || meta(html, "twitter:description")
-        ),
-      };
-    }
-  } catch (e) {
-    // Slow or blocked sites just show no description.
-  }
-  const save = cache.put(key, new Response(JSON.stringify(about), {
-    headers: { "Content-Type": "application/json", "Cache-Control": "max-age=604800" },
-  }));
-  if (waitUntil) waitUntil(save); else await save;
-  return about;
-}
-
-function meta(html, name) {
-  const n = name.replace(".", "\\.");
-  return pick(html, new RegExp(`<meta[^>]+(?:name|property)=["']${n}["'][^>]*content=["']([^"']*)["']`, "i"))
-    || pick(html, new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:name|property)=["']${n}["']`, "i"));
-}
-
-function pick(s, re) {
-  const m = s.match(re);
-  return m ? m[1] : "";
-}
-
-function clean(s) {
-  return s
-    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d))
-    .replace(/\s+/g, " ").trim().slice(0, 400);
 }
