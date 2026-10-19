@@ -25,6 +25,8 @@ import * as filtersUi from "./ui/filters.js";
 import * as emptyUi from "./ui/empty.js";
 import * as skeletonUi from "./ui/skeleton.js";
 import * as chartsUi from "./ui/charts.js";
+import * as inlineEditUi from "./ui/inline-edit.js";
+import * as columnsUi from "./ui/columns.js";
 import * as record from "./features/record/index.js";
 import { openSearch } from "./features/search.js";
 import { openAddSite } from "./features/add-site.js";
@@ -64,7 +66,8 @@ let main = null;
 let active = null; // {page, root, sub}
 
 function uiKit() {
-  return Object.assign({}, toastUi, dialogUi, menuUi, pillsUi, listUi, filtersUi, emptyUi, skeletonUi, chartsUi);
+  return Object.assign({}, toastUi, dialogUi, menuUi, pillsUi, listUi, filtersUi, emptyUi, skeletonUi, chartsUi,
+    inlineEditUi, columnsUi);
 }
 
 export function makeCtx(route = router.current()) {

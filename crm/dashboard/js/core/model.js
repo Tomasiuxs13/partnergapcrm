@@ -129,21 +129,6 @@ export function parseNext(nextStep) {
   return { waitingOnClient: false, text: s.trim() };
 }
 
-// TEMP until G1-B: a v1 /api/partners positional row (functions/api/partners.js row()) as a v2 object.
-// [id, domain, name, type, dr, traffic, owner, stage, last_touch, clients, country, contacts, next_step,
-//  next_due, deal_model, deal_flat, deal_pct, deal_value, live_date, content_url]
-export function fromV1Row(a) {
-  const s = (v) => (v == null || v === "" ? null : v);
-  return {
-    id: a[0], domain: s(a[1]), name: s(a[2]), label: s(a[2]) || s(a[1]) || "Unnamed creator", type: s(a[3]),
-    dr: s(a[4]), traffic: s(a[5]), owner: s(a[6]), stage: s(a[7]), last_touch: s(a[8]), clients: s(a[9]),
-    country: s(a[10]), contacts: a[11] || 0, next_step: s(a[12]), next_due: s(a[13]), deal_model: s(a[14]),
-    deal_flat: s(a[15]), deal_pct: s(a[16]), deal_value: s(a[17]), live_date: s(a[18]), content_url: s(a[19]),
-    tracking_id: null, source: null, updated_at: null, updated_by: null, last_email: null, replied_contact: null,
-    act_at: null, sugg: null,
-  };
-}
-
 // A v2 row array (cols order) as an object.
 export function fromV2Row(row, cols = V2_COLS) {
   const o = {};

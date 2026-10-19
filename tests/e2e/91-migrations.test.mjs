@@ -498,11 +498,29 @@ test("every golden write path still writes its rows after the lib/crm.js refacto
   for (const file of files) {
     const g = loadGolden(file);
     for (const c of g.cases) {
-      // d5e91d9 answers 400 for a client key with a space; B1 fixes clients/[k].js (NEEDS.md, T23).
-      if (/d5e91d9-bug/.test(c.name)) continue;
+      if (/d5e91d9-bug/.test(c.name)) {
+        // d5e91d9 answered 400 for a client key with a space. clients/[k].js now decodes the key (G1
+        // checkpoint, NEEDS.md G1-D 1), so the request writes client-program#partial's row with
+        // field = the stored key "botanical synthesis" (T23).
+        const partial = goldenCase("client-program", "partial");
+        const fixed = { ...c, status: 200, response: { ok: true },
+          edits: partial.edits.map((e) => ({ ...e, field: "botanical synthesis" })) };
+        const r = await replayCase(fixed, { client, target });
+        assert.ok(r.ok, file + "#" + c.name + " (decoded)\n" + r.errors.join("\n"));
+        n++;
+        continue;
+      }
       const r = await replayCase(c, { client, target, order: g.row_order });
       assert.ok(r.ok, file + "#" + c.name + "\n" + r.errors.join("\n"));
       n++;
+      if (file === "patch-partner" && c.status === 200) {
+        // PATCH adds v2 (G1-B acceptance 5; applied at the G1 checkpoint from NEEDS.md G1-B 1).
+        const v2 = r.response.json.v2;
+        const id = c.request.url.split("/").pop();
+        assert.ok(Array.isArray(v2) && v2.length === V2_COLS.length, "PATCH returns v2: " + file + "#" + c.name);
+        assert.equal(v2[0], id);
+        assert.equal(v2[V2_COLS.indexOf("stage")], r.response.json.partner.stage);
+      }
       if (file === "add-site" && c.status === 201) {
         const v2 = r.response.json.v2;
         assert.ok(Array.isArray(v2) && v2.length === V2_COLS.length, "Add site returns v2");

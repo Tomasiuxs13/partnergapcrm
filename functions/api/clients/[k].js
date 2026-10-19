@@ -6,7 +6,11 @@ const FIELDS = { network: 80, commission: 200, payout_terms: 300, signup_url: 30
 export async function onRequestPut({ request, env, params }) {
   const db = env.PARTNERS_DB;
   if (!db) return bad("Not connected", 404);
-  const k = text(params.k, 40).toLowerCase();
+  // The page sends encodeURIComponent(k) and the route may pass it on still encoded
+  // ("botanical%20synthesis"); a malformed escape stays as it is and fails the check below.
+  let raw = String(params.k || "");
+  try { raw = decodeURIComponent(raw); } catch (e) { /* keep raw */ }
+  const k = text(raw, 40).toLowerCase();
   if (!/^[a-z0-9 -]+$/.test(k)) return bad("Unknown client.");
   const b = await body(request);
   const by = who(b);

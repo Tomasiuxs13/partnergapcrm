@@ -11,7 +11,7 @@ import { api, readPartners } from "./api.js";
 import * as cache from "./cache.js";
 import * as meta from "./meta.js";
 import * as bus from "./bus.js";
-import { derive, fromV1Row, fromV2Row, V2_COLS, DERIVED } from "./model.js";
+import { derive, fromV2Row, V2_COLS, DERIVED } from "./model.js";
 import { todayIso, lastRunAt } from "./format.js";
 
 const raws = new Map(); // id -> raw v2 object
@@ -38,10 +38,9 @@ let listening = false;
 // fromCache: the shown list came from Cache Storage (still true after a 304 confirmed it).
 // pending: edits waiting for the morning copy (from meta.freshness, then setPending()).
 // build: meta.build when the list was loaded. loading/error/checkedAt/etag: network state.
-// legacyRows: TEMP until G1-B, true while the list came from the v1 positional rows.
 export const status = {
   loadedAt: null, fromCache: false, pending: null, build: null,
-  loading: false, error: null, checkedAt: null, etag: null, legacyRows: false,
+  loading: false, error: null, checkedAt: null, etag: null,
 };
 
 const hasWindow = () => typeof window !== "undefined";
@@ -150,17 +149,9 @@ const isV2 = (d) => d && typeof d === "object" && !Array.isArray(d) && Array.isA
 
 function applyResult(r, reason) {
   const d = r && r.data;
-  if (Array.isArray(d)) {
-    // TEMP until G1-B: /api/partners?v=2 still answers with the v1 positional rows. Map them to the
-    // v2 names; never cache them (the cache key and ETag belong to the v2 list).
-    setAll(d.map(fromV1Row), reason);
-    status.legacyRows = true;
-    status.etag = null;
-    cache.clear();
-  } else if (isV2(d)) {
+  if (isV2(d)) {
     cols = d.cols.slice();
     setAll(d.rows.map((row) => fromV2Row(row, cols)), reason);
-    status.legacyRows = false;
     status.etag = r.etag || null;
     cache.write(r.text != null ? r.text : d, { etag: r.etag || null, generatedAt: r.generatedAt || null });
   } else {

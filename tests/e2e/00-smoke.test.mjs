@@ -7,11 +7,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { baseUrl, signedInPage, closeBrowser, browser, pageFetch, api } from "./lib.mjs";
 
-// Requests that may fail with 404 for now: endpoints G1-B and B1 have not built yet (they answer the
-// catch-all's {"error":"Not available yet","unavailable":true}). The G1 checkpoint empties this list.
-const ALLOWED_404 = [
-  "/api/meta",
-];
+// Requests that may fail with 404 for now: endpoints that are not built yet (they answer the catch-all's
+// {"error":"Not available yet","unavailable":true}). Emptied at the G1 checkpoint: /api/meta and the
+// v2 list exist. Add a path here only for an endpoint a page calls before its owner ships it.
+const ALLOWED_404 = [];
 // Requests this file makes on purpose to check the catch-all.
 const DELIBERATE_404 = ["/api/nope"];
 

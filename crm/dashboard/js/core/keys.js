@@ -16,10 +16,11 @@ function typing(el) {
   return false;
 }
 
-// A menu, popover or modal dialog is open: it handles Esc itself.
+// A menu, popover or modal dialog is open: it handles Esc itself. The toast region (#toasts, a
+// manual popover open for a few seconds after each save) is not a layer.
 function layerOpen() {
   try {
-    if (document.querySelector(":popover-open")) return true;
+    if (document.querySelector(":popover-open:not(#toasts)")) return true;
   } catch (e) { /* no Popover API */ }
   return !!document.querySelector("dialog[open]");
 }

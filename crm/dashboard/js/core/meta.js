@@ -47,49 +47,6 @@ function base() {
   };
 }
 
-// TEMP until G1-B: the built-in meta used while /api/meta is not deployed. It mirrors the 6.3.1
-// example (the values come from today's legacy page and lib/crm.js). Delete it once /api/meta ships.
-function fallback() {
-  return Object.assign(base(), {
-    fallback: true,
-    deal_models: ["Commission (CPA)", "Revenue share", "Flat fee", "Flat fee + commission", "Free placement", "Gifted product"],
-    activity_types: ["Email", "Call", "Meeting", "Note", "Deal update", "Content live"],
-    affiliate_types: ["Media / Publisher", "Coupon / Deals", "Review", "Influencer / Social", "Affiliate Network",
-      "Loyalty / Rewards", "Marketplace Partner", "Web Hosting", "Email Marketing", "WP / Web Platform", "Tech / SaaS", "Agency", "Other"],
-    team: [{ name: "Jonas" }, { name: "Vik", home: "team" }, { name: "Kamile" }, { name: "Eivyda" }, { name: "Monica" },
-      { name: "Mantvydas" }, { name: "Gaby" }, { name: "Sandra" }, { name: "Tomas" }, { name: "Denisse" }, { name: "Egle" }],
-    admins: ["Jonas", "Vik"],
-    clients: [
-      { k: "soro", slug: "soro", name: "Soro", what: "AI SEO content platform", managers: ["Jonas", "Vik"], markets: "US", aliases: [] },
-      { k: "transfergo", slug: "transfergo", name: "TransferGO", what: "Money transfer app", managers: ["Jonas", "Vik"], markets: "GB · UA · PL · DE", aliases: [] },
-      { k: "ultahost", slug: "ultahost", name: "UltaHost", what: "Web hosting", managers: ["Kamile"], markets: "US", aliases: ["ultahost"] },
-      { k: "mailerlite", slug: "mailerlite", name: "MailerLite", what: "Email marketing", managers: ["Kamile"], markets: "US", aliases: [] },
-      { k: "mailersend", slug: "mailersend", name: "MailerSend", what: "Transactional email", managers: ["Kamile"], markets: "US", aliases: [] },
-      { k: "headway", slug: "headway", name: "Headway", what: "Book summaries app", managers: ["Kamile"], markets: "US · IN · GB", aliases: [] },
-      { k: "guardblinds", slug: "guardblinds", name: "GuardBlinds", what: "Blackout blinds", managers: ["Kamile"], markets: "US", aliases: [] },
-      { k: "fiverr", slug: "fiverr", name: "Fiverr", what: "Freelance marketplace", managers: ["Mantvydas"], markets: "IN · US", aliases: [] },
-      { k: "raibu", slug: "raibu", name: "Raibu", what: "Supplements", managers: ["Monica"], markets: "IT · ES · US", aliases: [] },
-      { k: "desktronic", slug: "desktronic", name: "Desktronic", what: "Standing desks", managers: ["Eivyda"], markets: "DE · EU · US", aliases: [] },
-      { k: "botanical synthesis", slug: "botanical-synthesis", name: "Botanical Synthesis", what: "Topical pain relief", managers: ["Eivyda"], markets: "US", aliases: [] },
-      { k: "melograno", slug: "melograno", name: "Melograno", what: "Trafft, Amelia, wpDataTables, IvyForms", managers: ["Eivyda"], markets: "US",
-        aliases: [], products: ["Trafft", "Amelia", "wpDataTables", "IvyForms"], token: "Melograno - {product}" },
-    ],
-    past_clients: [{ k: "weglot", slug: "weglot", name: "Weglot" }, { k: "termly", slug: "termly", name: "Termly" }],
-    sla: { Contacted: 14, Replied: 3, Negotiating: 7, ActiveNotLive: 14 },
-    follow_up_days: { New: 2, Researching: 2, Contacted: 7, Replied: 2, Negotiating: 3, Active: 14 },
-    lost_reasons: ["No budget", "Only paid placements", "Price too high", "Not a fit", "No reply after follow-ups",
-      "Already works with a competitor", "Other"],
-    platform_domains: ["google.com", "drive.google.com", "docs.google.com", "wordpress.org", "wordpress.com", "pinterest.com",
-      "adobe.com", "shopify.com", "bit.ly", "wix.com", "forbes.com", "medium.com", "trustpilot.com", "nytimes.com", "cnn.com",
-      "healthline.com", "webmd.com", "amazon.com", "apple.com", "microsoft.com", "github.com", "youtube.com", "facebook.com",
-      "instagram.com", "linkedin.com", "x.com", "twitter.com", "reddit.com", "wikipedia.org", "blogspot.com"],
-    schedule: [{ name: "Find new sites", when: "Mondays 07:52" }, { name: "Morning copy (daily run)", when: "Mon–Fri 08:47" },
-      { name: "Weekly digest", when: "Fridays 15:51" }],
-    sheet_url: "https://docs.google.com/spreadsheets/d/1llDAVFowJ1tHVXCTRc2Upos1FXndl2Iit3mfAOhp05I/edit",
-    features: { settings: true, suggestions: true, runs: true, dnc: false },
-  });
-}
-
 const isObj = (v) => v && typeof v === "object" && !Array.isArray(v);
 
 // Server values win; nested objects (limits, features, sla...) are merged one level deep.
@@ -129,8 +86,8 @@ export async function load() {
   } catch (e) {
     body = null;
   }
-  // TEMP until G1-B: without /api/meta (404 "unavailable", or an error) use the built-in values.
-  finish(isObj(body) && Array.isArray(body.stages) ? merge(base(), body) : fallback());
+  // Without a usable /api/meta body (an error, or a 404 "unavailable") the neutral shape is used.
+  finish(isObj(body) && Array.isArray(body.stages) ? merge(base(), body) : base());
 }
 
 // Re-reads /api/meta (freshness, build, overrides). Keeps the current values if it fails.

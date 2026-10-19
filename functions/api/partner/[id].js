@@ -1,6 +1,6 @@
 // One partner's profile for the record panel: details, contacts (with emails; the login in
 // functions/_middleware.js covers this route), activity and what the site says about itself.
-import { json, bad, body, who, updatePartner } from "../../../lib/crm.js";
+import { json, bad, body, who, updatePartner, v2Row } from "../../../lib/crm.js";
 const DOMAIN = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i;
 
 export async function onRequestGet({ env, params, waitUntil }) {
@@ -32,7 +32,9 @@ export async function onRequestPatch({ request, env, params }) {
     return bad(String(msg));
   }
   if (changed === null) return bad("Not found", 404);
-  return json({ ok: true, changed, partner: await db.prepare("SELECT * FROM partners WHERE id = ?").bind(String(params.id)).first() });
+  const partner = await db.prepare("SELECT * FROM partners WHERE id = ?").bind(String(params.id)).first();
+  // v2: the row in /api/partners?v=2 column order, so the page can upsert it (spec 6.3.2).
+  return json({ ok: true, changed, partner, v2: await v2Row(db, partner) });
 }
 
 // The site's own title and description, cached for a week so each site is fetched rarely.

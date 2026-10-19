@@ -52,3 +52,22 @@ Changes G1-C needs in files it does not own.
      `crm-easy-site-g1-b` (4bc4a4e), that request returns 400 "Select at least one site.".
    - `tests/e2e/05-ui-kit.test.mjs` probes for rows mode and mocks it with `page.route` only when it is
      missing. It logs `# mocked: POST /api/bulk {rows}`.
+
+# Status at the G1 checkpoint (tag g1-checkpoint)
+
+Applied at the checkpoint (js/core/*, lib/meta.js and js/ui/columns.js are frozen from here on):
+- G1-D 1: `functions/api/clients/[k].js` decodes the key (try/catch on a malformed `%`). `91-migrations` now
+  replays `client-program#key-with-space-d5e91d9-bug` and expects `#partial`'s row with `field` = `"botanical synthesis"`.
+- G1-B 1: PATCH `/api/partner/:id` returns `v2` (checked for every 200 PATCH case in `91-migrations` test 10).
+- G1-B 4: `ALLOWED_404` in `00-smoke` is empty.
+- G1-B 5: the "TEMP until G1-B" fallbacks are gone: `meta.js` `fallback()` (a failed `/api/meta` now gives the
+  neutral shape), `store.js` v1 mapping and `status.legacyRows`, `model.fromV1Row`.
+- G1-C 1: `keys.js` `layerOpen()` ignores `#toasts`.
+- G1-C 2: `app.js` `ctx.ui` also holds `ui/inline-edit.js` and `ui/columns.js`.
+
+Still open:
+- G1-B 2 and G1-C 3 (B1, `functions/api/bulk.js`): the ids-mode rewrite with `changed_ids`, `before` and `v2`,
+  rows mode, and `allow_dnc` read once per request. `05-ui-kit` mocks rows mode until it ships.
+- G1-B 3 (B1, `functions/_middleware.js`): the read-only guard and `ctx.data.readOnly`, the sign-in team list
+  from meta + kv overrides, and `PUT /api/settings` through `lib/settings.js#saveSettings`.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
