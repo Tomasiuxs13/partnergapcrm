@@ -7,12 +7,14 @@
 //
 // URL (spec 2.4): tab (mine | unowned | waiting | all; none = All), the filter params of ui/filters.js,
 // quiet=14 (Waiting only), preset=activity | replied_nodate (All only; "Has a suggestion" is sugg=1),
+// flag=<id> (All only: one of the Team overview's lists, rules/team.js#FLAGS, so each of its numbers opens
+// Sites with the same count; shown as a removable chip with the list's name, its line under the h1),
 // sort + dir (only when they differ from the default sort), page (when > 1).
 // - Waiting for reply shows my sites when the URL has no owner; owner=all shows everyone's.
 // - Mine to contact and Unowned define the owner themselves; Stage and the presets are on All only;
 //   "Show big sites" is on every tab but Waiting (B.4). Filters a tab doesn't offer stay in the URL but
 //   don't apply there, so they come back with the tab.
-// - A tab link keeps the filters and drops quiet, preset, sort and page.
+// - A tab link keeps the filters and drops quiet, preset, flag, sort and page.
 // Rows: Unowned new sites get [Claim] and [Assign to <client manager>]; other rows [Log what happened ▾]
 // [Follow up ▾]. Every write goes through ui/actions.js (bulk through ui/bulk.js). The page redraws in
 // place on store, meta and route changes; it never remounts.
@@ -20,6 +22,8 @@ import { html, raw, render, on } from "../core/dom.js";
 import { num, plural } from "../core/format.js";
 import { clientManager, firstClientName } from "../core/outcomes.js";
 import { TABS, tabOf, tabInfo, siteView, ownerFilter, sortFor, baseSort, defaultDir, sortLabel, SORT_CHOICES } from "../rules/sites.js";
+import { FLAGS, flagTest } from "../rules/team.js";
+import { siteMatcher, loadContactsFor } from "../features/search.js";
 import { createList } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
 import { CSV_SITES } from "../ui/columns.js";
@@ -67,6 +71,7 @@ function fresh(root, ctx) {
     ranks: new Map(), // sort key -> Map(site id -> rank), until the store changes
     announced: false,
     sayTimer: 0,
+    askedContacts: false, // the contacts index was asked for an email search
   };
 }
 
@@ -89,6 +94,12 @@ function quietOn(p) {
   return has(p.quiet) && p.quiet !== "0";
 }
 
+// The Team overview list of flag=<id> ({label, desc, …}), or null (none, or an id Sites doesn't know).
+function flagOf(p) {
+  const id = p && has(p.flag) ? String(p.flag) : "";
+  return id && Object.prototype.hasOwnProperty.call(FLAGS, id) ? FLAGS[id] : null;
+}
+
 function sharedParams(p) {
   const out = {};
   for (const k of SHARED) if (has(p[k])) out[k] = p[k];
@@ -97,17 +108,36 @@ function sharedParams(p) {
 
 function dataKey(ctx, p) {
   return JSON.stringify([tabOf(p.tab), me(ctx), SHARED.map((k) => p[k] || ""), p.owner || "", p.stage || "", p.big || "",
-    p.quiet || "", p.preset || ""]);
+    p.quiet || "", p.preset || "", p.flag || ""]);
+}
+
+// The search text matches what Search matches (features/search.js#siteMatcher), so its "See all N matching
+// sites" lands on N rows; an email waits for the contacts index (asked once per mount), then redraws.
+function searchTest(ctx, p) {
+  if (!has(p.q)) return null;
+  const test = siteMatcher(p.q);
+  if (test && !st.askedContacts) {
+    const wait = loadContactsFor(p.q);
+    if (wait) {
+      st.askedContacts = true;
+      wait.then(() => { if (st) schedule("store"); }, () => {});
+    }
+  }
+  return test;
 }
 
 // {rows, counts, quiet, tab}: one pass (rules/sites.js#siteView) over the records that pass the shared filters.
 function compute(ctx) {
   const p = params(ctx);
   const mine = me(ctx);
-  const base = applyFilters(ctx.store.all(), sharedParams(p), { meta: ctx.meta, me: mine });
+  const shared = sharedParams(p);
+  const match = searchTest(ctx, p);
+  if (match) delete shared.q;
+  let base = applyFilters(ctx.store.all(), shared, { meta: ctx.meta, me: mine });
+  if (match) base = base.filter(match);
   const v = siteView(base, {
     meta: ctx.meta, me: mine, today: ctx.today, tab: p.tab, owner: p.owner, stage: p.stage, big: p.big === "1",
-    quiet: quietOn(p) ? p.quiet : "", preset: p.preset,
+    quiet: quietOn(p) ? p.quiet : "", preset: p.preset, flag: flagOf(p) ? flagTest(String(p.flag), { meta: ctx.meta, today: ctx.today }) : null,
   });
   v.tab = tabOf(p.tab);
   return v;
@@ -127,7 +157,7 @@ function barParams(tab, p) {
 function filtered(tab, p) {
   if (SHARED.some((k) => has(p[k]))) return true;
   if (tab === "waiting") return quietOn(p) || (has(p.owner) && p.owner !== "me" && p.owner !== "all" && p.owner !== "any");
-  if (tab === "all") return (has(p.owner) && p.owner !== "all" && p.owner !== "any") || has(p.stage) || has(p.preset);
+  if (tab === "all") return (has(p.owner) && p.owner !== "all" && p.owner !== "any") || has(p.stage) || has(p.preset) || !!flagOf(p);
   return false;
 }
 
@@ -271,8 +301,9 @@ function drawTabs(ctx, p, v) {
     if (n && n.textContent !== text) n.textContent = text;
   }
   const sub = st.root.querySelector("[data-si-sub]");
-  const info = tabInfo(tab);
-  if (sub && sub.textContent !== info.desc) sub.textContent = info.desc;
+  const flag = tab === "all" ? flagOf(p) : null;
+  const desc = flag ? flag.desc : tabInfo(tab).desc;
+  if (sub && sub.textContent !== desc) sub.textContent = desc;
 }
 
 function quietHtml(p, v) {
@@ -348,7 +379,7 @@ function emptyAct(act) {
   const ctx = st.ctx;
   const p = params(ctx);
   if (act === "clear") {
-    const patch = { quiet: null, preset: null, sort: null, dir: null, page: null };
+    const patch = { quiet: null, preset: null, flag: null, sort: null, dir: null, page: null };
     for (const k of KEEP) patch[k] = null;
     ctx.setParams(patch);
   } else if (act === "quiet-off") {
@@ -365,7 +396,8 @@ function emptyAct(act) {
 function queueLabel() {
   const p = params(st.ctx);
   const tab = tabOf(p.tab);
-  return tab === "waiting" && quietOn(p) ? QUIET : tabInfo(tab).label;
+  const flag = tab === "all" ? flagOf(p) : null;
+  return tab === "waiting" && quietOn(p) ? QUIET : flag ? flag.label : tabInfo(tab).label;
 }
 
 function openRow(id, o) {
@@ -446,6 +478,15 @@ function onBarChange(patch, opts = {}) {
   ctx.setParams(out, { replace: !!opts.replace });
 }
 
+// The flag=<id> chip on All: the list's name ("Overdue follow-ups ×"); × or Clear all removes it.
+function flagChips(tab) {
+  if (tab !== "all") return () => [];
+  return (p) => {
+    const f = flagOf(p);
+    return f ? [{ field: "flag", label: f.label, title: f.desc }] : [];
+  };
+}
+
 function makeBar(tab) {
   const el = st.root.querySelector("[data-si-filters]");
   if (st.bar) st.bar.destroy();
@@ -455,6 +496,7 @@ function makeBar(tab) {
     onChange: onBarChange,
     records: () => st.ctx.store.all(),
     label: "Filters",
+    chips: flagChips(tab),
   });
 }
 
@@ -588,7 +630,8 @@ export default {
     st = fresh(root, ctx);
     const p = params(ctx);
     // Phones show Export CSV in the header (the tool row below keeps the whole width for Sort).
-    render(root, html`<div class="si-page"><header class="si-head"><div class="si-head-text"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${tabInfo(p.tab).desc}</p></div><button type="button" class="ui-btn is-sm is-ghost si-csv si-csv-head" data-si-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
+    const flag = tabOf(p.tab) === "all" ? flagOf(p) : null;
+    render(root, html`<div class="si-page"><header class="si-head"><div class="si-head-text"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${flag ? flag.desc : tabInfo(p.tab).desc}</p></div><button type="button" class="ui-btn is-sm is-ghost si-csv si-csv-head" data-si-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
     bind();
     draw("all");
     if (!st.announced) ctx.announce("Sites");

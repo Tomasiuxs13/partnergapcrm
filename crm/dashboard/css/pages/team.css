@@ -1,6 +1,6 @@
 /* Team overview (spec 2.2.5, 4.12). Owner F6. Class prefix .tm-
    Desktop: Needs a decision (rows grouped by owner), Stuck (5 tiles), the Team table, the Morning run and Data
-   clean-up cards side by side, then Charts (collapsed). The list view (#team?show=…) is the kit's list.
+   clean-up cards side by side, then Charts (collapsed). Every number opens Sites.
    Phone (< 640 px): one column; the Team table becomes one card per person with a label on every number;
    Stuck tiles two by two; row actions behind ⋯ (the kit hides the others in .ui-row-acts). */
 
@@ -225,13 +225,6 @@ a.tm-kv-n { min-width: 32px; padding: 2px 6px; border-radius: 4px; color: var(--
 @media (hover: hover) { .tm-chart .ui-bar-label a:hover { text-decoration: underline; } }
 .tm-chart-note { margin: 6px 0 0; color: var(--ink-2); font-size: var(--fs-12); }
 
-/* ---------- List view ---------- */
-
-.tm-listview { display: grid; gap: var(--sp-3); min-width: 0; }
-.tm-back { margin: 0; font-size: var(--fs-13); }
-.tm-back a { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; color: var(--link); }
-.tm-list { min-width: 0; }
-
 /* ---------- Narrower screens ---------- */
 
 @media (max-width: 1279.98px) {
@@ -297,7 +290,6 @@ a.tm-kv-n { min-width: 32px; padding: 2px 6px; border-radius: 4px; color: var(--
   .tm-num { min-width: 0; }
   .tm-num::after { content: ""; position: absolute; inset: 0; }
 
-  .tm-back a { min-height: var(--tap); }
   .tm-charts-sum { padding: var(--sp-3); }
   .tm-charts-body { padding: 0 var(--sp-3) var(--sp-3); }
 }

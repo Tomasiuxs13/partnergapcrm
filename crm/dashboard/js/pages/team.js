@@ -5,23 +5,24 @@
 //    Each row: the site (opens in queue mode over the whole list), client tags, the terms, the next step with its
 //    date and "Quiet Nd", the "Waiting on client?" tick box when the next step names the client or says
 //    "waiting" (one click ticks it, with Undo in the toast) and [Log what happened ▾].
-// 2. Stuck: 5 tiles with a big number; each opens the sites behind it.
-// 3. Team: one row per person (then past owners, then "No owner"). Every number opens a list with the same
-//    count: Sites when Sites can show exactly those sites, else this page's own list (#team?show=<flag>&
-//    owner=<name|none>, rules/team.js#target). A name opens Edit history for that person. Changes this week
-//    and Last active come from GET /api/team-activity.
+// 2. Stuck: 5 tiles with a big number; each opens the sites behind it in Sites.
+// 3. Team: one row per person (then past owners, then "No owner"). Every number opens Sites with the same
+//    count (rules/team.js#target: a Sites tab or stage, or Sites › All with flag=<id>). A name opens Edit
+//    history for that person. Changes this week and Last active come from GET /api/team-activity. The
+//    section head links to Sites › All › Recently active (the old Home "Recently updated", spec 2.3).
 // 4. Morning run card: open suggestions by kind and client (GET /api/suggestions) with a link to Sites › Has a
 //    suggestion, and the latest runs (GET /api/runs) once there are any; before that, the fallback text.
 // 5. Data clean-up card: five read-only counts with links.
 // 6. Charts, collapsed; drawn when opened (ui/charts.js bars: labels and values are text).
-// #team?show=<flag>[&owner=…]: one list (ui/list.js) under "‹ Team overview", with CSV and queue mode.
+// Back from a list a number opened returns to the same scroll position with the focus on that number (the
+// place is kept in history.state of the #team entry). #team?show=<flag>[&owner=…] (this page's own lists
+// before Sites read flag=) redirects to the same list on Sites.
 // Every write goes through ui/actions.js (the tick box, the row menus). Endpoints that aren't there yet
 // (api.* gives null) show "Not available yet"; the page never remounts itself on updates.
 import { html, render, on } from "../core/dom.js";
 import { num, plural, date as fmtDate, toDay, daysBetween } from "../core/format.js";
 import * as rules from "../rules/team.js";
 import { isQuiet } from "../rules/deals.js";
-import { createList } from "../ui/list.js";
 import { bars } from "../ui/charts.js";
 import { clientTags, dueBadge, avatar, newDot } from "../ui/pills.js";
 import { rowActions, bindInlineEdits } from "../ui/inline-edit.js";
@@ -80,12 +81,9 @@ let st = null; // the mounted page's state
 
 function fresh(root, ctx) {
   return {
-    root, ctx, offs: [], frame: 0, pending: null, announced: false, sayTimer: 0, actTimer: 0, token: 0,
-    view: "", // "overview" | "list"
-    listKey: "", list: null, listRows: [], listTitle: "",
+    root, ctx, offs: [], frame: 0, pending: null, announced: false, sayTimer: 0, actTimer: 0, backTimer: 0, token: 0,
     vm: null, // the overview's numbers
     activity: undefined, sugg: undefined, runs: undefined, // undefined: loading, null: not there, {error}: failed
-    scrollY: 0, back: null, // where the overview was when a number opened a list
     busy: new Set(), // tick boxes saving
   };
 }
@@ -103,11 +101,6 @@ function loaded(ctx) {
 
 function readOnly(ctx) {
   return !!(ctx.meta && ctx.meta.read_only);
-}
-
-function listKeyOf(ctx) {
-  const p = params(ctx);
-  return has(p.show) ? String(p.show) + "|" + (has(p.owner) ? String(p.owner) : "") : "";
 }
 
 function compute(ctx) {
@@ -389,7 +382,6 @@ function drawCharts() {
 function focusKey() {
   const a = typeof document !== "undefined" ? document.activeElement : null;
   if (!a || !st.root.contains(a) || a === document.body) return null;
-  if (a.closest("[data-tm-list]")) return null; // the list keeps its own focus
   const f = a.getAttribute("data-tm-f");
   if (f) return { f, row: rowIndex(a) };
   const act = a.getAttribute("data-row-act");
@@ -444,7 +436,7 @@ function overviewShell() {
 <header class="tm-head"><h1 tabindex="-1">${TITLE}</h1><p class="tm-sub">${SUB}</p></header>
 <section class="tm-sec" aria-labelledby="tm-h-decision"><div class="tm-shead"><h2 class="tm-h" id="tm-h-decision" tabindex="-1">Needs a decision <span class="tm-n" data-tm-n></span></h2><p class="tm-desc">Negotiating deals where the next move is ours. Log what happened, or tick “Waiting on client?” when the client has the next move.</p></div><div class="tm-decision" data-tm-decision></div></section>
 <section class="tm-sec" aria-labelledby="tm-h-stuck"><div class="tm-shead"><h2 class="tm-h" id="tm-h-stuck">Stuck</h2><p class="tm-desc">Across the whole team. A number opens the sites behind it.</p></div><div class="tm-tiles" data-tm-stuck-list></div></section>
-<section class="tm-sec" aria-labelledby="tm-h-team"><div class="tm-shead"><h2 class="tm-h" id="tm-h-team">Team</h2><p class="tm-desc">A number opens those sites. A name opens that person's changes in Edit history.</p></div><div data-tm-team></div><p class="tm-note" data-tm-team-note></p></section>
+<section class="tm-sec" aria-labelledby="tm-h-team"><div class="tm-shead"><h2 class="tm-h" id="tm-h-team">Team</h2><p class="tm-desc">A number opens those sites. A name opens that person's changes in Edit history.</p><p class="tm-desc">What the team worked on lately: <a href="${st.ctx.href("sites", { tab: "all", preset: "activity" })}" data-tm-recent data-tm-f="recent">Recently active sites</a></p></div><div data-tm-team></div><p class="tm-note" data-tm-team-note></p></section>
 <div class="tm-cards">
 <section class="ui-card tm-card" aria-labelledby="tm-h-run" data-tm-run-card><h2 class="tm-h" id="tm-h-run">Morning run</h2><div class="tm-card-body" data-tm-runs></div></section>
 <section class="ui-card tm-card" aria-labelledby="tm-h-clean" data-tm-clean-card><h2 class="tm-h" id="tm-h-clean">Data clean-up</h2><p class="tm-desc">Bulk clean-ups run once, after Jonas decides.</p><div class="tm-card-body" data-tm-cleanup></div></section>
@@ -485,123 +477,59 @@ function drawOverview(what) {
   }
 }
 
-// ---------- the list view (#team?show=<flag>&owner=…) ----------
+// ---------- the old list links (#team?show=<flag>&owner=…) ----------
 
-function listTitleOf(flag, owner) {
-  const f = rules.FLAGS[flag];
-  if (!f) return "";
-  const who = owner === "none" ? "No owner" : owner;
-  return f.label + (has(who) && !(flag === "no_owner" && owner === "none") ? " · " + who : "");
-}
-
-function listRowsOf(ctx) {
-  const p = params(ctx);
-  if (!loaded(ctx)) return [];
-  return rules.flagged(ctx.store.all(), String(p.show), { meta: ctx.meta, today: ctx.today, owner: has(p.owner) ? String(p.owner) : null });
-}
-
-function openList() {
+// The same list on Sites (rules/team.js#target), replacing the history entry; an unknown list: the overview.
+function redirectShow() {
   const ctx = st.ctx;
   const p = params(ctx);
-  const flag = String(p.show);
-  const owner = has(p.owner) ? String(p.owner) : "";
-  const lv = st.root.querySelector("[data-tm-listview]");
-  if (st.list) {
-    try { st.list.destroy(); } catch (e) { /* already gone */ }
-    st.list = null;
-  }
-  const back = html`<p class="tm-back"><a href="${ctx.href("team")}" data-tm-back><span aria-hidden="true">‹</span>Team overview</a></p>`;
-  if (!rules.FLAGS[flag]) {
-    st.listTitle = "";
-    render(lv, html`${back}<header class="tm-head"><h1 tabindex="-1">This list doesn't exist</h1><p class="tm-sub">The link may be old. Go back to the Team overview and pick a number again.</p></header>`);
-    return;
-  }
-  st.listTitle = listTitleOf(flag, owner);
-  render(lv, html`${back}<header class="tm-head"><h1 tabindex="-1">${st.listTitle}</h1><p class="tm-sub">${rules.FLAGS[flag].desc}</p></header><div class="tm-list" data-tm-list></div>`);
-  st.listRows = listRowsOf(ctx);
-  st.list = createList(lv.querySelector("[data-tm-list]"), {
-    id: "team-" + flag,
-    rows: () => (st ? st.listRows : []),
-    columns: ["site", "stage", "owner", "clients", "next", "last_activity", "actions"],
-    csvName: "team-" + flag + (owner ? "-" + owner : ""),
-    noun: ["site", "sites"],
-    label: st.listTitle,
-    queueLabel: st.listTitle,
-    loading: () => !!st && !loaded(st.ctx),
-    empty: { title: "No sites here now.", body: "They may have moved on since the overview counted them." },
-    openRecord: (id, o) => st.ctx.openRecord(id, o || {}),
-  });
+  if (!has(p.show)) return false;
+  const t = rules.target(String(p.show), { owner: has(p.owner) ? String(p.owner) : null });
+  const go = ctx.go;
+  setTimeout(() => go(t.page, t.params, { replace: true }), 0);
+  return true;
 }
 
-function drawList() {
-  if (!st.list) return;
-  st.listRows = listRowsOf(st.ctx);
-  st.list.refresh();
+// ---------- back to the number that opened a list ----------
+
+const BACK_KEY = "tmBack";
+
+function historyState() {
+  try { return typeof history !== "undefined" && history.state && typeof history.state === "object" ? history.state : null; } catch (e) { return null; }
 }
 
-function listSay() {
-  return st.listTitle ? st.listTitle + ", " + sitesText(st.listRows.length) : "This list doesn't exist";
+function setHistoryState(state) {
+  try { history.replaceState(state, ""); } catch (e) { /* not allowed here */ }
 }
 
-// Shows the overview or a list for the URL. Remembers where the overview was, and comes back there.
-function showView({ first = false } = {}) {
-  const ctx = st.ctx;
-  const key = listKeyOf(ctx);
-  const want = key ? "list" : "overview";
-  const ov = st.root.querySelector("[data-tm-overview]");
-  const lv = st.root.querySelector("[data-tm-listview]");
-  const win = typeof window !== "undefined" ? window : null;
-  if (want === "list") {
-    if (st.view === "list" && st.listKey === key) return;
-    if (st.view === "overview" && win) st.scrollY = win.scrollY || 0;
-    st.view = "list";
-    st.listKey = key;
-    ov.hidden = true;
-    lv.hidden = false;
-    openList();
-    if (!first) {
-      if (win && win.scrollTo) win.scrollTo(0, 0);
-      const h1 = lv.querySelector("h1");
-      if (h1) h1.focus({ preventScroll: true });
-    }
-    if (loaded(ctx)) {
-      st.announced = true;
-      say(listSay(), { now: true });
-    }
-    return;
-  }
-  if (st.view === "overview") return;
-  const fromList = st.view === "list";
-  st.view = "overview";
-  st.listKey = "";
-  if (st.list) {
-    try { st.list.destroy(); } catch (e) { /* already gone */ }
-    st.list = null;
-  }
-  render(lv, html``);
-  lv.hidden = true;
-  ov.hidden = false;
-  st.announced = !first && loaded(ctx); // a return trip says the title, not the count again
-  drawOverview("all");
-  if (fromList) {
-    if (win && win.scrollTo) win.scrollTo(0, st.scrollY || 0);
-    const el = st.back ? findKey(st.back) : null;
-    (el || ov.querySelector("h1")).focus({ preventScroll: true });
-    say(TITLE, { now: true });
-  }
+// A number (or another link of the overview) is opening a list: keep the place in this history entry.
+function rememberPlace(a) {
+  const f = a.getAttribute("data-tm-f");
+  if (!f) return;
+  const y = typeof window !== "undefined" ? window.scrollY || 0 : 0;
+  setHistoryState(Object.assign({}, historyState() || {}, { [BACK_KEY]: { f, y } }));
+}
+
+// Back on this entry: the same scroll position, the focus on that link (after the router's h1 focus).
+function restorePlace() {
+  const s0 = historyState();
+  const b = s0 && s0[BACK_KEY];
+  if (!b || typeof b.f !== "string") return;
+  const rest = Object.assign({}, s0);
+  delete rest[BACK_KEY];
+  setHistoryState(Object.keys(rest).length ? rest : null);
+  if (!loaded(st.ctx)) return;
+  st.backTimer = setTimeout(() => {
+    if (!st) return;
+    const el = findKey(b.f);
+    if (typeof window !== "undefined" && window.scrollTo) window.scrollTo(0, Number(b.y) || 0);
+    if (el) el.focus({ preventScroll: true });
+  }, 0);
 }
 
 function draw(what = "all") {
   if (!st) return;
   st.frame = 0;
-  if (st.view === "list") {
-    drawList();
-    if (!st.announced && loaded(st.ctx)) {
-      st.announced = true;
-      say(listSay(), { now: true });
-    }
-    return;
-  }
   drawOverview(what);
 }
 
@@ -666,9 +594,7 @@ function bind() {
   }));
   st.offs.push(on(root, "change", "input[data-tm-wait]", (e, input) => tickWaiting(input)));
   // Remember which number opened a list, to come back to it.
-  st.offs.push(on(root, "click", "[data-tm-overview] a[data-tm-f]", (e, a) => {
-    st.back = a.getAttribute("data-tm-f");
-  }));
+  st.offs.push(on(root, "click", "[data-tm-overview] a[data-tm-f]", (e, a) => rememberPlace(a)));
   st.offs.push(on(root, "toggle", "[data-tm-charts]", () => drawCharts()));
   const dec = root.querySelector("[data-tm-decision]");
   if (dec) st.offs.push(bindInlineEdits(dec, { getRecord: (id) => st && st.ctx.store.get(id) }));
@@ -680,10 +606,13 @@ export default {
   mount(root, ctx) {
     if (st) this.unmount();
     st = fresh(root, ctx);
-    render(root, html`<div class="tm-page">${overviewShell()}<div class="tm-listview" data-tm-listview hidden></div></div>`);
+    render(root, html`<div class="tm-page">${overviewShell()}</div>`);
+    if (redirectShow()) return;
     bind();
-    showView({ first: true });
+    root.querySelector("[data-tm-overview]").hidden = false;
+    drawOverview("all");
     if (!st.announced) ctx.announce(TITLE); // the rows aren't loaded yet: the count follows when they are
+    restorePlace();
     fetchSide();
   },
   update(ctx, change) {
@@ -691,13 +620,7 @@ export default {
     st.ctx = ctx;
     const kind = change && change.kind;
     if (kind === "route") {
-      if (st.frame) {
-        const caf = typeof cancelAnimationFrame === "function" ? cancelAnimationFrame : clearTimeout;
-        caf(st.frame);
-        st.frame = 0;
-        st.pending = null;
-      }
-      showView();
+      redirectShow();
       return;
     }
     if (kind === "store") {
@@ -714,12 +637,10 @@ export default {
     if (st.frame) caf(st.frame);
     clearTimeout(st.sayTimer);
     clearTimeout(st.actTimer);
+    clearTimeout(st.backTimer);
     st.token++;
     for (const off of st.offs) {
       try { off(); } catch (e) { /* already gone */ }
-    }
-    if (st.list) {
-      try { st.list.destroy(); } catch (e) { /* already gone */ }
     }
     st = null;
   },

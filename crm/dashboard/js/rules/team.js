@@ -14,9 +14,9 @@
 //   are no manager contact names to match.
 // - Unanswered replies (Stuck): Replied, inside the reply window, not handled, and the reply at least
 //   meta.sla.Replied (3) days old. No snooze test (B.7 lists none).
-// - Every number opens a list with the same count: target() names a Sites view when Sites can show exactly
-//   those sites, otherwise the Team overview's own list (#team?show=<flag>&owner=<name|none>). SITES_FLAGS
-//   lists the flags Sites itself filters with flag=<id> (empty until it does; NEEDS.md, F6 1).
+// - Every number opens Sites with the same count (spec 2.2.5): target() names Sites' own view where it has
+//   one (a tab, a stage, quiet=14, a preset), otherwise Sites › All with flag=<id>, which Sites filters with
+//   FLAGS[id].test and shows as a removable chip (SITES_FLAGS = every flag).
 import { daysBetween, toDay } from "../core/format.js";
 import { splitClients, clientLabel } from "../core/meta.js";
 import { isNoReply } from "./sites.js";
@@ -133,9 +133,20 @@ export const FLAGS = {
 
 export const FLAG_IDS = Object.keys(FLAGS);
 
-// The flags Sites filters itself with flag=<id> (spec 2.2.5 "Sites filtered by that owner (and stage or flag)").
-// Empty until Sites reads flag= (NEEDS.md, F6 1); those numbers open the Team overview's own list meanwhile.
-export const SITES_FLAGS = [];
+// The flags Sites filters itself with flag=<id> on All (spec 2.2.5 "Sites filtered by that owner (and stage or
+// flag)"): every one of them.
+export const SITES_FLAGS = FLAG_IDS.slice();
+
+// The order a flag's list opens in on Sites (its sort and dir params; none = Sites' newest first): the oldest
+// follow-up date first for overdue sites, the longest wait first for replies and quiet deals.
+const FLAG_SORT = {
+  overdue: { sort: "next" },
+  replies: { sort: "last_activity", dir: "asc" },
+  unanswered: { sort: "last_activity", dir: "asc" },
+  quiet: { sort: "last_activity", dir: "asc" },
+  decision: { sort: "last_activity", dir: "asc" },
+  replied_old: { sort: "last_activity", dir: "asc" },
+};
 
 function ownerTest(owner) {
   if (owner == null || owner === "" || owner === "all") return () => true;
@@ -155,9 +166,10 @@ export function flagged(records, flag, { meta, today, owner } = {}) {
 }
 
 /**
- * Where a number leads: {page: "sites", params} when Sites shows exactly those sites, else
- * {page: "team", params: {show, owner?}} (the Team overview's own list). owner: a name, "none" or null.
- * Sites hides big sites unless big=1, so the links that count every site add it.
+ * Where a number leads: {page: "sites", params}, a Sites view that shows exactly those sites. owner: a name,
+ * "none" or null (everyone). Sites' own views where they fit (a tab, a stage, quiet=14, a preset), else All
+ * with flag=<id>. Sites hides big sites on All unless big=1, so the links that count every site add it.
+ * An unknown flag leads back to the Team overview.
  */
 export function target(flag, { owner = null } = {}) {
   const o = owner == null || owner === "" ? null : String(owner);
@@ -167,13 +179,23 @@ export function target(flag, { owner = null } = {}) {
     case "emailed": return { page: "sites", params: { tab: "waiting", owner: o || "all" } };
     case "negotiating": return { page: "sites", params: Object.assign({ tab: "all" }, own, { stage: "Negotiating", big: "1" }) };
     case "active": return { page: "sites", params: Object.assign({ tab: "all" }, own, { stage: "Active", big: "1" }) };
-    case "noreply": if (!o) return { page: "sites", params: { tab: "waiting", quiet: "14", owner: "all" } }; break;
+    case "noreply": return { page: "sites", params: { tab: "waiting", quiet: "14", owner: o || "all" } };
     case "unowned": if (!o) return { page: "sites", params: { tab: "unowned" } }; break;
     case "replied_nodate": if (!o) return { page: "sites", params: { tab: "all", preset: "replied_nodate", big: "1" } }; break;
     default: break;
   }
-  if (SITES_FLAGS.includes(flag)) return { page: "sites", params: Object.assign({ tab: "all", flag }, own, { big: "1" }) };
-  return { page: "team", params: Object.assign({ show: flag }, own) };
+  if (SITES_FLAGS.includes(flag)) {
+    return { page: "sites", params: Object.assign({ tab: "all" }, own, { flag, big: "1" }, FLAG_SORT[flag] || {}) };
+  }
+  return { page: "team", params: {} };
+}
+
+/** The test Sites applies for flag=<id> (null for an unknown id): FLAGS[id].test with {meta, today}. */
+export function flagTest(flag, { meta, today } = {}) {
+  const f = Object.prototype.hasOwnProperty.call(FLAGS, flag) ? FLAGS[flag] : null;
+  if (!f) return null;
+  const o = { meta, today };
+  return (r) => !!r && f.test(r, o);
 }
 
 // ---------- Needs a decision ----------

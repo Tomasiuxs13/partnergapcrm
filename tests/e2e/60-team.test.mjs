@@ -5,8 +5,8 @@
 // is worked out here from local D1 with plain JS (B.1 / B.7 by hand), not with rules/team.js. Changes this
 // week count the D1 edits rows at or after the `since` the page's own GET /api/team-activity answered with.
 // Every number in the Team table, every Stuck tile, every clean-up count, the suggestions link and a chart
-// bar are then opened, and the list they open (Sites, or the Team overview's own list) must show the same
-// count. Read-only tests first; the one write (the "Waiting on client?" tick box, then Undo) is last, and
+// bar are then opened, and the Sites list they open must show the same count (a Sites tab or stage, or
+// Sites › All with flag=<id> and its removable chip). Read-only tests first; the one write (the "Waiting on client?" tick box, then Undo) is last, and
 // after() puts its row back and deletes the edits and activity rows the tests added.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
@@ -241,11 +241,8 @@ async function openTeam({ name = "Kamile", hash = "#team", viewport = DESKTOP, c
   if (routes) await routes(s.page);
   const act = s.page.waitForResponse((r) => /\/api\/team-activity/.test(r.url()), { timeout: 20000 }).catch(() => null);
   await s.page.goto(BASE + "/" + hash);
-  if (/show=/.test(hash)) await s.page.waitForSelector("[data-tm-listview]:not([hidden]) .ui-list", { timeout: 20000 });
-  else {
-    await ready(s.page);
-    await sideReady(s.page);
-  }
+  await ready(s.page);
+  await sideReady(s.page);
   const res = await act;
   let since = null;
   try { since = res && res.ok() ? (await res.json()).since : null; } catch (e) { since = null; }
@@ -284,12 +281,12 @@ async function waitFor(fn, what, ms = 15000) {
 
 const announce = (page) => page.evaluate(() => (document.querySelector("[data-announce]") || {}).textContent || "");
 
-// Opens a link's hash in the running app and returns the count its list shows: Sites ("N sites" in the tool
-// row) or the Team overview's own list. Waits until the count is there and stops changing.
+// Opens a link's hash in the running app and returns the count its Sites list shows ("N sites" in the tool
+// row). Waits until the count is there and stops changing.
 async function countAt(page, hash) {
+  assert.ok(hash.startsWith("#sites"), "a number opens Sites: " + hash);
   await page.evaluate((h) => { location.hash = h; }, hash);
-  const sites = hash.startsWith("#sites");
-  const sel = sites ? '[data-page="sites"] [data-si-count]' : '[data-page="team"] [data-tm-listview]:not([hidden]) .ui-list-count';
+  const sel = '[data-page="sites"] [data-si-count]';
   let prev = null, same = 0;
   const end = Date.now() + 15000;
   while (Date.now() < end) {
@@ -381,7 +378,7 @@ test("T20: the Team table equals the fixture worked out by hand (Denisse from th
   }
 });
 
-test("T20: every nonzero Team table number opens a list (Sites or the Team overview's own) with the same count", async () => {
+test("T20: every nonzero Team table number opens Sites with the same count", async () => {
   const { page, watch, close } = await openTeam({ name: "Jonas" });
   try {
     const got = await shownTable(page);
@@ -389,14 +386,16 @@ test("T20: every nonzero Team table number opens a list (Sites or the Team overv
     for (const p of got) for (const c of COUNTS) if (p.links[c]) checks.push({ what: p.name + " " + c, hash: p.links[c], n: p[c] });
     assert.ok(checks.length > 40, "many numbers to open (" + checks.length + ")");
     const sites = checks.filter((c) => c.hash.startsWith("#sites")).length;
-    assert.ok(sites > 20, "most open Sites (" + sites + ")");
+    assert.equal(sites, checks.length, "every number opens Sites");
     for (const c of checks) assert.equal(await countAt(page, c.hash), c.n, c.what + " → " + c.hash);
     // A few links by hand, so the filters are the right ones and not only the count.
     const kamile = got.find((p) => p.name === "Kamile").links;
     assert.equal(kamile.owns, "#sites?tab=all&owner=Kamile&big=1");
     assert.equal(kamile.emailed, "#sites?tab=waiting&owner=Kamile");
     assert.equal(kamile.negotiating, "#sites?tab=all&owner=Kamile&stage=Negotiating&big=1");
-    assert.equal(kamile.prospects, "#team?show=prospects&owner=Kamile");
+    assert.equal(kamile.prospects, "#sites?tab=all&owner=Kamile&flag=prospects&big=1");
+    assert.equal(kamile.overdue, "#sites?tab=all&owner=Kamile&flag=overdue&big=1&sort=next");
+    assert.equal(kamile.replies, "#sites?tab=all&owner=Kamile&flag=replies&big=1&sort=last_activity&dir=asc");
     assert.equal(got.find((p) => p.name === "none").links.owns, "#sites?tab=all&owner=none&big=1");
     assert.deepEqual(watch.pageErrors, []);
   } finally {
@@ -422,6 +421,8 @@ test("Stuck: five tiles equal the fixture by hand, and each opens a list with th
     }
     assert.equal(tiles.find((t) => t.id === "noreply").href, "#sites?tab=waiting&quiet=14&owner=all");
     assert.equal(tiles.find((t) => t.id === "unowned").href, "#sites?tab=unowned");
+    assert.equal(tiles.find((t) => t.id === "overdue").href, "#sites?tab=all&flag=overdue&big=1&sort=next");
+    assert.equal(tiles.find((t) => t.id === "quiet").href, "#sites?tab=all&flag=quiet&big=1&sort=last_activity&dir=asc");
     for (const t of tiles) assert.equal(await countAt(page, t.href), t.n, t.label + " → " + t.href);
     assert.deepEqual(watch.pageErrors, []);
   } finally {
@@ -494,6 +495,7 @@ test("Morning run and Data clean-up: counts by hand, links open lists with the s
     assert.match(await page.textContent("[data-tm-clean-card]"), /Bulk clean-ups run once, after Jonas decides\./);
     assert.match(await page.textContent("[data-tm-clean-card]"), /“Ultahost” → UltaHost/);
     assert.equal(await countAt(page, sugg), suggSites, "Has a suggestion");
+    for (const c of clean) assert.ok(!c.n || c.href, c.id + ": a nonzero count is a link");
     for (const c of clean) if (c.href) assert.equal(await countAt(page, c.href), c.n, c.id + " → " + c.href);
     assert.deepEqual(watch.pageErrors, []);
   } finally {
@@ -539,40 +541,54 @@ test("Charts: collapsed by default; bars with labels and values as text; a bar o
   }
 });
 
-test("A number opens the Team overview's own list; back returns to the same place with the focus on that number", async () => {
+test("A number opens Sites with a removable chip; Back returns to the same place with the focus on that number", async () => {
   const { page, watch, close } = await openTeam({ name: "Kamile" });
   try {
+    // "Recently active" (spec 2.3: the old Home "Recently updated") is linked from the Team section.
+    assert.equal(await page.getAttribute("[data-tm-recent]", "href"), "#sites?tab=all&preset=activity");
+    assert.equal((await page.textContent("[data-tm-recent]")).trim(), "Recently active sites");
     const link = '[data-tm-person="Gaby"] [data-tm-cell="prospects"] a';
     await page.$eval(link, (a) => a.scrollIntoView({ block: "center" }));
     const y0 = await page.evaluate(() => window.scrollY);
+    const shown = Number((await page.textContent(link)).replace(/[^\d]/g, ""));
     await page.click(link);
-    await page.waitForSelector("[data-tm-listview]:not([hidden]) .ui-list");
-    assert.equal((await page.textContent("[data-tm-listview] h1")).trim(), "Prospects · Gaby");
-    assert.equal(await page.evaluate(() => location.hash), "#team?show=prospects&owner=Gaby");
-    const n = await countAt(page, "#team?show=prospects&owner=Gaby");
+    await page.waitForFunction(() => location.hash.startsWith("#sites"));
+    assert.equal(await page.evaluate(() => location.hash), "#sites?tab=all&owner=Gaby&flag=prospects&big=1");
     const exp = (await siteRows()).filter((r) => key(r.owner) === "gaby" && RULE.prospects(r));
-    assert.equal(n, exp.length);
-    const ids = await page.$$eval("[data-tm-listview] tbody tr[data-key]", (trs) => trs.map((t) => t.getAttribute("data-key")));
-    assert.deepEqual(ids.slice().sort(), exp.map((r) => r.id).sort());
+    assert.equal(shown, exp.length);
+    assert.equal(await countAt(page, "#sites?tab=all&owner=Gaby&flag=prospects&big=1"), exp.length);
     assert.ok(exp.some((r) => r.stage === "Researching"), "Researching is a prospect too");
-    assert.equal(await announce(page), "Prospects · Gaby, " + n + " sites");
-    assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.tagName), "H1");
-    await shot(page, "team-list-1440");
-    // CSV of the list.
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("[data-tm-listview] [data-csv]")]);
-    assert.match(dl.suggestedFilename(), /^partnergap-team-prospects-gaby-\d{4}-\d{2}-\d{2}\.csv$/);
-    // Back.
-    await page.click("[data-tm-back]");
-    await page.waitForSelector("[data-tm-overview]:not([hidden])");
-    assert.equal(await page.evaluate(() => location.hash), "#team");
-    const f = await page.evaluate(() => document.activeElement && document.activeElement.getAttribute("data-tm-f"));
-    assert.equal(f, "cell:gaby:prospects", "the focus is back on the number");
+    const chips = await page.$$eval(".si-filters .ui-chiprow .ui-fchip", (cs) => cs.map((c) => c.firstChild.textContent.trim()));
+    assert.deepEqual(chips, ["Prospects", "Owner: Gaby", "Show big sites"], "the list's name as the first chip, then the owner and big sites (Team counts them)");
+    assert.equal((await page.textContent("[data-si-sub]")).trim(), "Not contacted yet (New or Researching).");
+    await shot(page, "team-number-to-sites-1440");
+    // Back: the overview at the same place, the focus on the number.
+    await page.goBack();
+    await ready(page);
+    await page.waitForFunction(() => document.activeElement && document.activeElement.getAttribute("data-tm-f") === "cell:gaby:prospects", null, { timeout: 5000 })
+      .catch(() => assert.fail("the focus is back on the number"));
     const y1 = await page.evaluate(() => window.scrollY);
     assert.ok(Math.abs(y1 - y0) < 4, "the same scroll position (" + y0 + " → " + y1 + ")");
-    // An unknown list says so, with the way back.
+    // A nav click to the Team overview starts at the top (only Back returns to the number).
+    await page.evaluate(() => { location.hash = "#sites?tab=mine"; });
+    await page.waitForSelector('[data-page="sites"] .si-page');
+    await page.evaluate(() => { location.hash = "#team"; });
+    await ready(page);
+    await new Promise((r) => setTimeout(r, 300));
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.tagName), "H1");
+    // The chip's × removes the list: every site of Gaby's.
+    await page.evaluate(() => { location.hash = "#sites?tab=all&owner=Gaby&flag=prospects&big=1"; });
+    await page.waitForSelector('.si-filters [data-fremove="flag"]');
+    await page.click('.si-filters [data-fremove="flag"]');
+    await page.waitForFunction(() => !/flag=/.test(location.hash));
+    assert.equal(await countAt(page, await page.evaluate(() => location.hash)), (await siteRows()).filter((r) => key(r.owner) === "gaby").length);
+    // The Team overview's old list links (#team?show=…) open the same list on Sites, replacing the entry.
+    await page.evaluate(() => { location.hash = "#team?show=overdue&owner=Kamile"; });
+    await page.waitForFunction(() => location.hash === "#sites?tab=all&owner=Kamile&flag=overdue&big=1&sort=next");
     await page.evaluate(() => { location.hash = "#team?show=nope"; });
-    await page.waitForSelector("[data-tm-listview]:not([hidden]) h1");
-    assert.equal((await page.textContent("[data-tm-listview] h1")).trim(), "This list doesn't exist");
+    await page.waitForFunction(() => location.hash === "#team");
+    await ready(page);
     assert.deepEqual(watch.pageErrors, []);
   } finally {
     await close();
@@ -638,9 +654,9 @@ test("Phone (390 px): one column, no sideways scroll, team cards with a label on
       await noHorizontalScroll(page, name + " with charts open");
       await page.click(".tm-charts-sum");
       await shotParts(page, "team-" + name.toLowerCase() + "-390");
-      // The list view on the phone.
-      await page.evaluate(() => { location.hash = "#team?show=overdue"; });
-      await page.waitForSelector("[data-tm-listview]:not([hidden]) .ui-list");
+      // A Stuck tile's list on the phone (Sites with the chip).
+      await page.click('[data-tm-stuck="overdue"]');
+      await page.waitForSelector('.si-filters [data-fremove="flag"]');
       await noHorizontalScroll(page, name + " list");
       if (name === "Kamile") await shot(page, "team-list-390");
       assert.deepEqual(watch.pageErrors, []);
@@ -650,7 +666,7 @@ test("Phone (390 px): one column, no sideways scroll, team cards with a label on
   }
 });
 
-test("axe: no serious or critical issues on the Team overview (light and dark, charts open) and its list", async () => {
+test("axe: no serious or critical issues on the Team overview (light and dark, charts open) and a flag list on Sites", async () => {
   const axeSrc = fs.readFileSync(tools().axe, "utf8");
   const check = async (page, where) => {
     await settled(page);
@@ -669,8 +685,9 @@ test("axe: no serious or critical issues on the Team overview (light and dark, c
       await page.waitForSelector("[data-tm-chart] .ui-bar");
       await check(page, colorScheme);
       if (colorScheme === "dark") await shot(page, "team-kamile-1440-dark", { fullPage: true });
-      await page.evaluate(() => { location.hash = "#team?show=quiet"; });
-      await page.waitForSelector("[data-tm-listview]:not([hidden]) tbody tr");
+      await page.evaluate(() => { location.hash = "#sites?tab=all&flag=quiet&big=1&sort=last_activity&dir=asc"; });
+      await page.waitForSelector('.si-filters [data-fremove="flag"]');
+      await page.waitForSelector(".si-list tbody tr");
       await check(page, colorScheme + " list");
     } finally {
       await close();
