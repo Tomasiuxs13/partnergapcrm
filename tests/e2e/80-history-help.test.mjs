@@ -632,14 +632,19 @@ test("T21: Load more shows 100 changes, then the rest; the header count follows 
 
 test("A save made from Edit history's site panel shows up as a new Waiting row, and the count follows", async () => {
   const id = "PG-00452";
-  const [rec0] = await retry(() => d1("SELECT next_step, next_due FROM partners WHERE id = " + q(id), { rawNulls: true }));
+  // Without rawNulls: a NULL next_due must go back as NULL, not as the string "null".
+  const [rec0] = await retry(() => d1("SELECT next_step, next_due FROM partners WHERE id = " + q(id)));
   const before = Number(await retry(() => maxEditN()));
   const e0 = await readEdits();
+  // The site's own changes (account=): earlier test files on the same server can leave 100+ newer edits,
+  // which would push this site's fixture edit off the unfiltered first page.
+  const mine = e0.list.filter((e) => e.account_id === id).length;
+  assert.ok(mine > 0, "the fixture has an edit for " + id);
   // On a phone the panel's footer has Follow up ▾.
-  const s = await open("#history", { viewport: PHONE, contextOptions: PHONE_OPTS });
+  const s = await open("#history?account=" + id, { viewport: PHONE, contextOptions: PHONE_OPTS });
   const { page, watch } = s;
   try {
-    await rowsSettled(page, firstPage(e0.count.all), "all edits");
+    await rowsSettled(page, firstPage(mine), "the site's edits");
     await page.locator(ROWS + ` td.hi-c-site a[data-open="${id}"]`).first().click();
     const follow = page.locator('#layer-panel [data-pfoot="follow"]');
     await follow.waitFor({ state: "visible", timeout: 15000 });
@@ -651,7 +656,7 @@ test("A save made from Edit history's site panel shows up as a new Waiting row, 
       const n = Number(await retry(() => maxEditN()));
       return n > before ? n - before : 0;
     }, "the new edits rows");
-    await rowsSettled(page, firstPage(e0.count.all + added), "the list with the new edits");
+    await rowsSettled(page, firstPage(mine + added), "the list with the new edits");
     const top = (await rows(page))[0];
     assert.equal(top.who, "Kamile");
     assert.equal(top.sheet, "Waiting");
