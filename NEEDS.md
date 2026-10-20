@@ -204,3 +204,14 @@ Still open:
 - F7 2 (F5 Clients, F3 Sites; optional): a page that adds a site for a context calls `openAddSite(prefill)`, for
   example a client page's "Add site" with `openAddSite({ clients: "Soro" })`. Neither page is merged yet.
 - F2 1 (F8), F2 2 (F3), G1-B 6 (G3-1, release) and the F1 3 follow-up (panel owner) as listed after the F2 merge.
+
+# NEEDS (F4)
+
+1. **`tests/e2e/00-smoke.test.mjs` (G1-D / G3-1), optional: point the title-fallback check at a page that does
+   not announce.** Test 7 ("a page's own announcement replaces its title") ends with `#deals` and waits for the
+   live region to read exactly "Deals", which held while Deals was a stub. Spec 4.13 wants the page's own
+   announcement ("Sites, 36 sites"). Meanwhile Deals says "Deals" during mount (so the smoke check passes) and
+   "54 deals" 700 ms later (also after each filter change). If the check moves to a page with no announcement
+   of its own (for example `#history` while it is a stub, or a stubbed page like the Help one), Deals can say
+   "Deals, 54 deals" once: in `js/pages/deals.js` `mount()`, drop `ctx.announce("Deals")` and announce
+   `"Deals, " + text` at once on the first loaded draw.

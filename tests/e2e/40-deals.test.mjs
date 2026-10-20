@@ -235,6 +235,7 @@ async function waitFor(fn, what, ms = 15000) {
   assert.fail("timed out waiting for " + what);
 }
 
+const announced = (page, text) => page.waitForFunction((t) => document.querySelector("[data-announce]").textContent === t, text, { timeout: 5000 });
 const row = (id) => 'tbody tr[data-key="' + id + '"]';
 const inGroup = (g, id) => '[data-dl-group="' + g + '"] ' + row(id);
 const menuLabels = (page) => page.$$eval(".ui-menu .ui-mi-label", (els) => els.filter((e) => e.offsetParent !== null).map((e) => e.textContent.trim()));
@@ -299,6 +300,7 @@ test("T13: the groups, counts and totals at 13:00 UTC are B.5 worked out by hand
     assert.match(await page.textContent(".dl-sub"), /lost in the last 30 days/);
     const got = await assertShows(page, exp, "Kamile, no filters");
     assert.deepEqual(Object.keys(got), GROUPS.map((g) => g.id), "groups in B.5 order");
+    await announced(page, exp.all.length + " deals"); // after "Deals" on the route change
     // Lost: most recent first.
     const lostDays = got.lost.ids.map((id) => lastActivity(rows.find((r) => r.id === id)));
     assert.deepEqual(lostDays, lostDays.slice().sort().reverse(), "Lost is most recent first");
@@ -365,6 +367,7 @@ test("Filters: Waiting on client, Owner (menu and me), Client; the empty filtere
     const w = expectGroups(rows, waiting);
     assert.ok(w.all.length >= 2, "waiting deals in the fixture");
     await assertShows(page, w, "waiting=1");
+    await announced(page, w.all.length + " deals");
     await page.click('[data-ffield="waiting"]');
     await page.waitForFunction(() => !/waiting=/.test(location.hash));
     await assertShows(page, expectGroups(rows), "waiting off");

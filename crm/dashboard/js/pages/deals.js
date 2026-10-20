@@ -212,12 +212,10 @@ function restoreFocus(f) {
 
 // ---------- drawing ----------
 
-function say(text, { now = false } = {}) {
+// Announced 700 ms later, so the page title (said on the route change) is read first and quick filter
+// changes give one announcement.
+function say(text) {
   clearTimeout(st.sayTimer);
-  if (now) {
-    st.ctx.announce(text);
-    return;
-  }
   st.sayTimer = setTimeout(() => {
     if (st) st.ctx.announce(text);
   }, 700);
@@ -280,12 +278,9 @@ function draw(what = "all") {
   if (csv) csv.disabled = none;
   restoreFocus(f);
   const text = v.groups.count ? dealsText(v.groups.count) : filtered(p) ? "No deals match" : "No deals yet";
-  if (!st.announced) {
-    st.announced = true;
-    say("Deals, " + text, { now: true });
-  } else if (what === "route") {
-    say(text);
-  }
+  // "Deals" on the route change (mount), then the count: "54 deals"; again when the filters change.
+  if (!st.announced || what === "route") say(text);
+  st.announced = true;
 }
 
 function schedule(what) {
@@ -349,7 +344,7 @@ export default {
     makeLists();
     bind();
     draw("all");
-    if (!st.announced) ctx.announce("Deals");
+    ctx.announce("Deals");
   },
   update(ctx, change) {
     if (!st) return;
