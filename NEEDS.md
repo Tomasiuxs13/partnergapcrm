@@ -545,15 +545,15 @@ optional).
 
 # NEEDS (G3-3)
 
-Closed here: F6 2. `js/ui/charts.js` draws one visible list (`figure > ul.ui-bars-list > li.ui-bar`); a linked bar
-is a link named "label, value" whose whole row is the target (44 px on touch screens) and shows the focus ring.
-Nothing focusable is inside `aria-hidden`, and there is no hidden table. `95-mobile-a11y` F6 checks it (Team
-overview charts by keyboard, then Enter opens Sites).
+Closed here: F6 2. `js/ui/charts.js` draws one visible list (`figure[aria-label] > ul.ui-bars-list > li.ui-bar`);
+a linked bar is a link named "label, value" whose whole row is the target (44 px on touch screens) and shows the
+focus ring. Nothing focusable is inside `aria-hidden`, and there is no hidden table. `95-mobile-a11y` F6 checks it
+(Team overview charts by keyboard, then Enter opens Sites).
 
-1. **Spec 4.13 wording (whoever edits the spec).** It asks for "an aria-label and a visually hidden table". The
-   visible list replaces both: the table's links were Tab stops a keyboard user couldn't see, and putting the
-   visible links in the Tab order inside an `aria-hidden` list fails axe `aria-hidden-focus` (serious). A titled
-   chart is named by its `figcaption`; the client page's untitled chart sits under its card heading "Pipeline".
+1. **Spec 4.13 wording (whoever edits the spec).** It asks for "an aria-label and a visually hidden table". Each
+   chart keeps its `aria-label` (a one-line summary, which `50-clients` reads); the visible list replaces the
+   hidden table: the table's links were Tab stops a keyboard user couldn't see, and putting the visible links in
+   the Tab order inside an `aria-hidden` list fails axe `aria-hidden-focus` (serious).
 2. **Owners of files G3-3 changed outside its area (small, for review):** `js/shell/shell.js` (the More sheet traps
    Tab like every other dialog), `js/pages/today.js` (`restoreFocus` looks for the row in its own block, then
    falls back to the block heading, never `<body>`), `js/features/search.js` (`.se-body` is a focusable region so

@@ -901,9 +901,12 @@ test("F6 by keyboard: Team overview, its charts, a bar's link (visible focus, no
       return {
         hiddenFocusable: root.querySelectorAll('[aria-hidden="true"] a, [aria-hidden="true"] button, [aria-hidden="true"] [tabindex]').length,
         links: Array.from(root.querySelectorAll("ul.ui-bars-list > li.ui-bar.is-link a")).map((a) => a.getAttribute("aria-label")),
+        figures: Array.from(root.querySelectorAll("figure.ui-bars")).map((f) => [(f.querySelector("figcaption") || {}).textContent, f.getAttribute("aria-label")]),
       };
     });
     assert.equal(s.hiddenFocusable, 0, "nothing focusable inside aria-hidden");
+    assert.ok(s.figures.length >= 3, "the charts are figures");
+    for (const [title, label] of s.figures) assert.ok(label && label.startsWith(title + ": "), "a chart carries an aria-label (spec 4.13): " + label);
     assert.ok(s.links.length >= 3, "the bars are a list of links");
     for (const l of s.links) assert.match(l, /^.+, [\d,]+( \w+)?$/, "a bar link is named 'label, value'");
     assert.deepEqual(await axe(page), [], "axe on Team overview with the charts open");
