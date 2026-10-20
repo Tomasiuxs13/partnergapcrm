@@ -23,7 +23,9 @@ import { num, plural } from "../core/format.js";
 import { clientManager, firstClientName } from "../core/outcomes.js";
 import { TABS, tabOf, tabInfo, siteView, ownerFilter, sortFor, baseSort, defaultDir, sortLabel, SORT_CHOICES } from "../rules/sites.js";
 import { FLAGS, flagTest } from "../rules/team.js";
-import { siteMatcher, loadContactsFor } from "../features/search.js";
+// A namespace import: siteMatcher/loadContactsFor are extras beyond spec 5.4, so a search module without them
+// (such as 00-smoke's stub) still boots; q= then matches as plain text (ui/filters.js).
+import * as search from "../features/search.js";
 import { createList } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
 import { CSV_SITES } from "../ui/columns.js";
@@ -114,10 +116,10 @@ function dataKey(ctx, p) {
 // The search text matches what Search matches (features/search.js#siteMatcher), so its "See all N matching
 // sites" lands on N rows; an email waits for the contacts index (asked once per mount), then redraws.
 function searchTest(ctx, p) {
-  if (!has(p.q)) return null;
-  const test = siteMatcher(p.q);
-  if (test && !st.askedContacts) {
-    const wait = loadContactsFor(p.q);
+  if (!has(p.q) || typeof search.siteMatcher !== "function") return null;
+  const test = search.siteMatcher(p.q);
+  if (test && !st.askedContacts && typeof search.loadContactsFor === "function") {
+    const wait = search.loadContactsFor(p.q);
     if (wait) {
       st.askedContacts = true;
       wait.then(() => { if (st) schedule("store"); }, () => {});
