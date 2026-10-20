@@ -636,8 +636,12 @@ test("T13: Not interested on a Negotiating deal at 13:00 UTC: one request, the s
     await ready(page);
     await page.waitForSelector(inGroup("lost", T13_ID));
     await assertShows(page, exp2, "after a reload");
-    const lostRow = (await shown(page)).lost.ids;
-    assert.equal(lostRow[0], T13_ID, "the most recent Lost site comes first");
+    // Lost: most recent first (ties in id order), so the site lost today is at the top.
+    const la = new Map(exp2.lost.map((r) => [r.id, lastActivity(r)]));
+    const lostOrder = exp2.lost.map((r) => r.id).sort((a, b) =>
+      (la.get(a) === la.get(b) ? a.localeCompare(b, "en", { numeric: true }) : la.get(a) < la.get(b) ? 1 : -1));
+    assert.deepEqual((await shown(page)).lost.ids, lostOrder, "Lost order");
+    assert.equal(la.get(lostOrder[0]), TODAY);
     assert.deepEqual(watch.pageErrors, []);
   } finally {
     await close();
