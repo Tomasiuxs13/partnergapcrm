@@ -175,3 +175,17 @@ Still open:
 - F2 2 (F3, `js/pages/sites.js` and `js/rules/sites.js`): keep `#sites?tab=waiting&quiet=14` and `#sites?tab=mine`
   working (Today links to both). Sites is still the G0 stub at this merge.
 - G1-B 6 (G3-1, release) and the F1 3 follow-up (panel owner) as listed after the B1 merge.
+
+# NEEDS (F7)
+
+Changes F7 (Search + Add site) needs in files it does not own. Search and Add site work without them.
+
+1. **`js/app.js` (shell owner / G3-1): start the "Recently opened" list at boot.** `features/search.js` exports
+   `start()`, which records every site the record panel opens (router `rec`) for the empty search. Today it starts
+   only on the first `openSearch()` or `openAddSite()`, so sites opened before the first search are not listed.
+   Suggested change: `import { openSearch, start as startSearch } from "./features/search.js";` and call
+   `startSearch();` right after `router.start(PAGES, ...)` in `boot()`. It is idempotent and only reads the route.
+2. **Pages that add a site for a context (F5 Clients, F3 Sites): use the prefill.** `openAddSite(prefill)` takes a
+   website string, or `{ domain, name, clients, owner, type, stage, next_step, next_due, notes }` (`clients` as
+   the stored text, such as `"Soro"` or `"Melograno - Amelia"`). For example a client page's "Add site" can call
+   `openAddSite({ clients: "Soro" })`. `openSearch({ query })` opens Search with a query typed in.

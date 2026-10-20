@@ -20,7 +20,8 @@ import {
 const BASE = baseUrl();
 const SHOTS = process.env.SHOTS_DIR || "/tmp/shots-f7";
 const fx = fixture();
-const HAS_KV = String(process.env.D1_TABLES || "").split(",").includes("kv_meta");
+// Set in before(): from D1_TABLES, or from the database itself when the file runs against a --serve server.
+let HAS_KV = String(process.env.D1_TABLES || "").split(",").includes("kv_meta");
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
 const PHONE_OPTS = { hasTouch: true, isMobile: true };
@@ -66,7 +67,8 @@ const CLAIM_COLS = ["owner", "stage", "next_step", "next_due", "updated_at", "up
 let n0 = 0;
 let newIds0 = [];
 let claim0 = null;
-let kv0 = null;
+let kv0 = []; // the kv_meta rows the tests may change, as they were before
+const KV_KEYS = ["new_site_n", "sheet_sig", "last_sheet_change"];
 
 // ---------- helpers ----------
 
@@ -212,7 +214,8 @@ before(async () => {
   const obj = "json_object(" + CLAIM_COLS.map((c) => "'" + c + "', " + c).join(", ") + ")";
   claim0 = JSON.parse((await retry(() => d1("SELECT " + obj + " AS j FROM partners WHERE id = " + q(ID.claim), { rawNulls: true })))[0].j);
   assert.equal(claim0.owner, null, "the Claim site starts unowned");
-  if (HAS_KV) kv0 = (await retry(() => d1("SELECT k, v, at, by_whom FROM kv_meta WHERE k = 'new_site_n'", { rawNulls: true })))[0] || null;
+  if (!HAS_KV) HAS_KV = (await retry(() => d1("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'kv_meta'"))).length > 0;
+  if (HAS_KV) kv0 = await retry(() => d1("SELECT k, v, at, by_whom FROM kv_meta WHERE k IN " + inList(KV_KEYS), { rawNulls: true }));
 });
 
 after(async () => {
@@ -223,8 +226,11 @@ after(async () => {
     const set = CLAIM_COLS.map((c) => c + " = " + q(claim0[c])).join(", ");
     await retry(() => d1("UPDATE partners SET " + set + " WHERE id = " + q(ID.claim)));
     if (HAS_KV) {
-      if (kv0) await retry(() => d1("UPDATE kv_meta SET v = " + q(kv0.v) + ", at = " + q(kv0.at) + ", by_whom = " + q(kv0.by_whom) + " WHERE k = 'new_site_n'"));
-      else await retry(() => d1("DELETE FROM kv_meta WHERE k = 'new_site_n'"));
+      // The new-site counter and the sheet freshness keys a GET wrote while the tests' rows existed.
+      await retry(() => d1("DELETE FROM kv_meta WHERE k IN " + inList(KV_KEYS)));
+      for (const r of kv0) {
+        await retry(() => d1("INSERT INTO kv_meta (k, v, at, by_whom) VALUES (" + [r.k, r.v, r.at, r.by_whom].map(q).join(", ") + ")"));
+      }
     }
   } finally {
     await closeBrowser();
