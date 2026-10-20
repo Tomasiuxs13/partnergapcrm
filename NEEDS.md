@@ -508,3 +508,14 @@ Still open (owners in brackets):
 - F8 2 (B1 + a spec change): `total` in `GET /api/edits`.
 - F1 3 follow-up (F1): the form outcomes through `quiet`/`throw`. Not small (the panel would own the form's busy
   state, Retry and Undo) and not required by the spec, so G3-1 left it.
+
+# Status after the G3-1 merge (crm-easy-site)
+
+Merged `--no-ff` with one conflict, here in NEEDS.md (the G3-6b sections and the G3-1 status are both kept). No
+product or test file needed a fix: unit 202/202, full e2e 218 tests, 216 pass, 0 fail, 2 todo (95-mobile-a11y for
+G3-3, 99-perf for G3-4). Three baseline 60-team tests now have new names: G3-1 rewrote them because Team overview
+numbers now open Sites (F6 1). Their replacements pass. The G3-1 Deals Stage pill is plain text in read-only mode
+(`cx.readOnly`), so 96-snapshot's write-control check (8/8) stays green.
+
+Still open: G3-6b 1 (G3-5 doc) and 2 (release), F6 2 (G1-C or G3-3), F8 2 (B1 + a spec change), F1 3 follow-up
+(F1, optional).
