@@ -542,3 +542,37 @@ does. Unit 202/202; full e2e 218 tests, 216 pass, 0 fail, 2 todo (95-mobile-a11y
 Still open: G3-5 1 (refresh the PR description's test line on the release candidate) and 2 (Jonas, J3), G3-6b 2
 (publishing the preview, a release step), F6 2 (G1-C or G3-3), F8 2 (B1 + a spec change), F1 3 follow-up (F1,
 optional).
+
+# NEEDS (G3-4)
+
+Performance (`tests/e2e/99-perf.test.mjs` on a synthetic 7,500-site store; speed fixes in `core/model.js`,
+`format.js`, `store.js`, `cache.js`, `dom.js`, `app.js`, `index.html`, `ui/list.js`, `pages/deals.js` and the rule
+collators). G3-4 kept its needs in the task log; they are copied here so they stay with the branch. The measured
+numbers are in TASKLOG (G3-4 done, 10:30Z).
+
+1. **Known gap, not fixed: warm load over 400 ms when `wrangler pages dev` serves the static files.** Locally
+   wrangler serves the ~70 files at about 5 ms each, mostly one at a time, so real data warm-loads in 502–528 ms
+   (DOMContentLoaded alone 320–440 ms). With the statics served from disk (as the edge serves them in production)
+   it is 247–279 ms. Fixing the local number would mean bundling or caching the statics; the no-cache policy is
+   deliberate (it keeps two module versions from mixing after a deploy). 99-perf asserts the disk numbers only.
+2. **Informational: at CPU 4x every budget is missed** (the budgets are for 1x): page switch medians 36–186 ms,
+   long tasks up to 237 ms, cold load about 1.0–1.5 s. Meeting them would need lighter rows or pages, or bundling.
+3. **For later e2e checks:** `ui/list.js` draws the first 20 rows of a client-side list on its first draw
+   (`FIRST_ROWS`, `opts.firstRows`) and appends the rest after the first paint; Deals' four groups share those 20.
+   A check that counts list rows right after a page opens must wait for the count (every current test does).
+
+# Status after the G3-4 merge (crm-easy-site)
+
+Merged `--no-ff` with no conflicts: G3-4 changed only front-end files and `99-perf`, and the G3-5 side changed only
+docs, NEEDS.md and `97-capabilities`. No product or test file needed a fix. Unit 202/202; full e2e 220 tests, 219
+pass, 0 fail, 1 todo (95-mobile-a11y for G3-3) in about 23 minutes. Every test that passed at the G3-5 merge still
+passes; the `99-perf` todo is now three tests, all green (cold 332–385 ms, warm 232–239 ms, page switch medians
+5.5–30.3 ms, search at most 11.9 ms per keystroke, Today compute 2.6 ms, no long task during loads or switches).
+Two choices recorded: the `__boot` script now comes before the stylesheets in `index.html` (spec 5.3 lists the
+CSS first; the two requests are unchanged and only start sooner, and it also reads the cached list as `cached`).
+G3-4 changed the frozen `js/core/*` files; spec 5.5 sends frozen-file changes to the integration step, and this
+merge is that step. The edits contract and the golden files are untouched.
+
+Still open: G3-4 1 (warm load with wrangler-served statics, local only) and 2 (CPU 4x, informational), G3-5 1
+(refresh the PR description's test line on the release candidate) and 2 (Jonas, J3), G3-6b 2 (publishing the
+preview, a release step), F6 2 (G1-C or G3-3), F8 2 (B1 + a spec change), F1 3 follow-up (F1, optional).
