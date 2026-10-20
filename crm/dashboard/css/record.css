@@ -214,8 +214,13 @@ textarea.rc-note { min-height: 0; height: 54px; }
   .rc-close { order: 1; margin-left: -6px; }
   .rc-close .rc-ic-x { display: none; }
   .rc-close .rc-ic-back { display: block; }
-  .rc-title { order: 2; }
+  .rc-title { display: contents; }
+  /* The name may take two lines rather than being cut ("Money Worl…") next to the stage pill. */
+  .rc-title h2 { order: 2; display: -webkit-box; white-space: normal; overflow-wrap: anywhere; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .rc-meta > .ui-pill { order: 3; }
+  /* The id and domain line goes under the name and past the pill, so a 320 px screen shows the domain
+     instead of "mon…". */
+  .rc-sub { order: 4; grid-column: 2 / -1; margin-top: -4px; }
   .rc-meta-rest { order: 4; display: flex; flex-wrap: wrap; grid-column: 1 / -1; align-items: center; gap: var(--sp-2); }
   .rc-about { order: 5; grid-column: 1 / -1; }
   .rc-foot {
@@ -227,7 +232,10 @@ textarea.rc-note { min-height: 0; height: 54px; }
     background: var(--panel);
     box-shadow: var(--shadow-up);
   }
-  .rc-foot-btn { flex: 1 1 auto; min-width: 0; padding: 0 var(--sp-3); }
+  /* At 320 px "Log what happened ▾" doesn't fit on one line beside Follow up and ⋯: it wraps inside its
+     button (balanced lines) instead of running past its edges, and Follow up keeps its one line. */
+  .rc-foot-btn { flex: 1 1 auto; min-width: 0; padding: 4px var(--sp-3); line-height: 1.2; text-align: center; white-space: normal; text-wrap: balance; }
+  .rc-foot-btn + .rc-foot-btn { flex: none; white-space: nowrap; }
   .rc-foot-more { flex: none; width: var(--tap); padding: 0; font-size: var(--fs-20); }
   .rc-body { padding-bottom: var(--sp-4); }
   .rc-card { padding: var(--sp-3); }
@@ -239,9 +247,11 @@ textarea.rc-note { min-height: 0; height: 54px; }
   .rc-queue .ui-x { min-height: var(--tap); }
   .rc-outs .ui-btn, .rc-acts .ui-btn, .rc-chip, .ui-btn.rc-mini, .ui-btn.rc-head-act, .rc-wait { min-height: var(--tap); }
   .rc-head-act.ui-linkbtn, .rc-more.ui-linkbtn, .rc-sheet { display: inline-flex; align-items: center; min-height: var(--tap); }
+  .rc-sheet { justify-content: flex-end; min-width: var(--tap); }
   .rc-details > summary { min-height: var(--tap); }
   /* Inline "more" links: a taller hit area without changing the line. */
   .rc-ti-more, .rc-about-more { padding: 12px 4px; margin: -12px -4px; }
+  .rc-sub > .rc-domain { min-width: var(--tap); padding-block: 12px; margin-block: -12px; }
 }
 
 /* Touch screens keep :hover after a tap; don't let a chip look picked when it isn't. */

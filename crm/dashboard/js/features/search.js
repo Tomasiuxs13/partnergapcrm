@@ -712,7 +712,7 @@ export function openSearch({ query = "" } = {}) {
     autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="300">
   <button type="button" class="se-close" data-close aria-label="Close search"><kbd class="se-esc">Esc</kbd><span class="se-cancel">Cancel</span></button>
 </div>
-<div class="se-body">
+<div class="se-body" tabindex="0" role="region" aria-label="Results">
   <p class="se-hint" data-note hidden></p>
   <div class="se-nomatch" data-nomatch hidden></div>
   <div role="grid" id="se-grid" class="se-grid" aria-label="Search results" hidden></div>

@@ -625,6 +625,10 @@ select.ui-input { padding-right: 28px; }
   .ui-table .is-p3, .ui-table td.is-num { display: none; }
   .ui-table td.is-c-site { flex: 1 1 calc(100% - 56px); max-width: none; min-width: 0; font-size: var(--fs-16); }
   .ui-table td.ui-sel { order: -1; flex: none; width: auto; padding: 0; }
+  /* A selectable card: the checkbox sits in its own column on the left, so the name, the pills and the
+     next step all start at the same edge. */
+  .ui-table tbody tr:has(> td.ui-sel) { padding-left: var(--tap); }
+  .ui-table tbody tr > td.ui-sel { position: absolute; top: var(--sp-3); left: 0; display: flex; justify-content: center; width: var(--tap); }
   .ui-table td.is-actions { position: absolute; top: 4px; right: 4px; width: auto; }
   .ui-table td.is-c-next, .ui-table td.is-c-due, .ui-table td.is-c-terms { flex-basis: 100%; }
   .ui-row-acts > .ui-btn:not(.ui-row-more) { display: none; }
@@ -758,8 +762,14 @@ select.ui-input { padding-right: 28px; }
 
 .ui-bars { margin: 0; }
 .ui-bars-title { margin-bottom: var(--sp-2); font-weight: 600; }
-.ui-bars-list { display: flex; flex-direction: column; gap: 6px; }
-.ui-bar { display: grid; grid-template-columns: minmax(80px, 160px) minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); font-size: var(--fs-13); }
+.ui-bars-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ui-bar { position: relative; display: grid; grid-template-columns: minmax(80px, 160px) minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); font-size: var(--fs-13); }
+/* A linked bar: the whole row opens the link, and the focus ring goes round the row (the label clips its
+   own overflow, which would cut a ring drawn round the link). */
+.ui-bar.is-link .ui-bar-label a::after { content: ""; position: absolute; inset: 0; }
+.ui-bar.is-link:has(a:focus-visible) { border-radius: 4px; outline: 2px solid var(--focus); outline-offset: 2px; }
+.ui-bar.is-link .ui-bar-label a:focus-visible { outline: none; }
+@media (hover: hover) { .ui-bar.is-link:hover .ui-bar-label a { text-decoration: underline; } }
 .ui-bar-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ui-bar-track { height: 10px; border-radius: var(--r-pill); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
 .ui-bar-fill { display: block; height: 100%; border-radius: var(--r-pill); background: var(--accent); }
@@ -902,8 +912,11 @@ html[data-panel-open] { overflow: hidden; }
   button.ui-tags { margin: 0; }
   button.ui-next { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: var(--tap); min-height: var(--tap); margin: 0; }
   .ui-selbox { min-width: var(--tap); min-height: var(--tap); }
-  .ui-sortbtn { min-height: var(--tap); }
+  .ui-sortbtn { min-width: var(--tap); min-height: var(--tap); }
+  .ui-row-acts > .ui-btn { min-width: var(--tap); }
   .ui-mi, .ui-radio, .ui-check { min-height: var(--tap); }
+  .ui-bars-list { gap: 0; }
+  .ui-bar.is-link { min-height: var(--tap); }
   .ui-fchip { min-height: var(--tap); }
   .ui-fchip-x { width: var(--tap); height: var(--tap); }
   .ui-sel input, .ui-radio input, .ui-check input { width: 20px; height: 20px; }
@@ -911,7 +924,27 @@ html[data-panel-open] { overflow: hidden; }
      classes set their own size, so they repeat it. */
   .ui-input, .ui-fsearch .ui-input, .ui-msearch, .ui-sortsel select, .ui-pager-per select { min-height: var(--tap); font-size: var(--fs-16); }
 }
-/* Phone cards: the checkbox stays in line with the pills; its target reaches into the card padding. */
-@media (pointer: coarse) and (max-width: 639.98px) {
-  .ui-table td.ui-sel .ui-selbox { margin-left: calc(-1 * var(--sp-3)); }
+/* Touch: a pill keeps its 44 px target but looks as slim as on a desktop. The visible pill is drawn by
+   ::before, inset into the target, so a row of pills doesn't turn into a row of tall buttons. */
+@media (pointer: coarse) {
+  button.ui-pill, button.ui-owner,
+  button.ui-pill.is-edit[aria-expanded="true"], button.ui-owner.is-edit[aria-expanded="true"],
+  button.ui-pill.is-edit:hover, button.ui-owner.is-edit:hover { position: relative; z-index: 0; border-color: transparent; background: transparent; }
+  button.ui-pill::before, button.ui-owner::before {
+    content: "";
+    position: absolute;
+    inset: 8px 0;
+    z-index: -1;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: var(--panel);
+  }
+  button.ui-owner.is-none::before { border-style: dashed; }
+  button.ui-pill.is-edit[aria-expanded="true"]::before, button.ui-owner.is-edit[aria-expanded="true"]::before { border-color: var(--ink-2); background: var(--panel-2); }
+  /* A link button inside running text: a 44 px target that doesn't stretch its line (the extra height
+     reaches into the lines above and below, as the record panel's inline "more" links do). */
+  :is(p, li, span) > .ui-linkbtn { justify-content: center; min-width: var(--tap); margin-block: -12px; }
+}
+@media (pointer: coarse) and (hover: hover) {
+  button.ui-pill.is-edit:hover::before, button.ui-owner.is-edit:hover::before { border-color: var(--ink-2); background: var(--panel-2); }
 }

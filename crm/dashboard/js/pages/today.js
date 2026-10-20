@@ -270,7 +270,9 @@ function restoreFocus(f) {
   let target = null;
   const scope = f.block ? el('[data-block="' + f.block + '"]') : st.root;
   if (f.key != null) {
-    const row = st.root.querySelector('[data-key="' + esc(f.key) + '"]');
+    // In its own block: a row that moved to another block (a prospect emailed now waits in a closed
+    // Coming up) left this one.
+    const row = (scope || st.root).querySelector('[data-key="' + esc(f.key) + '"]');
     if (row) target = f.attr ? row.querySelector("[" + f.attr + '="' + esc(f.value || "") + '"]') || row.querySelector("a,button,input") : row.querySelector("a");
     else if (scope) {
       // The row left its block (a save moved it): the row now at its place, else the block heading.
@@ -286,6 +288,12 @@ function restoreFocus(f) {
   }
   if (!target) return;
   try { target.focus({ preventScroll: true }); } catch (e) { return; }
+  // Not focusable (inside a closed block): the page heading, so focus isn't dropped to <body>.
+  if (typeof document !== "undefined" && document.activeElement !== target) {
+    const h = (scope && scope.querySelector(".td-h[tabindex]")) || st.root.querySelector("h1");
+    if (h) h.focus({ preventScroll: true });
+    return;
+  }
   if (f.sel && typeof target.setSelectionRange === "function") {
     try { target.setSelectionRange(f.sel[0], f.sel[1]); } catch (e) { /* not a text field */ }
   }

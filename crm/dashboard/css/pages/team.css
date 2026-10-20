@@ -5,14 +5,16 @@
    Stuck tiles two by two; row actions behind ⋯ (the kit hides the others in .ui-row-acts). */
 
 .tm-page { min-width: 0; }
-.tm-overview { display: grid; gap: var(--sp-6); min-width: 0; }
+.tm-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); min-width: 0; }
 .tm-overview[aria-busy="true"] .tm-tile.is-loading { min-height: 96px; }
 
 .tm-head { display: grid; gap: 2px; }
 .page .tm-head h1 { margin: 0; }
 .tm-sub { margin: 0; color: var(--ink-2); font-size: var(--fs-14); }
 
-.tm-sec { display: grid; gap: var(--sp-3); min-width: 0; }
+/* One column no wider than the page: an auto column grew to the Team table's width (1,032 px at 820 px),
+   and the whole page scrolled sideways instead of the table's own scroller. */
+.tm-sec { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
 .tm-shead { display: grid; gap: 2px; }
 .tm-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--sp-2); font-size: var(--fs-16); font-weight: 600; }
 .tm-h:focus { outline: none; }
@@ -292,4 +294,18 @@ a.tm-kv-n { min-width: 32px; padding: 2px 6px; border-radius: 4px; color: var(--
 
   .tm-charts-sum { padding: var(--sp-3); }
   .tm-charts-body { padding: 0 var(--sp-3) var(--sp-3); }
+}
+
+/* ---------- Touch: 44 px targets (spec 4.1, 4.12) ---------- */
+
+@media (pointer: coarse) {
+  /* The person's name keeps its line; its target reaches into the row (or the card's padding). */
+  a.tm-person { min-height: var(--tap); margin-block: -10px; }
+  /* A number's target is its whole cell (the phone cards already do this below 640 px). */
+  .tm-table td.is-num { position: relative; }
+  .tm-table a.tm-num::after { content: ""; position: absolute; inset: 0; }
+  .tm-clients a { display: inline-block; min-width: var(--tap); padding-block: 14px; margin-block: -14px; }
+  .tm-cline a { display: inline-flex; align-items: center; min-height: var(--tap); }
+  .tm-kv li { align-items: center; min-height: var(--tap); padding-block: 0; }
+  a.tm-kv-n { display: inline-flex; align-items: center; justify-content: flex-end; min-width: var(--tap); min-height: var(--tap); }
 }

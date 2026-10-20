@@ -100,7 +100,9 @@ a.hi-site:not(.ui-row-link):focus-visible { color: var(--link); text-decoration:
 @media (max-width: 639.98px) {
   .hi-bar { flex-direction: column; align-items: stretch; }
   .hi-tools { justify-content: space-between; margin-left: 0; }
-  .hi-states .hi-state-btn { flex: 1 1 auto; justify-content: center; }
+  /* Two by two, like the Sites tabs, instead of three and one stretched across. */
+  .hi-states { display: grid; flex: 1 1 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hi-states .hi-state-btn { justify-content: center; }
 
   /* A card per change: What, Site, then Who · When · Sheet. */
   .hi-list .ui-table tbody tr { gap: 4px var(--sp-3); }
@@ -118,4 +120,8 @@ a.hi-site:not(.ui-row-link):focus-visible { color: var(--link); text-decoration:
 
 @media (pointer: coarse) {
   .hi-state.is-not_copied a { display: inline-flex; align-items: center; min-height: var(--tap); }
+}
+/* A table row's site or client link (a card's is inline in its line): 44 px tall without growing the row. */
+@media (pointer: coarse) and (min-width: 640px) {
+  a.hi-site:not(.ui-row-link) { line-height: var(--tap); margin-block: -11px; }
 }

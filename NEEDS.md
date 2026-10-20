@@ -576,3 +576,33 @@ merge is that step. The edits contract and the golden files are untouched.
 Still open: G3-4 1 (warm load with wrangler-served statics, local only) and 2 (CPU 4x, informational), G3-5 1
 (refresh the PR description's test line on the release candidate) and 2 (Jonas, J3), G3-6b 2 (publishing the
 preview, a release step), F6 2 (G1-C or G3-3), F8 2 (B1 + a spec change), F1 3 follow-up (F1, optional).
+
+# NEEDS (G3-3)
+
+Closed here: F6 2. `js/ui/charts.js` draws one visible list (`figure[aria-label] > ul.ui-bars-list > li.ui-bar`);
+a linked bar is a link named "label, value" whose whole row is the target (44 px on touch screens) and shows the
+focus ring. Nothing focusable is inside `aria-hidden`, and there is no hidden table. `95-mobile-a11y` F6 checks it
+(Team overview charts by keyboard, then Enter opens Sites).
+
+1. **Spec 4.13 wording (whoever edits the spec).** It asks for "an aria-label and a visually hidden table". Each
+   chart keeps its `aria-label` (a one-line summary, which `50-clients` reads); the visible list replaces the
+   hidden table: the table's links were Tab stops a keyboard user couldn't see, and putting the visible links in
+   the Tab order inside an `aria-hidden` list fails axe `aria-hidden-focus` (serious).
+2. **Owners of files G3-3 changed outside its area (small, for review):** `js/shell/shell.js` (the More sheet traps
+   Tab like every other dialog), `js/pages/today.js` (`restoreFocus` looks for the row in its own block, then
+   falls back to the block heading, never `<body>`), `js/features/search.js` (`.se-body` is a focusable region so
+   its results can be scrolled by keyboard), `js/features/add-site.js` (placeholder "For example mashable.com",
+   which fits at 320 px), `js/pages/clients.js` (a row's second line is `span.cl-part` items; CSS draws the "·").
+3. **Merge with G3-4.** No product file overlaps. Rerun `99-perf` after the merge: G3-3 adds touch-only CSS on
+   list rows (pills, row buttons, the phone checkbox column).
+
+How 95 judges a few things (recorded so a later reader knows the reading taken):
+- Visible focus: an outline or box-shadow on the element, the caret in a text field, or an outline on a
+  `:focus-within` ancestor (a chart row, a card) within four levels. The focused element must not sit under the
+  sticky top bar or the bottom tabs.
+- Touch targets (4.12) are checked on touch emulation at 320, 390 and 820; a link inside running text is exempt
+  (WCAG 2.5.8 inline), as is the Test badge (a tooltip).
+- T27 Sign out: the session cookie is stateless, so the check is the client side: `/logout` lands on the login page
+  with "You're signed out.", the `pg_session` cookie and the Cache Storage copy are gone, and `/` asks to sign in.
+- Edit history has no sidebar link (spec 2.1 hides it); the keyboard route check opens it from the sidebar's sync
+  line, as a user would.

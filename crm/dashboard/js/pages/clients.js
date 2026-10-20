@@ -179,16 +179,9 @@ function siteRow(ctx, r, sec, second) {
 </li>`;
 }
 
-const dot = html`<span class="cl-sep" aria-hidden="true">·</span>`;
-const join = (parts) => {
-  const list = parts.filter((x) => x != null && x !== "" && x !== false);
-  const out = [];
-  list.forEach((x, i) => {
-    if (i) out.push(dot);
-    out.push(x);
-  });
-  return out;
-};
+// The second line's parts, each in its own box. clients.css draws the "·" before every part and hides
+// the one that starts a line, so a wrapped line never starts or ends with a separator.
+const join = (parts) => parts.filter((x) => x != null && x !== "" && x !== false).map((x) => html`<span class="cl-part">${x}</span>`);
 
 function termsHtml(r) {
   const t = clientTerms(r);

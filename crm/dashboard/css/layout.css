@@ -1,6 +1,10 @@
 /* Shell layout (spec 2.1, 4.11, 4.12): sidebar, top bar, banners, main, bottom tabs, More sheet.
    Owner G1-A. Markup: js/shell/shell.js (classes sh-*). Desktop >= 1024 px; compact below. */
 
+/* What the browser scrolls into view (a control reached with Tab, a #hash target) stays clear of the
+   sticky top bar and of the bottom tabs (0 px on a desktop). */
+html { scroll-padding: calc(var(--top-h) + var(--sp-2)) 0 calc(var(--tabs-h) + var(--sp-2)); }
+
 .app {
   display: grid;
   grid-template-columns: var(--side-w) minmax(0, 1fr);
@@ -444,11 +448,16 @@
   .sh-more .sh-fresh.is-warn { color: var(--warn-ink); }
   .sh-more .sh-foot-acts .sh-link { min-height: var(--tap); color: var(--ink); }
   .sh-more .sh-foot .sh-me .sh-link { min-height: var(--tap); }
+  .sh-more .sh-sync { display: flex; align-items: center; min-height: var(--tap); }
 }
 
 @media (max-width: 639.98px) {
   .sh-content { padding-left: var(--sp-3); padding-right: var(--sp-3); }
   .sh-banner { padding-left: var(--sp-3); padding-right: var(--sp-3); }
+  /* A banner with a dismiss ×: the text takes the line and × stays beside it (no line of its own). */
+  .sh-banner:has(> span + .sh-x) { flex-wrap: nowrap; align-items: flex-start; padding-right: 0; }
+  .sh-banner > span + .sh-x { margin-top: -6px; }
+  .sh-banner > span { flex-basis: 0; }
 }
 
 @media (max-width: 359.98px) {
@@ -456,6 +465,7 @@
 }
 
 @media (pointer: coarse) {
+  .sh-skip { display: inline-flex; align-items: center; min-height: var(--tap); }
   .sh-nav-a { min-height: var(--tap); }
   .sh-bbtn { display: inline-flex; align-items: center; min-height: var(--tap); }
   .sh-x { min-width: var(--tap); min-height: var(--tap); }
