@@ -1,6 +1,10 @@
 /* Shell layout (spec 2.1, 4.11, 4.12): sidebar, top bar, banners, main, bottom tabs, More sheet.
    Owner G1-A. Markup: js/shell/shell.js (classes sh-*). Desktop >= 1024 px; compact below. */
 
+/* What the browser scrolls into view (a control reached with Tab, a #hash target) stays clear of the
+   sticky top bar and of the bottom tabs (0 px on a desktop). */
+html { scroll-padding: calc(var(--top-h) + var(--sp-2)) 0 calc(var(--tabs-h) + var(--sp-2)); }
+
 .app {
   display: grid;
   grid-template-columns: var(--side-w) minmax(0, 1fr);

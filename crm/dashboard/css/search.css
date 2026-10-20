@@ -52,6 +52,9 @@
   font: 400 var(--fs-16)/1.4 var(--font);
 }
 .se-input:focus { outline: none; }
+/* The results scroll in .se-body, which takes Tab (a keyboard user can scroll it with Page Up/Down); its ring
+   sits inside, where the dialog doesn't cut it off. */
+.se-body:focus-visible { outline-offset: -2px; }
 .se-input::placeholder { color: var(--faint); }
 .se-close {
   display: inline-flex;

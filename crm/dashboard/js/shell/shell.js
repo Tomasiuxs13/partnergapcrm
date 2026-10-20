@@ -17,6 +17,7 @@ import { date, num, plural, todayIso, toDay, daysBetween, zonedParts, lastRunAt,
 import { openMePicker } from "./me-picker.js";
 import { isDirty } from "../features/record/index.js";
 import { toast } from "../ui/toast.js";
+import { trapFocus } from "../ui/dialog.js";
 
 const I = {
   today: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/>',
@@ -285,11 +286,17 @@ function setBusy() {
 
 // ---------- Actions ----------
 
+const trapped = new WeakSet(); // More sheets whose Tab and Shift+Tab cycle inside, as in every other dialog
+
 function openMore() {
   const d = app && $(".sh-more", app);
   if (!d || d.open) return;
   renderFooters();
   d.showModal();
+  if (!trapped.has(d)) {
+    trapped.add(d);
+    trapFocus(d);
+  }
   // Toasts stay above dialogs (spec 4.9): put the toast popover back on top.
   const t = document.getElementById("toasts");
   try {
