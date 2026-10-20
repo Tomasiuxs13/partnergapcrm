@@ -286,3 +286,18 @@ Changes F5 (Clients, client page, report) needs in files it does not own. Nothin
 F7 2, Clients part: done on this branch. The client page's "+ Add site for Soro" calls `openAddSite({ clients: "Soro" })`;
 on Melograno (no product picked) it first asks "Which product?" and passes `"Melograno - Amelia"`. `50-clients` T8
 covers it.
+
+# Status after the F5 merge (crm-easy-site)
+
+Applied at the F5 merge:
+- F5 1: `js/ui/dialog.js` `openModal()` takes an optional `foot` (html``, or text shown as a `<p>`), rendered in
+  `.ui-modal-foot` before the buttons; a modal with `foot` and no actions still gets the footer. `features/report.js`
+  passes its `<div class="rp-warns" data-rp-warn data-noprint>` that way instead of inserting it after `openModal()`;
+  the DOM is the same as before, so `clients.css` and `50-clients` are unchanged.
+- F7 2, Clients part: done by F5 (the client page's "+ Add site for <client>" calls `openAddSite({ clients })`;
+  Melograno asks "Which product?" first). F7 2 is closed (its Sites part was closed at the F3 merge).
+
+Still open:
+- F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.

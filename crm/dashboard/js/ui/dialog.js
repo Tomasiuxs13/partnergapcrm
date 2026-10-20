@@ -56,15 +56,17 @@ function bodyHtml(body) {
   return html`<p>${String(body)}</p>`;
 }
 
-// openModal({title, body, actions, size, onClose, canClose, className, description})
+// openModal({title, body, actions, size, onClose, canClose, className, description, foot})
 //   body: html`` (or text, or a DOM node); actions: [{label, value, kind: 'primary'|'danger'|'ghost',
 //   onClick(modal) -> false keeps it open, disabled, autofocus}]. With actions the body and footer
 //   sit in one <form method="dialog">, so Enter in a field submits the first submit/primary action.
+//   foot: optional html`` rendered in the footer above the buttons (for example warnings that must
+//   show next to the actions without scrolling the body).
 //   size: 'sm' | 'md' (default) | 'lg'. canClose(value) -> boolean|Promise<boolean> guards ×, Esc and
 //   the backdrop (the unsaved-text guard). onClose(value) runs once after it closes.
 // Returns {el, body, close(value), result}: result resolves with the value it closed with
 //   (an action's value, or null for ×/Esc).
-export function openModal({ title = "", body, actions = [], size = "md", onClose, canClose, className = "", description = "" } = {}) {
+export function openModal({ title = "", body, actions = [], size = "md", onClose, canClose, className = "", description = "", foot: footExtra } = {}) {
   const id = "ui-modal-" + ++seq;
   const el = document.createElement("dialog");
   el.className = "ui-modal is-" + (size || "md") + (className ? " " + className : "");
@@ -72,8 +74,9 @@ export function openModal({ title = "", body, actions = [], size = "md", onClose
   if (description) el.setAttribute("aria-describedby", id + "-d");
   const acts = (actions || []).filter(Boolean);
   const primaryIndex = acts.findIndex((a) => a.type === "submit" || a.kind === "primary" || a.kind === "danger");
-  const foot = acts.length
-    ? html`<footer class="ui-modal-foot">${acts.map((a, i) => html`<button type="${i === primaryIndex ? "submit" : "button"}" class="ui-btn${a.kind === "primary" ? " is-primary" : a.kind === "danger" ? " is-danger" : a.kind === "ghost" ? " is-ghost" : ""}" data-a="${i}"${a.disabled ? html` disabled` : ""}${a.autofocus ? html` autofocus` : ""}>${a.label}</button>`)}</footer>`
+  const extra = footExtra == null || footExtra === "" ? "" : isSafe(footExtra) ? footExtra : html`<p>${String(footExtra)}</p>`;
+  const foot = acts.length || extra
+    ? html`<footer class="ui-modal-foot">${extra}${acts.map((a, i) => html`<button type="${i === primaryIndex ? "submit" : "button"}" class="ui-btn${a.kind === "primary" ? " is-primary" : a.kind === "danger" ? " is-danger" : a.kind === "ghost" ? " is-ghost" : ""}" data-a="${i}"${a.disabled ? html` disabled` : ""}${a.autofocus ? html` autofocus` : ""}>${a.label}</button>`)}</footer>`
     : "";
   render(el, html`<form method="dialog" class="ui-modal-form" novalidate>
 <header class="ui-modal-head"><h2 id="${id}-h" class="ui-modal-title" tabindex="-1">${title}</h2><button type="button" class="ui-x" data-a="x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>

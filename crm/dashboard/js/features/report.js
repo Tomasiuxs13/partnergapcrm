@@ -100,6 +100,8 @@ export function openReport({ clientKey, month, product } = {}) {
 <article class="rp-doc" data-rp-doc aria-live="polite"></article>
 </div>`,
     actions,
+    // The warnings sit in the footer, right above the actions, so they show without scrolling the report.
+    foot: html`<div class="rp-warns" data-rp-warn data-noprint></div>`,
     onClose: () => {
       off();
       if (current === st) current = null;
@@ -116,13 +118,7 @@ export function openReport({ clientKey, month, product } = {}) {
   const printBtn = Array.from(modal.el.querySelectorAll(".ui-modal-foot button")).find((b) => /print/i.test(b.textContent));
   if (printBtn) printBtn.setAttribute("data-rp-print", "");
 
-  // The warnings sit in the footer, right above the actions, so they show without scrolling the report.
-  const warn = document.createElement("div");
-  warn.className = "rp-warns";
-  warn.setAttribute("data-rp-warn", "");
-  warn.setAttribute("data-noprint", "");
-  if (foot) foot.insertBefore(warn, foot.firstChild);
-  else modal.body.appendChild(warn);
+  const warn = modal.el.querySelector("[data-rp-warn]");
   const doc = modal.body.querySelector("[data-rp-doc]");
   const draw = () => {
     render(doc, docHtml(st.report));
