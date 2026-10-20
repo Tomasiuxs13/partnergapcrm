@@ -300,7 +300,7 @@ test("T13: the groups, counts and totals at 13:00 UTC are B.5 worked out by hand
     assert.match(await page.textContent(".dl-sub"), /lost in the last 30 days/);
     const got = await assertShows(page, exp, "Kamile, no filters");
     assert.deepEqual(Object.keys(got), GROUPS.map((g) => g.id), "groups in B.5 order");
-    await announced(page, exp.all.length + " deals"); // after "Deals" on the route change
+    await announced(page, "Deals, " + exp.all.length + " deals"); // spec 4.13, said once on the route change
     // Lost: most recent first.
     const lostDays = got.lost.ids.map((id) => lastActivity(rows.find((r) => r.id === id)));
     assert.deepEqual(lostDays, lostDays.slice().sort().reverse(), "Lost is most recent first");

@@ -212,10 +212,14 @@ function restoreFocus(f) {
 
 // ---------- drawing ----------
 
-// Announced 700 ms later, so the page title (said on the route change) is read first and quick filter
-// changes give one announcement.
-function say(text) {
+// Filter changes are announced 700 ms later, so quick changes give one announcement. The first count
+// (spec 4.13, "Deals, 54 deals") goes at once: during mount it replaces the title announcement.
+function say(text, { now = false } = {}) {
   clearTimeout(st.sayTimer);
+  if (now) {
+    st.ctx.announce(text);
+    return;
+  }
   st.sayTimer = setTimeout(() => {
     if (st) st.ctx.announce(text);
   }, 700);
@@ -278,9 +282,13 @@ function draw(what = "all") {
   if (csv) csv.disabled = none;
   restoreFocus(f);
   const text = v.groups.count ? dealsText(v.groups.count) : filtered(p) ? "No deals match" : "No deals yet";
-  // "Deals" on the route change (mount), then the count: "54 deals"; again when the filters change.
-  if (!st.announced || what === "route") say(text);
-  st.announced = true;
+  // "Deals, 54 deals" once the rows are there; "54 deals" again when the filters change.
+  if (!st.announced) {
+    st.announced = true;
+    say("Deals, " + text.charAt(0).toLowerCase() + text.slice(1), { now: true });
+  } else if (what === "route") {
+    say(text);
+  }
 }
 
 function schedule(what) {
@@ -344,7 +352,7 @@ export default {
     makeLists();
     bind();
     draw("all");
-    ctx.announce("Deals");
+    if (!st.announced) ctx.announce("Deals"); // rows not loaded yet: the count follows when they are
   },
   update(ctx, change) {
     if (!st) return;

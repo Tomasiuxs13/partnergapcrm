@@ -151,8 +151,9 @@ test("GET /api/nope is a 404 JSON (catch-all)", async () => {
   assert.deepEqual(fromNode.json, { error: "Not available yet", unavailable: true });
 });
 
-// Spec 4.6 and 4.13 (review fixes). Add site, Search and the Help page are stubbed in this context only, so
-// the test counts the shortcut calls and controls the page's own announcement.
+// Spec 4.6 and 4.13 (review fixes). Add site, Search and the Help and Edit history pages are stubbed in this
+// context only, so the test counts the shortcut calls and controls the page's own announcement (Help has one,
+// Edit history has none and falls back to its title).
 test("shortcuts wait while a modal or menu is open; a page's own announcement replaces its title", async () => {
   const s = await signedInPage({ name: "Kamile" });
   try {
@@ -162,6 +163,8 @@ test("shortcuts wait while a modal or menu is open; a page's own announcement re
     await page.route("**/js/features/search.js", stub("export function openSearch() { window.__smokeSearch = (window.__smokeSearch || 0) + 1; }"));
     await page.route("**/js/pages/help.js", stub("export default { id: 'help', title: () => 'Help', " +
       "mount(root, ctx) { root.innerHTML = '<h1 tabindex=\"-1\">Help</h1>'; ctx.announce('Help, 5 shortcuts'); }, update() {}, unmount() {} };"));
+    await page.route("**/js/pages/history.js", stub("export default { id: 'history', title: () => 'Edit history', " +
+      "mount(root) { root.innerHTML = '<h1 tabindex=\"-1\">Edit history</h1>'; }, update() {}, unmount() {} };"));
     await page.goto("about:blank"); // a fresh document, so the stubs load
     await page.goto(BASE + "/#today");
     await waitTitle(page, /^Today$/);
@@ -194,9 +197,9 @@ test("shortcuts wait while a modal or menu is open; a page's own announcement re
     await announced("Help, 5 shortcuts");
     await page.waitForTimeout(200);
     assert.equal(await page.textContent("[data-announce]"), "Help, 5 shortcuts", "the title did not replace it");
-    await page.evaluate(() => { location.hash = "#deals"; });
-    await waitTitle(page, /^Deals$/);
-    await announced("Deals");
+    await page.evaluate(() => { location.hash = "#history"; });
+    await waitTitle(page, /^Edit history$/);
+    await announced("Edit history");
     assert.deepEqual(s.watch.pageErrors, [], "no page errors");
   } finally {
     await s.close();

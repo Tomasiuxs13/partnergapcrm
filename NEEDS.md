@@ -258,3 +258,17 @@ Still open:
    of its own (for example `#history` while it is a stub, or a stubbed page like the Help one), Deals can say
    "Deals, 54 deals" once: in `js/pages/deals.js` `mount()`, drop `ctx.announce("Deals")` and announce
    `"Deals, " + text` at once on the first loaded draw.
+
+# Status after the F4 merge (crm-easy-site)
+
+Applied at the F4 merge:
+- F4 1: `00-smoke` test 7 checks the title fallback on a stubbed Edit history page with no announcement of its own
+  (stubbed in that test's context only, like Help), not on `#deals`. Deals now says "Deals, 54 deals" once (spec
+  4.13): during mount when the rows are loaded, else "Deals" at mount and the count as soon as they load; a filter
+  change still says "N deals" 700 ms later. `40-deals` T13 expects "Deals, N deals".
+
+Still open:
+- F7 2 (F5 Clients; optional): a client page's "Add site" can call `openAddSite({ clients: "Soro" })`.
+- F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
