@@ -247,3 +247,17 @@ Still open:
 - F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
+
+# NEEDS (F5)
+
+Changes F5 (Clients, client page, report) needs in files it does not own. Nothing blocks; each has a workaround.
+
+1. **`js/ui/dialog.js` (G1-C), optional: a footer slot in `openModal()`.** The report's warnings ("Check before you
+   send") must sit right above the actions without scrolling (spec 2.2.4). `openModal()` has no place for markup in
+   the footer, so `features/report.js` inserts its own `<div class="rp-warns" data-rp-warn data-noprint>` as the
+   first child of `.ui-modal-foot` (and tags the head and foot `data-noprint`, the buttons `data-rp-copy` and
+   `data-rp-print`). Suggested: `openModal({..., foot})`, markup rendered above the buttons.
+
+F7 2, Clients part: done on this branch. The client page's "+ Add site for Soro" calls `openAddSite({ clients: "Soro" })`;
+on Melograno (no product picked) it first asks "Which product?" and passes `"Melograno - Amelia"`. `50-clients` T8
+covers it.
