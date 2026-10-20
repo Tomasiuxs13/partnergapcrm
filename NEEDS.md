@@ -606,3 +606,22 @@ How 95 judges a few things (recorded so a later reader knows the reading taken):
   with "You're signed out.", the `pg_session` cookie and the Cache Storage copy are gone, and `/` asks to sign in.
 - Edit history has no sidebar link (spec 2.1 hides it); the keyboard route check opens it from the sidebar's sync
   line, as a user would.
+
+# Status after the G3-3 merge (crm-easy-site)
+
+Merged `--no-ff` with one conflict, here in NEEDS.md (the G3-4 sections and the G3-3 section are both kept). The
+two sides share no other file: G3-3 changed CSS, `ui/charts.js`, `shell/shell.js`, `pages/today.js`,
+`pages/clients.js`, `features/search.js`, `features/add-site.js` and `95-mobile-a11y`; G3-4's files (core, `app.js`,
+`index.html`, `ui/list.js`, `pages/deals.js`, rules) are untouched by it. No product or test file needed a fix, and
+`functions/`, `lib/`, the golden files and `crm/docs/` are unchanged (edits contract intact). Unit 202/202; full e2e
+240 tests, 240 pass, 0 fail, 0 todo: every test that passed at the G3-4 merge (219) still passes, and the
+`95-mobile-a11y` todo is now 21 green tests. `99-perf` after the merge (G3-3 NEEDS 3), in the full run: cold
+332–369 ms, warm 237–368 ms, page switch medians 6.2–32.6 ms; alone on its own server: cold 336–417 ms, warm
+224–248 ms, page switch medians 5.7–29.4 ms (team 26.5), search at most 10.6 ms per keystroke, Today compute 3 ms,
+no long task. F6 2 is closed by G3-3; G3-3 1 (spec 4.13 wording) is for whoever edits the spec, and G3-3 2 lists
+the small changes outside its area for their owners to review.
+
+Still open: G3-3 1 (spec 4.13 wording) and 2 (owner review, optional), G3-4 1 (warm load with wrangler-served
+statics, local only) and 2 (CPU 4x, informational), G3-5 1 (refresh the PR description's test line on the release
+candidate) and 2 (Jonas, J3), G3-6b 2 (publishing the preview, a release step), F8 2 (B1 + a spec change), F1 3
+follow-up (F1, optional).
