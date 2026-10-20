@@ -44,8 +44,15 @@ function outcomeTip(r, o, { meta, today, st }) {
   return parts.join(" · ");
 }
 
+// In queue mode the opener may name the outcome it wants first (queue.primary, for example "followed_up"
+// in Sites › Waiting for reply › No reply in 14+ days, spec 2.2.2). It moves first only when it is shown.
 export function outsHtml(r, st, { meta, today }) {
-  const { primary, more } = outcomesFor(r, { meta });
+  const outs = outcomesFor(r, { meta });
+  const more = outs.more;
+  let primary = outs.primary;
+  const want = st && st.queue && st.queue.primary;
+  const at = want ? primary.findIndex((o) => o.id === want) : -1;
+  if (at > 0) primary = [primary[at], ...primary.slice(0, at), ...primary.slice(at + 1)];
   const busy = !!(st && st.busy);
   const dis = busy ? raw(" disabled") : "";
   return html`${primary.map((o, i) => {

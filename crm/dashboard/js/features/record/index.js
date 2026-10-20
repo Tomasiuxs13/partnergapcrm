@@ -81,7 +81,7 @@ export function openRecord(id, { queue, focus } = {}) {
   if (focus !== undefined) pendingFocus = focus;
   if (state && state.id === key) {
     state.queue = getQueue(key);
-    draw(["queue"]);
+    draw(["queue", "outs"]);
     applyFocus();
     return;
   }

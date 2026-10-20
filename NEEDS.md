@@ -225,3 +225,25 @@ Changes the Sites page (F3) needs in files it does not own. Each has a local wor
 
 F2 2 is handled on this branch: `#sites?tab=waiting&quiet=14` and `#sites?tab=mine` open those views, and
 `30-sites` covers both.
+
+# Status after the F3 merge (crm-easy-site)
+
+Applied at the F3 merge:
+- F3 1: `js/ui/list.js` `compareValues()` compares text with one module-level
+  `Intl.Collator("en", {numeric: true, sensitivity: "base"})` (same order as the old `localeCompare` call).
+  The fast sort keys in `pages/sites.js` (`col()` overrides: numeric ranks for Site, Owner and Clients, YYYYMMDD for
+  Last activity and Next step) are kept: they are still faster than any text compare and 30-sites' 7,500-row speed
+  test was tuned with them. Removing them is optional clean-up for the Sites owner (F3).
+- F3 2: `features/record/log.js` `outsHtml()` moves `queue.primary` first and marks it `is-primary` when it is one of
+  the shown outcomes (in the Sites quiet queue "Sent a follow-up" now comes before "They replied"); otherwise the
+  stage's order stays. `features/record/index.js` redraws the outcome buttons when `openRecord()` gives the open
+  site a new queue. `30-sites` checks the primary button in its Start test.
+- F2 2: done by F3 (`#sites?tab=waiting&quiet=14` and `#sites?tab=mine` work; `30-sites` covers both). F7's links
+  `#sites?tab=all&q=<text>` and `#sites?tab=all&owner=<name|me>` work too.
+- F7 2, Sites part: closed. Spec 2.2.2 gives Sites no in-context Add site (the top bar's "+ Add site" covers it).
+
+Still open:
+- F7 2 (F5 Clients; optional): a client page's "Add site" can call `openAddSite({ clients: "Soro" })`.
+- F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.

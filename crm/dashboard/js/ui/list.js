@@ -97,12 +97,16 @@ function parseSort(s) {
   return { key: s.key || null, dir: s.dir === "desc" ? "desc" : "asc" };
 }
 
+// One shared collator: localeCompare(a, b, "en", {…}) builds one per call, about 20 times slower
+// (sorting 7,500 sites by name took 350 ms). Same order.
+const COLLATOR = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+
 function compareValues(a, b) {
   const ea = a == null || a === "";
   const eb = b == null || b === "";
   if (ea || eb) return ea && eb ? 0 : ea ? 1 : -1; // empty values last in both directions
   if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b), "en", { numeric: true, sensitivity: "base" });
+  return COLLATOR.compare(String(a), String(b));
 }
 
 function sortRows(list, fn, dir) {

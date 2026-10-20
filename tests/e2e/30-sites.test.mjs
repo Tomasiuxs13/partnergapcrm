@@ -605,6 +605,12 @@ test("Waiting for reply: No reply in 14+ days (N), oldest first, Start opens que
     await page.waitForSelector("#layer-panel .ui-queue-text");
     assert.equal((await page.textContent("#layer-panel .ui-queue-text")).trim(), "1 of " + QUIET_K.length + " · No reply in 14+ days");
     assert.equal((await params(page)).rec, first[0]);
+    // Spec 2.2.2: in this queue the primary outcome is "Sent a follow-up" (queue.primary, NEEDS F3 2).
+    const pri = page.locator("#layer-panel [data-pouts] .ui-btn.is-primary");
+    await pri.waitFor();
+    assert.equal(await pri.count(), 1, "one primary outcome");
+    assert.equal(await pri.getAttribute("data-outcome"), "followed_up");
+    assert.equal(await page.getAttribute("#layer-panel [data-pouts] [data-outcome]", "data-outcome"), "followed_up", "first in the row");
     await shot(page, "sites-waiting-queue-1440");
   } finally {
     await close();
