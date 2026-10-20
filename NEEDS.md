@@ -301,3 +301,24 @@ Still open:
 - F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
+
+# NEEDS (F8)
+
+Changes F8 (Edit history, Help, Settings, What's new) needs in files it does not own. Nothing blocks; each has a
+workaround.
+
+F2 1 is done on this branch: `js/shell/whats-new.js` `whatsNewBanner(ctx, slot)` renders "The CRM has a new layout.
+[See what moved] ×" into Today's slot and returns null (Today leaves the slot alone). Opening What's new (from the
+banner or Help) or × hides it for good in this browser (localStorage `pgcrm-dismiss-whatsnew` = "1"); not shown in
+the snapshot. Styles: `css/pages/help.css` (`.hp-wn-*`).
+
+1. **`js/ui/list.js` (G1-C), optional: a server-mode refresh that keeps the rows.** `refresh()` on a `fetchPage`
+   list empties `state.fetched` and draws skeleton rows until every loaded page is fetched again, so each refresh
+   flashes. Edit history works around it: after a save, a store load/refresh or a meta re-read it fetches the first
+   page itself and calls `list.refresh()` only when that page differs from the rows shown. Suggested: keep the
+   current rows (aria-busy on the table) until the new pages arrive, or expose `redraw()` for cells that read
+   live data (site labels from the store).
+2. **`functions/api/edits.js` (B1), optional: a `total` in GET /api/edits.** With filters there is no total, so
+   the list can't say "N changes" until every page is loaded; Edit history says "Showing the newest 100 changes"
+   while more pages remain and its own count line after that. `fetchPage` already passes `r.total` through when it
+   is a number.
