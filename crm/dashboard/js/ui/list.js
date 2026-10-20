@@ -390,14 +390,18 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
 
   // ---------- Server paging ----------
 
-  async function fetchMore({ reset = false, pages = 1 } = {}) {
+  // keep (a refresh with the same params): the shown rows stay, marked aria-busy, until the new pages arrive.
+  async function fetchMore({ reset = false, pages = 1, keep = false } = {}) {
     const my = ++state.token;
     state.loadingMore = true;
     state.fetchError = null;
-    if (reset) {
+    keep = reset && keep && state.fetched.length > 0;
+    if (reset && !keep) {
       state.fetched = [];
       state.total = 0;
     }
+    if (keep) bodyEl.setAttribute("aria-busy", "true");
+    else bodyEl.removeAttribute("aria-busy");
     drawAll();
     try {
       let page = reset ? 1 : Math.floor(state.fetched.length / state.per) + 1;
@@ -420,7 +424,12 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
     } catch (e) {
       if (my !== state.token) return;
       state.fetchError = (e && (e.friendly || e.message)) || "Couldn't load this list.";
+      if (keep) {
+        state.fetched = [];
+        state.total = 0;
+      }
     }
+    bodyEl.removeAttribute("aria-busy");
     state.loadingMore = false;
     pruneSelection();
     drawAll();
@@ -547,7 +556,7 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
       }
       if (server) {
         const pages = Math.max(1, Math.ceil(state.fetched.length / state.per));
-        return fetchMore({ reset: true, pages: next.params ? 1 : pages });
+        return fetchMore({ reset: true, pages: next.params ? 1 : pages, keep: !next.params });
       }
       computeClient();
       clampPage();

@@ -360,3 +360,31 @@ the snapshot. Styles: `css/pages/help.css` (`.hp-wn-*`).
    the list can't say "N changes" until every page is loaded; Edit history says "Showing the newest 100 changes"
    while more pages remain and its own count line after that. `fetchPage` already passes `r.total` through when it
    is a number.
+
+# Status after the F8 merge (crm-easy-site)
+
+Applied or closed at the F8 merge:
+- F2 1: done by F8 (`js/shell/whats-new.js` `whatsNewBanner(ctx, slot)` renders the banner into Today's slot and
+  returns null). Closed.
+- F8 1: `js/ui/list.js` `refresh()` on a `fetchPage` list with the same params (no `next.params`) keeps the shown
+  rows, with `aria-busy="true"` on the list body, until the new pages arrive, then redraws once (spec 4.7: a refresh
+  keeps page, scroll and focus). A refresh with new params, a sort click and "Try again" still start from an empty
+  list; a failed keep-refresh empties the list and shows the error, as before. Edit history's own first-page check
+  (it calls `list.refresh()` only when the first page changed) is kept; dropping it is optional clean-up for F8.
+
+Fixed at the F8 merge (`tests/e2e/80-history-help.test.mjs`, F8's file):
+- "A save made from Edit history's site panel ..." failed in the full run: it looked for PG-00452's fixture edit (n 30)
+  on the unfiltered first page, but earlier files on the same server leave edits rows behind (30-sites about 380,
+  05/10/20 about 80), so it was no longer among the newest 100. The test now opens `#history?account=PG-00452` and
+  counts that site's edits. Its restore also read `next_due` with `rawNulls`, which wrote the string "null" back
+  into a NULL `next_due`; it now reads without it.
+
+Still open:
+- F8 2 (B1, `functions/api/edits.js`, optional): not applied. Spec 6.3.6 fixes the paged response as
+  `{pending, recent, next_before, max_applied_n}` and `90-api-contract` asserts exactly those keys; a `total` also
+  needs a `COUNT(*)` over every matching `edits` row on each page request (spec 6.6 budgets Edit history at < 2k rows
+  read per call). It needs a spec change first (owners B1 and `90-api-contract`). Edit history works without it
+  ("Showing the newest 100 changes", then "N changes").
+- F6 1 (F3, then F6) and F6 2 (G1-C or G3-3) as listed after the F6 merge.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
