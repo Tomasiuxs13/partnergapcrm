@@ -356,7 +356,7 @@ function panelHtml(r) {
   const roText = readOnlyText();
   const today = todayIso();
   const m = meta();
-  const head = { queue: state.queue, aboutText: state.aboutText, aboutOpen: state.aboutOpen, emailState: emailState(r) };
+  const head = { queue: state.queue, aboutText: state.aboutText, aboutOpen: state.aboutOpen, emailState: emailState(r), copyEmail: !snapshotMode() };
   const deal = showDeal(r, { showAll: state.showAll || state.dealForced });
   const place = showPlacement(r, { showAll: state.showAll });
   return html`<div class="ui-panel-scrim" data-pclose="scrim"></div>
@@ -500,7 +500,7 @@ function draw(parts) {
         break;
       }
       case "sub": put("[data-psub]", subHtml(r)); break;
-      case "tools": put("[data-ptools]", toolsHtml(r, { emailState: emailState(r) })); break;
+      case "tools": put("[data-ptools]", toolsHtml(r, { emailState: emailState(r), copyEmail: !snapshotMode() })); break;
       case "meta": put("[data-pmeta]", metaHtml(r, { readOnly: ro, roText: readOnlyText() })); break;
       case "about": {
         const node = put("[data-pabout]", aboutHtml(state.aboutText, state.aboutOpen));
@@ -845,9 +845,9 @@ async function moreMenu(b) {
   const items = [];
   if (phone()) {
     const es = emailState(r);
-    items.push({ label: "Copy email", value: "copy-email", disabled: es === "none" || es === "noemail" });
+    if (!snapshotMode()) items.push({ label: "Copy email", value: "copy-email", disabled: es === "none" || es === "noemail" });
     if (siteUrl(r)) items.push({ label: "Visit site ↗", value: "visit" });
-    items.push({ divider: true });
+    if (items.length) items.push({ divider: true });
   }
   items.push({ label: "Open in sheet", value: "sheet", disabled: !sheet, desc: sheet ? "" : r.isNew ? "Reaches the Google Sheet on the next weekday morning" : "" });
   items.push({ label: "Copy link", value: "link" }, { label: "Copy ID", value: "id" }, { divider: true });

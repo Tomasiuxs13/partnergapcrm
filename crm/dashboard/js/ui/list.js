@@ -300,7 +300,7 @@ export function createList(root, opts = {}) {
     const sortSel = sortable.length
       ? html`<label class="ui-sortsel"><span class="sr-only">Sort by</span><select class="ui-input" data-sortsel>${!state.sort.key || !sortable.some((c) => c.id === state.sort.key) ? html`<option value="">Sort: default</option>` : ""}${sortable.map((c) => html`<option value="${c.id}:asc"${state.sort.key === c.id && state.sort.dir === "asc" ? raw(" selected") : ""}>Sort: ${c.label} ↑</option><option value="${c.id}:desc"${state.sort.key === c.id && state.sort.dir === "desc" ? raw(" selected") : ""}>Sort: ${c.label} ↓</option>`)}</select></label>`
       : "";
-    render(toolsEl, html`${sortSel}${csv ? html`<button type="button" class="ui-btn is-sm is-ghost" data-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button>` : ""}`);
+    render(toolsEl, html`${sortSel}${csv ? html`<button type="button" class="ui-btn is-sm is-ghost" data-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button>` : ""}`);
   }
 
   function drawPager() {

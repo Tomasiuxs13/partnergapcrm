@@ -132,7 +132,7 @@ const text = (view, sel) => view.$eval(sel, (e) => e.textContent.replace(/\s+/g,
 function writeControls(view) {
   return view.evaluate(() => {
     const LABEL = /^(log what happened|follow up|add site|add contact|add as contact|sent first email|not a fit|save|claim|edit\b|mark .* as handled|dismiss|add terms|add placement|export|use this name)/i;
-    const ATTRS = ["data-write", "data-edit", "data-row-act", "data-sel", "data-selall", "data-csv", "data-si-csv", "data-dl-csv", "download"];
+    const ATTRS = ["data-write", "data-edit", "data-row-act", "data-sel", "data-selall", "data-csv", "data-si-csv", "data-dl-csv", "data-download", "download"];
     const visible = (el) => {
       const r = el.getBoundingClientRect();
       const s = getComputedStyle(el);
@@ -282,6 +282,8 @@ test("T34 offline: opens on Today with the snapshot banner, core pages render, 0
       await go(v, "team");
       assert.equal(await h1(v), "Team overview");
       await v.waitForFunction(() => /Needs a decision/.test(document.querySelector("main#main").textContent));
+      // The morning run card has no suggestions to show in a snapshot (spec 4.14).
+      await v.waitForFunction(() => /Open the live site to see this\./.test((document.querySelector("[data-tm-runs]") || {}).textContent || ""));
       await s.page.screenshot({ path: path.join(SHOTS, "snapshot-team-" + tag + ".png") });
 
       await go(v, "today");

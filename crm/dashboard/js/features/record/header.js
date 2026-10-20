@@ -39,12 +39,12 @@ export function subHtml(r) {
 }
 
 // Copy email / Visit site / ⋯. emailState: 'none' (no contacts), 'ready', 'noemail' (contacts, none with an
-// email), 'unknown' (contacts, not loaded yet).
-export function toolsHtml(r, { emailState = "unknown" } = {}) {
+// email), 'unknown' (contacts, not loaded yet). copyEmail: false leaves Copy email out (a snapshot holds no email).
+export function toolsHtml(r, { emailState = "unknown", copyEmail = true } = {}) {
   const url = siteUrl(r);
   const noEmail = emailState === "none" || emailState === "noemail";
   const tip = emailState === "none" ? "No contacts yet" : emailState === "noemail" ? "No contact has an email yet" : "Copies the main contact's email";
-  return html`<button type="button" class="ui-btn is-sm rc-tool" data-pact="copy-email" title="${tip}"${noEmail ? raw(" disabled") : ""}>Copy email</button>${url
+  return html`${copyEmail ? html`<button type="button" class="ui-btn is-sm rc-tool" data-pact="copy-email" title="${tip}"${noEmail ? raw(" disabled") : ""}>Copy email</button>` : ""}${url
     ? html`<a class="ui-btn is-sm rc-tool" href="${url}" target="_blank" rel="noopener noreferrer" data-pact="visit">Visit site <span aria-hidden="true">↗</span></a>` : ""}<button type="button" class="ui-x rc-tool rc-dots" data-pact="more" aria-haspopup="menu" aria-label="More actions">${DOTS}</button>`;
 }
 

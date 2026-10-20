@@ -408,3 +408,23 @@ each item has a workaround in `crm/scripts/snapshot/snapshot.css` or the prelude
 3. **`js/pages/team.js` (F6), optional: the morning run card in a snapshot.** It shows "Not available yet".
    `js/pages/clients.js` already says "Open the live site to see this." when `window.__SNAPSHOT__` is set.
    Suggested change: the same text there.
+
+# Status after the G3-6 merge (crm-easy-site)
+
+Applied at the G3-6 merge:
+- G3-6 1 (F1): in a snapshot (`window.__SNAPSHOT__`) the record panel leaves "Copy email" out of the header tools
+  (`header.js` `toolsHtml(r, {emailState, copyEmail})`, `copyEmail` defaults to true) and out of the phone ⋯ menu
+  (`index.js` `moreMenu`; its first divider is added only when an item precedes it). The live site is unchanged.
+  `snapshot.css` keeps hiding `[data-pact="copy-email"]` as a second guard.
+- G3-6 2: every Export CSV button also carries `data-download` (G1-C `ui/list.js` `[data-csv]`, F3 `pages/sites.js`
+  `[data-si-csv]` (both), F4 `pages/deals.js` `[data-dl-csv]`). `snapshot.css` hides `html[data-snapshot]
+  [data-download]` next to the three old selectors, and `96-snapshot`'s write-control detector counts it. A new
+  download button only needs `data-download`.
+- G3-6 3 (F6): in a snapshot, the Team overview morning run card says "Open the live site to see this." where the
+  live site shows the suggestions fallback text (spec 4.14: a snapshot has no suggestions). `96-snapshot` checks it.
+
+Still open:
+- F8 2 (B1, `functions/api/edits.js`, optional): needs a spec change first, as listed after the F8 merge.
+- F6 1 (F3, then F6) and F6 2 (G1-C or G3-3) as listed after the F6 merge.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.

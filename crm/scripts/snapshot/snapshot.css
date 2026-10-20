@@ -25,7 +25,8 @@ html[data-snapshot] .sh-banners:not(:has(> :not([data-banner="readonly"]))) { di
 html[data-snapshot] .sh-foot,
 html[data-snapshot] .sh-test { display: none !important; }
 
-/* No downloads in a snapshot: Export CSV is hidden on every list. */
+/* No downloads in a snapshot: Export CSV is hidden on every list (every download button carries data-download). */
+html[data-snapshot] [data-download],
 html[data-snapshot] [data-csv],
 html[data-snapshot] [data-si-csv],
 html[data-snapshot] [data-dl-csv] { display: none !important; }

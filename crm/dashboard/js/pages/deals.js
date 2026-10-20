@@ -340,7 +340,7 @@ export default {
   mount(root, ctx) {
     if (st) this.unmount();
     st = fresh(root, ctx);
-    render(root, html`<div class="dl-page"><header class="dl-head"><h1 tabindex="-1">Deals</h1><button type="button" class="ui-btn is-sm is-ghost dl-csv" data-dl-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button><p class="dl-sub">${SUB}</p></header><div class="dl-filters" data-dl-filters></div><div class="dl-body" data-dl-body><div class="dl-loading" data-dl-loading hidden>${skeletonRows(6)}</div>${GROUPS.map(groupHtml)}<div class="dl-empty" data-dl-empty hidden></div></div></div>`);
+    render(root, html`<div class="dl-page"><header class="dl-head"><h1 tabindex="-1">Deals</h1><button type="button" class="ui-btn is-sm is-ghost dl-csv" data-dl-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button><p class="dl-sub">${SUB}</p></header><div class="dl-filters" data-dl-filters></div><div class="dl-body" data-dl-body><div class="dl-loading" data-dl-loading hidden>${skeletonRows(6)}</div>${GROUPS.map(groupHtml)}<div class="dl-empty" data-dl-empty hidden></div></div></div>`);
     st.bar = createFilterBar(root.querySelector("[data-dl-filters]"), {
       fields: FIELDS,
       params: filterParams(params(ctx)),

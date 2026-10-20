@@ -321,7 +321,7 @@ function drawTools(ctx, p, v) {
   const f = rememberFocus(el);
   const left = tab === "waiting" ? quietHtml(p, v) : tab === "all" ? presetsHtml(p) : "";
   const n = v && loaded(ctx) ? v.rows.length : null;
-  render(el, html`${left}<div class="si-tools-r"><p class="si-count" data-si-count>${n == null ? "" : sites(n)}</p>${sortHtml(p)}<button type="button" class="ui-btn is-sm is-ghost si-csv" data-si-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></div>`);
+  render(el, html`${left}<div class="si-tools-r"><p class="si-count" data-si-count>${n == null ? "" : sites(n)}</p>${sortHtml(p)}<button type="button" class="ui-btn is-sm is-ghost si-csv" data-si-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></div>`);
   restoreFocus(el, f);
 }
 
@@ -588,7 +588,7 @@ export default {
     st = fresh(root, ctx);
     const p = params(ctx);
     // Phones show Export CSV in the header (the tool row below keeps the whole width for Sort).
-    render(root, html`<div class="si-page"><header class="si-head"><div class="si-head-text"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${tabInfo(p.tab).desc}</p></div><button type="button" class="ui-btn is-sm is-ghost si-csv si-csv-head" data-si-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
+    render(root, html`<div class="si-page"><header class="si-head"><div class="si-head-text"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${tabInfo(p.tab).desc}</p></div><button type="button" class="ui-btn is-sm is-ghost si-csv si-csv-head" data-si-csv data-download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
     bind();
     draw("all");
     if (!st.announced) ctx.announce("Sites");

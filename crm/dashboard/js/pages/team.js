@@ -32,6 +32,8 @@ const TITLE = "Team overview";
 const SUB = "What needs a decision, what is stuck, and how each person is doing.";
 const DECISION_QUEUE = "Needs a decision";
 const NOT_AVAILABLE = "Not available yet";
+const LIVE_ONLY = "Open the live site to see this."; // a snapshot has no suggestions (spec 4.14)
+const snapshot = () => typeof window !== "undefined" && !!window.__SNAPSHOT__;
 const FALLBACK = "Suggestions from the morning run (contacts found, test emails) appear here once it writes them to the site. Until then they're in the daily review in the CRM project.";
 const SHEET_NOTE = "Changes made in the Google Sheet or brought in from Gmail aren't counted here.";
 
@@ -324,7 +326,7 @@ function runCardHtml(v) {
   if (s === undefined) return html`<div class="tm-mini-skel">${skeletonRows(2, { lines: 1 })}</div>`;
   let body;
   if (!ok(s)) {
-    body = html`<p class="tm-fallback">${s && s.error ? "Suggestions couldn't load. Reload the page to try again." : FALLBACK}</p>`;
+    body = html`<p class="tm-fallback">${s && s.error ? "Suggestions couldn't load. Reload the page to try again." : snapshot() ? LIVE_ONLY : FALLBACK}</p>`;
   } else {
     const sum = rules.suggestionSummary(s.rows, { meta: st.ctx.meta });
     if (!sum.total) {
