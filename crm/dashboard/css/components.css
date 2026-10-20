@@ -758,8 +758,14 @@ select.ui-input { padding-right: 28px; }
 
 .ui-bars { margin: 0; }
 .ui-bars-title { margin-bottom: var(--sp-2); font-weight: 600; }
-.ui-bars-list { display: flex; flex-direction: column; gap: 6px; }
-.ui-bar { display: grid; grid-template-columns: minmax(80px, 160px) minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); font-size: var(--fs-13); }
+.ui-bars-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ui-bar { position: relative; display: grid; grid-template-columns: minmax(80px, 160px) minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); font-size: var(--fs-13); }
+/* A linked bar: the whole row opens the link, and the focus ring goes round the row (the label clips its
+   own overflow, which would cut a ring drawn round the link). */
+.ui-bar.is-link .ui-bar-label a::after { content: ""; position: absolute; inset: 0; }
+.ui-bar.is-link:has(a:focus-visible) { border-radius: 4px; outline: 2px solid var(--focus); outline-offset: 2px; }
+.ui-bar.is-link .ui-bar-label a:focus-visible { outline: none; }
+@media (hover: hover) { .ui-bar.is-link:hover .ui-bar-label a { text-decoration: underline; } }
 .ui-bar-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ui-bar-track { height: 10px; border-radius: var(--r-pill); background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
 .ui-bar-fill { display: block; height: 100%; border-radius: var(--r-pill); background: var(--accent); }
@@ -902,8 +908,11 @@ html[data-panel-open] { overflow: hidden; }
   button.ui-tags { margin: 0; }
   button.ui-next { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: var(--tap); min-height: var(--tap); margin: 0; }
   .ui-selbox { min-width: var(--tap); min-height: var(--tap); }
-  .ui-sortbtn { min-height: var(--tap); }
+  .ui-sortbtn { min-width: var(--tap); min-height: var(--tap); }
+  .ui-row-acts > .ui-btn { min-width: var(--tap); }
   .ui-mi, .ui-radio, .ui-check { min-height: var(--tap); }
+  .ui-bars-list { gap: 0; }
+  .ui-bar.is-link { min-height: var(--tap); }
   .ui-fchip { min-height: var(--tap); }
   .ui-fchip-x { width: var(--tap); height: var(--tap); }
   .ui-sel input, .ui-radio input, .ui-check input { width: 20px; height: 20px; }
