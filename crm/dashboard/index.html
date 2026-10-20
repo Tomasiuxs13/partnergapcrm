@@ -77,13 +77,18 @@
 <link rel="modulepreload" href="/js/pages/sites.js">
 <link rel="modulepreload" href="/js/pages/team.js">
 <link rel="modulepreload" href="/js/pages/today.js">
-<script>window.BUILD = 'dev';</script>
+<script>window.BUILD = 'easy-rc0';</script>
 <script>
-window.__boot = {
-  meta: fetch('/api/meta', {credentials: 'same-origin'}),
-  partners: (() => { let e = null; try { e = localStorage.getItem('pgcrm-cache-etag'); } catch (x) {}
-    return fetch('/api/partners?v=2', {credentials: 'same-origin', headers: e ? {'If-None-Match': e} : {}}); })()
-};
+window.__boot = (() => {
+  // These start before the modules load. A failed request is read and shown by core/meta.js and
+  // core/store.js (the cached list and "Couldn't refresh"); quiet() keeps it from being reported as uncaught.
+  const quiet = (p) => { p.catch(() => {}); return p; };
+  let e = null; try { e = localStorage.getItem('pgcrm-cache-etag'); } catch (x) {}
+  return {
+    meta: quiet(fetch('/api/meta', {credentials: 'same-origin'})),
+    partners: quiet(fetch('/api/partners?v=2', {credentials: 'same-origin', headers: e ? {'If-None-Match': e} : {}}))
+  };
+})();
 </script>
 <script type="module" src="/js/app.js"></script>
 </head>

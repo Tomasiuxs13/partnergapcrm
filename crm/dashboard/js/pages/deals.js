@@ -5,11 +5,13 @@
 // stage (rules/deals.js, B.5), each group hidden when it has no rows:
 //   Negotiating (N · $ total) · Signed, not live (N · $ total) · Live (N) · Lost in the last 30 days (N)
 // Each group is a ui/list.js list (a table at >= 640 px, cards below) with the same columns, so the groups
-// line up: Site (name + client tags), Terms ("$350 + 30%" over "Flat fee + commission"), Value (deal value,
-// or the flat fee: what the total adds up), then Next step (+ due, "Waiting on client", "Quiet 9d") for open
-// deals, Placement (link + went-live date) for Live, Last activity for Lost; Owner ▾ and [Log what
-// happened ▾]. No Stage column: the group heading says it, and Log what happened moves a deal on. A row
-// opens the site in queue mode over its group.
+// line up: Site (name, then the Stage ▾ pill and the client tags), Terms ("$350 + 30%" over "Flat fee +
+// commission"), Value (deal value, or the flat fee: what the total adds up), then Next step (+ due, "Waiting
+// on client", "Quiet 9d") for open deals, Placement (link + went-live date) for Live, Last activity for Lost;
+// Owner ▾ and [Log what happened ▾]. The Stage ▾ pill (ui/inline-edit.js, the record panel's own editor and
+// write, with Undo) moves a deal in one click, as the old board's drag did: Negotiating → Active (Signed, not
+// live); Lost asks for the reason. Signed → Live is Log what happened ▾ › Placement is live (the link). No
+// Stage column: the group heading says it. A row opens the site in queue mode over its group.
 // URL (spec 2.4): client, owner (name | me | none), waiting=1. Every write goes through ui/actions.js (the
 // row editors and Log what happened). The four lists are made once at mount and refreshed in place on
 // route, store, meta and person changes; nothing is remounted, so no listener is ever added twice.
@@ -20,7 +22,7 @@ import { dealGroups, dealValue, isQuiet, GROUPS } from "../rules/deals.js";
 import { createList, toCsv, csvColumnsOf, downloadText, csvFileName } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
 import { COLUMNS, CSV_DEALS, resolveColumn } from "../ui/columns.js";
-import { clientTags, newDot, waitingBadge } from "../ui/pills.js";
+import { clientTags, newDot, waitingBadge, stagePill } from "../ui/pills.js";
 import { rowActions } from "../ui/inline-edit.js";
 import { emptyState, EMPTY } from "../ui/empty.js";
 import { skeletonRows } from "../ui/skeleton.js";
@@ -88,9 +90,10 @@ function amounts(r) {
   return [money(r.deal_flat), pct(r.deal_pct)].filter(Boolean).join(" + ");
 }
 
+// The name, then the Stage ▾ pill (plain in read-only mode) and the client tags on the line under it.
 function siteCell(r, cx) {
   const href = cx && cx.link ? cx.link(r) : "#";
-  return html`<span class="ui-site dl-site"><a class="ui-row-link" href="${href}" data-open="${r.id}">${r.label || r.domain || r.id}</a>${newDot(r)}<span class="dl-tags">${clientTags(r, { max: 2 })}</span></span>`;
+  return html`<span class="ui-site dl-site"><a class="ui-row-link" href="${href}" data-open="${r.id}">${r.label || r.domain || r.id}</a>${newDot(r)}<span class="dl-tags">${stagePill(r, { edit: !(cx && cx.readOnly) })}${clientTags(r, { max: 2 })}</span></span>`;
 }
 
 function termsCell(r) {

@@ -191,9 +191,11 @@ function fieldButtons(fields, params) {
 }
 
 // fields: filter names in display order (see FILTERS); params: the current URL params;
-// onChange(patch, {replace}); records(): the rows the data-driven options come from (default store.all).
+// onChange(patch, {replace}); records(): the rows the data-driven options come from (default store.all);
+// chips(params): more active filters the page applies itself, [{field, label, title?}], shown first as chips with ×
+// (the × and "Clear all" set that param to null), such as Sites' flag=<id> from a Team overview number.
 // Returns {update(params), destroy()}.
-export function createFilterBar(root, { fields = [], params = {}, onChange, records, label = "Filters" } = {}) {
+export function createFilterBar(root, { fields = [], params = {}, onChange, records, label = "Filters", chips: extraChips } = {}) {
   if (!root) return { update() {}, destroy() {} };
   const list = (fields || []).filter((f) => FILTERS[f]);
   const hasSearch = list.includes("q");
@@ -223,11 +225,17 @@ ${hasSearch ? html`<label class="ui-fsearch"><span class="sr-only">Search in thi
   const count = root.querySelector("[data-fcount]");
   const input = root.querySelector("[data-fq]");
 
+  const extra = () => {
+    let out = [];
+    try { out = typeof extraChips === "function" ? extraChips(cur) || [] : []; } catch (e) { out = []; }
+    return out.filter((c) => c && c.field && has(c.label) && !list.includes(c.field));
+  };
+
   function draw() {
     render(btns, html`${fieldButtons(list, cur)}`);
     if (sheet) render(sheet.body.querySelector("[data-fbtns-sheet]"), html`${fieldButtons(list, cur)}`);
-    const active = activeFilters(cur, list);
-    render(chips, active.length ? html`<span class="sr-only">Active filters:</span>${active.map((a) => html`<span class="ui-fchip">${a.label}<button type="button" class="ui-fchip-x" data-fremove="${a.field}" aria-label="${"Remove filter " + a.label}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>`)}<button type="button" class="ui-linkbtn" data-fclear>Clear all</button>` : html``);
+    const active = extra().concat(activeFilters(cur, list));
+    render(chips, active.length ? html`<span class="sr-only">Active filters:</span>${active.map((a) => html`<span class="ui-fchip"${a.title ? html` title="${a.title}"` : ""}>${a.label}<button type="button" class="ui-fchip-x" data-fremove="${a.field}" aria-label="${"Remove filter " + a.label}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>`)}<button type="button" class="ui-linkbtn" data-fclear>Clear all</button>` : html``);
     chips.hidden = !active.length;
     const n = active.filter((a) => a.field !== "q").length;
     count.textContent = n ? " (" + n + ")" : "";
@@ -254,6 +262,7 @@ ${hasSearch ? html`<label class="ui-fsearch"><span class="sr-only">Search in thi
     on(root, "click", "[data-fclear]", () => {
       const patch = {};
       for (const f of list) patch[f] = null;
+      for (const c of extra()) patch[c.field] = null;
       change(patch);
     }),
     on(root, "click", "[data-fsheet]", (e, b) => {

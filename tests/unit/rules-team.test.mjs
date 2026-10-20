@@ -3,8 +3,7 @@
 // lib/crm.js#v2Sql builds them (contacts and activity joined), then model.derive. The expected numbers are
 // worked out here from the raw fixture rows with plain JS (B.1 / B.7 by hand), not with the rules modules,
 // so the test is not circular. Every number's target() is then checked against what that list shows:
-// rules/sites.js#siteView for a Sites link (the same function the Sites page counts with), flagged() for
-// the Team overview's own list.
+// rules/sites.js#siteView with the flag= test (the same functions the Sites page counts with).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { derive } from "../../crm/dashboard/js/core/model.js";
@@ -185,16 +184,15 @@ test("stuck: the five counts are B.7 by hand, and match Sites where Sites shows 
 
 // ---------- every number opens a list with the same count ----------
 
-// What the target shows: Sites through siteView (as pages/sites.js passes the URL), or this page's list.
+// What the target shows: Sites through siteView, as pages/sites.js passes the URL (flag= through flagTest).
 function shows(t, me = "Kamile") {
-  if (t.page === "team") {
-    return team.flagged(recs, t.params.show, { meta, today: TODAY, owner: t.params.owner || null }).length;
-  }
-  assert.equal(t.page, "sites");
+  assert.equal(t.page, "sites", "every number opens Sites: " + JSON.stringify(t));
   const p = t.params;
-  for (const k of Object.keys(p)) assert.ok(["tab", "owner", "stage", "big", "quiet", "preset", "flag"].includes(k), "a param Sites reads: " + k);
+  for (const k of Object.keys(p)) assert.ok(["tab", "owner", "stage", "big", "quiet", "preset", "flag", "sort", "dir"].includes(k), "a param Sites reads: " + k);
   assert.ok(!p.flag || team.SITES_FLAGS.includes(p.flag), "flag= only for the flags Sites filters");
-  const v = siteView(recs, { meta, me, today: TODAY, tab: p.tab, owner: p.owner, stage: p.stage, big: p.big === "1", quiet: p.quiet === "14", preset: p.preset });
+  const flag = p.flag ? team.flagTest(p.flag, { meta, today: TODAY }) : null;
+  assert.ok(!p.flag || flag, "Sites knows flag=" + p.flag);
+  const v = siteView(recs, { meta, me, today: TODAY, tab: p.tab, owner: p.owner, stage: p.stage, big: p.big === "1", quiet: p.quiet === "14", preset: p.preset, flag });
   return v.rows.length;
 }
 
@@ -212,12 +210,14 @@ test("target: every Team table number opens a list with the same count", () => {
       if (t.page === "sites") sites++;
     }
   }
-  assert.ok(checked > 40 && sites > 20, "the fixture has many nonzero numbers (" + checked + ", " + sites + " on Sites)");
+  assert.ok(checked > 40, "the fixture has many nonzero numbers (" + checked + ")");
+  assert.equal(sites, checked, "every one opens Sites");
 });
 
 test("target: every Stuck tile and clean-up count opens a list with the same count", () => {
   const s = team.stuck(recs, O);
   for (const k of team.STUCK) assert.equal(shows(team.target(k)), s[k], k);
+  for (const k of team.STUCK) assert.equal(shows(team.target(k), "Jonas"), s[k], k + " as Jonas");
   assert.deepEqual(team.target("noreply"), { page: "sites", params: { tab: "waiting", quiet: "14", owner: "all" } });
   assert.deepEqual(team.target("unowned"), { page: "sites", params: { tab: "unowned" } });
   const c = team.cleanup(recs, O);
@@ -225,19 +225,34 @@ test("target: every Stuck tile and clean-up count opens a list with the same cou
   assert.deepEqual(team.target("replied_nodate"), { page: "sites", params: { tab: "all", preset: "replied_nodate", big: "1" } });
 });
 
-test("target: Sites links where Sites shows exactly those sites, else the Team overview's own list", () => {
+test("target: Sites' own view where it has one, else Sites › All with flag=", () => {
   assert.deepEqual(team.target("owns", { owner: "Gaby" }), { page: "sites", params: { tab: "all", owner: "Gaby", big: "1" } });
   assert.deepEqual(team.target("owns", { owner: "none" }), { page: "sites", params: { tab: "all", owner: "none", big: "1" } });
   assert.deepEqual(team.target("emailed", { owner: "Gaby" }), { page: "sites", params: { tab: "waiting", owner: "Gaby" } });
   assert.deepEqual(team.target("negotiating", { owner: "Vik" }), { page: "sites", params: { tab: "all", owner: "Vik", stage: "Negotiating", big: "1" } });
   assert.deepEqual(team.target("active", { owner: "Vik" }), { page: "sites", params: { tab: "all", owner: "Vik", stage: "Active", big: "1" } });
-  assert.deepEqual(team.target("prospects", { owner: "Gaby" }), { page: "team", params: { show: "prospects", owner: "Gaby" } });
-  assert.deepEqual(team.target("overdue"), { page: "team", params: { show: "overdue" } });
-  assert.deepEqual(team.target("noreply", { owner: "Kamile" }), { page: "team", params: { show: "noreply", owner: "Kamile" } });
-  // Gaby and Tomas have Researching prospects, which Sites can't show beside New for someone else: so the
-  // Team overview's list, and not Sites › Mine (which is only ever the signed-in person's).
+  // Gaby and Tomas have Researching prospects, which no stage filter shows beside New for someone else, and
+  // Sites › Mine is only ever the signed-in person's: so flag=prospects.
+  assert.deepEqual(team.target("prospects", { owner: "Gaby" }), { page: "sites", params: { tab: "all", owner: "Gaby", flag: "prospects", big: "1" } });
   const res = recs.filter((r) => r.stage === "Researching" && has(r.owner)).map((r) => r.owner);
   assert.ok(res.length > 0, "the fixture has owned Researching sites");
+  // The order a list opens in: the oldest follow-up date, or the longest wait, first.
+  assert.deepEqual(team.target("overdue"), { page: "sites", params: { tab: "all", flag: "overdue", big: "1", sort: "next" } });
+  assert.deepEqual(team.target("quiet", { owner: "Vik" }), { page: "sites", params: { tab: "all", owner: "Vik", flag: "quiet", big: "1", sort: "last_activity", dir: "asc" } });
+  assert.deepEqual(team.target("no_type"), { page: "sites", params: { tab: "all", flag: "no_type", big: "1" } });
+  assert.deepEqual(team.target("noreply", { owner: "Kamile" }), { page: "sites", params: { tab: "waiting", quiet: "14", owner: "Kamile" } });
+  assert.deepEqual(team.target("nope"), { page: "team", params: {} }, "an unknown list: the overview");
+  assert.deepEqual(team.SITES_FLAGS.slice().sort(), team.FLAG_IDS.slice().sort(), "Sites filters every flag");
+  // Each flag on Sites shows exactly flagged() for every owner (the lists' own definition).
+  for (const f of team.FLAG_IDS) {
+    for (const owner of [null, "Kamile", "Gaby", "none"]) {
+      const t = team.target(f, { owner });
+      if (!t.params.flag) continue;
+      assert.equal(shows(t), team.flagged(recs, f, { meta, today: TODAY, owner }).length, f + " / " + owner);
+    }
+  }
+  assert.equal(team.flagTest("nope", O), null);
+  assert.equal(team.flagTest("toString", O), null, "only the lists, not object keys");
 });
 
 // ---------- the lists ----------

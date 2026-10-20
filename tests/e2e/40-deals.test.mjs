@@ -6,6 +6,7 @@
 // What each group should hold is worked out here from local D1 with plain JS (B.5 by hand: last activity is
 // the latest of last_touch, the contacts' last_email, the activity dates and updated_at), not with
 // rules/deals.js. Read-only tests first, then the writes: Not interested on a Negotiating deal (T13), the
+// row's Stage ▾ pill (Negotiating → Signed with Undo, then Placement is live → Live, never the panel), the
 // 30/31-day edge and a formula in the CSV. Every row a test changes is put back in after(), and the activity
 // rows the tests add are deleted.
 import { test, before, after } from "node:test";
@@ -31,7 +32,7 @@ const GROUPS = [
 ];
 const SLA = { Negotiating: 7, ActiveNotLive: 14 };
 // Columns a test may change, put back in after().
-const COLS = ["stage", "owner", "next_step", "next_due", "last_touch", "tracking_id", "updated_at", "updated_by"];
+const COLS = ["stage", "owner", "next_step", "next_due", "last_touch", "tracking_id", "content_url", "live_date", "updated_at", "updated_by"];
 const DEAL_CSV = ["Deal type", "Flat fee", "Commission %", "Deal value", "Placement", "Went live", "Tracking ID"];
 const T13_ID = (fx.groups["vik-neg"] || [])[0] || "PG-00400"; // Vik's Negotiating deal: Flat fee + commission, $250 + 10%, value 1,000
 
@@ -308,7 +309,7 @@ test("T13: the groups, counts and totals at 13:00 UTC are B.5 worked out by hand
     // No board, no drag, no Replied column.
     assert.equal(await page.$$eval("main [draggable='true']", (els) => els.length), 0, "nothing to drag");
     const heads = await page.$$eval("[data-dl-group]:not([hidden]) thead th", (ths) => ths.map((t) => t.textContent.trim()));
-    assert.ok(!heads.includes("Replied") && !heads.includes("Stage"), "no Replied or Stage column: " + heads.join("|"));
+    assert.ok(!heads.includes("Replied") && !heads.includes("Stage"), "no Replied or Stage column (the pill sits under the name): " + heads.join("|"));
 
     // Terms inline: amounts over the model; the deal value in its own column.
     const t13 = await page.evaluate((sel) => {
@@ -334,6 +335,16 @@ test("T13: the groups, counts and totals at 13:00 UTC are B.5 worked out by hand
     const expQuiet = exp.all.filter(quiet).map((r) => r.id + ":Quiet " + daysBetween(lastActivity(r), TODAY) + "d").sort();
     assert.ok(expQuiet.length >= 1, "the fixture has quiet deals");
     assert.deepEqual(marks.quiet.sort(), expQuiet, "Quiet chips");
+
+    // A Stage ▾ pill on every row, saying the row's stage (the old board's drag: one click moves a deal).
+    const pills = await page.$$eval("[data-dl-group]:not([hidden]) tbody tr", (trs) => trs.map((tr) => {
+      const b = tr.querySelector('.dl-site button.ui-stage[data-edit="stage"][aria-haspopup="menu"]');
+      return b && b.offsetParent !== null ? b.textContent.trim() : null;
+    }));
+    assert.equal(pills.length, exp.all.length);
+    const stageOf = new Map(rows.map((r) => [r.id, r.stage]));
+    const gotStages = await page.$$eval("[data-dl-group]:not([hidden]) tbody tr", (trs) => trs.map((tr) => tr.getAttribute("data-key")));
+    assert.deepEqual(pills, gotStages.map((id) => stageOf.get(id)), "every row's pill names its stage");
 
     // Log what happened on every row (and no Follow up button: Log what happened is the one action).
     const acts = await page.$$eval("[data-dl-group]:not([hidden]) tbody tr", (trs) => trs.map((tr) => {
@@ -646,6 +657,62 @@ test("T13: Not interested on a Negotiating deal at 13:00 UTC: one request, the s
   } finally {
     await close();
     await restore([T13_ID]);
+  }
+});
+
+test("Stage ▾ on a row: Negotiating → Signed in one click with Undo, then Placement is live → Live, never the panel", async () => {
+  const rows = await dealRows();
+  const exp = expectGroups(rows);
+  const deal = exp.negotiating.find((r) => r.id !== T13_ID && !waiting(r) && !has(r.content_url));
+  assert.ok(deal, "a Negotiating deal to move");
+  const id = deal.id;
+  await remember([id]);
+  const url = "https://placement-g31.example.test/best-tools";
+  const { page, watch, close } = await openDeals({ name: "Jonas" });
+  try {
+    const pill = (g) => inGroup(g, id) + ' [data-edit="stage"]';
+    assert.equal((await page.textContent(pill("negotiating"))).trim(), "Negotiating");
+    // One click on the pill, one on the stage: one PATCH, the row moves to Signed, not live.
+    await page.click(pill("negotiating"));
+    await page.waitForSelector(".ui-menu .ui-mi-label");
+    const labels = await menuLabels(page);
+    assert.ok(labels.includes("Active") && labels.includes("Lost"), "the stage menu: " + labels.join("|"));
+    const writes = await writesDuring(page, async () => {
+      await page.click('.ui-menu .ui-mi-label:text-is("Active")');
+      await page.waitForSelector(inGroup("signed", id), { timeout: 15000 });
+      await waitFor(async () => (await readRows([id]))[id].stage === "Active", "Active in D1");
+    });
+    assert.deepEqual(writes, ["PATCH /api/partner/" + id], "one save, the same as the panel's Stage ▾");
+    assert.equal(await page.$(inGroup("negotiating", id)), null, "gone from Negotiating");
+    const e = await retry(() => d1("SELECT by_whom, kind, field, old, new FROM edits WHERE account_id = " + q(id) + " ORDER BY n DESC LIMIT 1"));
+    assert.deepEqual({ ...e[0] }, { by_whom: "Jonas", kind: "update", field: "stage", old: "Negotiating", new: "Active" }, "one update row");
+    const toast = page.locator("#toasts .ui-toast", { has: page.locator('[data-t="undo"]') }).last();
+    await toast.waitFor({ state: "visible", timeout: 15000 });
+    await shot(page, "deals-stage-pill-signed-1440", { fullPage: true });
+    // Undo puts it back.
+    await toast.locator('[data-t="undo"]').click();
+    await page.waitForSelector(inGroup("negotiating", id), { timeout: 15000 });
+    await waitFor(async () => (await readRows([id]))[id].stage === "Negotiating", "Undo in D1");
+    // Again, then Signed → Live from the row's Log what happened ▾ › Placement is live.
+    await page.click(pill("negotiating"));
+    await page.click('.ui-menu .ui-mi-label:text-is("Active")');
+    await page.waitForSelector(inGroup("signed", id), { timeout: 15000 });
+    await page.click(inGroup("signed", id) + ' [data-row-act="log"]');
+    await page.waitForSelector(".ui-menu .ui-mi-label");
+    await page.click('.ui-menu .ui-mi-label:text-is("Placement is live")');
+    await page.waitForSelector('.ui-pop input[name="link"]');
+    await page.fill('.ui-pop input[name="link"]', url);
+    await page.click('.ui-pop button[type="submit"]');
+    await page.waitForSelector(inGroup("live", id), { timeout: 15000 });
+    await waitFor(async () => (await readRows([id]))[id].content_url === url, "the placement link in D1");
+    assert.equal((await page.textContent(pill("live"))).trim(), "Active");
+    assert.ok(!/[?&]rec=/.test(await page.evaluate(() => location.hash)), "the record panel never opened");
+    assert.equal(await page.$("#layer-panel .ui-panel"), null, "no panel");
+    await shot(page, "deals-stage-pill-live-1440", { fullPage: true });
+    assert.deepEqual(watch.pageErrors, []);
+  } finally {
+    await close();
+    await restore([id]);
   }
 });
 

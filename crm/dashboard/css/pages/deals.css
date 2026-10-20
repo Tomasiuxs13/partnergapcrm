@@ -51,8 +51,9 @@
 /* ---------- Rows ---------- */
 
 .dl-site .ui-row-link { white-space: normal; overflow-wrap: anywhere; }
-.dl-tags { display: flex; flex-basis: 100%; min-width: 0; margin-top: 3px; }
+.dl-tags { display: flex; flex-wrap: wrap; flex-basis: 100%; align-items: center; gap: 4px var(--sp-2); min-width: 0; margin-top: 3px; }
 .dl-tags .ui-tag { max-width: 150px; }
+.dl-tags .ui-stage { flex: none; }
 .dl-tags .ui-tags.is-none:empty { display: none; }
 
 .dl-terms { display: flex; flex-direction: column; min-width: 0; }

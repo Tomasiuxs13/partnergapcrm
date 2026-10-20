@@ -483,3 +483,28 @@ G3-5, and item 2 is a release step.
 Still open: G3-6b 1 (G3-5) and 2 (release), plus the list at the G2 checkpoint: G2 checkpoint 1, F6 1, F6 2,
 F8 2, the F1 3 follow-up and G1-B 6. G3-1's task-log note says `crm-easy-site-g31` (not merged yet) closes
 G2 checkpoint 1, F6 1 and G1-B 6.
+
+# Status at G3-1 (integration, crm-easy-site-g31)
+
+Closed at G3-1:
+- G2 checkpoint 1: `functions/api/partner/[id].js` PATCH and `functions/api/settings.js` PUT rethrow a real `Error`
+  (a D1 failure) instead of answering 400 with its text; the string field checks stay 400. The page shows "The
+  server couldn't save this. Try again in a moment." (4.11). Tests: `tests/unit/api-errors.test.mjs` (stub D1),
+  `98-scenarios` T35 (a 500 on a save, through `api.request` and through a Deals row's Next step).
+- F6 1: Sites › All takes `flag=<Team overview list id>` (a removable chip named after the list, shown first, and
+  the list's description under the h1); `rules/team.js` `SITES_FLAGS` holds every flag and `target()` sends every
+  Team overview number, Stuck tile and clean-up count to Sites. `#team?show=<flag>&owner=` (the old list view, now
+  removed) redirects to the same Sites list; Back from a number returns to it with the focus on it.
+- G1-B 6: `window.BUILD` (index.html) and `BUILD` (lib/meta.js) are both `easy-rc0`; `tests/unit/build.test.mjs`
+  fails when they differ, so a release changes both in one commit.
+- 2.3 "Deals board … + stage menu": every Deals row has the Stage pill under the site name (the panel's Stage
+  write, with Undo); Signed → Live stays "Log what happened › Placement is live".
+- Found and fixed while testing T18: the boot requests in `index.html` (meta, list) had no handler until the
+  modules loaded, so a failed list request on a warm start was reported as an uncaught page error; each now has a
+  no-op `catch` (the store and meta still read the failure).
+
+Still open (owners in brackets):
+- F6 2 (G1-C or G3-3): chart bar focus.
+- F8 2 (B1 + a spec change): `total` in `GET /api/edits`.
+- F1 3 follow-up (F1): the form outcomes through `quiet`/`throw`. Not small (the panel would own the form's busy
+  state, Retry and Undo) and not required by the spec, so G3-1 left it.

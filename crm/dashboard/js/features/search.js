@@ -319,6 +319,28 @@ function loadContacts() {
 }
 
 
+// ---------- The same match on Sites (q=…; "See all N matching sites") ----------
+
+/**
+ * A test that keeps exactly the sites the search counts for `text`, so "See all N matching sites" opens a
+ * Sites list of N and Sites' "Search in this list" finds what Search finds. null when the text is too short
+ * to search (one letter, no ID or domain): the list then filters by plain text. An email uses the contacts
+ * index once it is loaded (loadContactsFor).
+ */
+export function siteMatcher(text) {
+  const q = parseQuery(text);
+  if (!q.raw || (q.name.length < 2 && !q.email && !q.dom && !q.id && q.digits == null)) return null;
+  const contactSites = q.email && contacts.state === "ready" ? searchContacts(contacts.list, q, { limit: 1 }).sites : null;
+  return (r) => !!r && scoreSite(siteEntry(r), q, contactSites) > 0;
+}
+
+/** For an email: loads the contacts index (once per page session). A promise while it loads, else null. */
+export function loadContactsFor(text) {
+  const q = parseQuery(text);
+  if (!q.email || contacts.state === "ready" || contacts.state === "none") return null;
+  return loadContacts() || null;
+}
+
 // ---------- The dialog ----------
 
 let ui = null; // the open dialog: {dialog, input, grid, note, live, rows, active, ...}
@@ -541,11 +563,13 @@ function setActive(i, { scroll = true } = {}) {
   if (scroll) cell.parentElement.scrollIntoView({ block: "nearest" });
 }
 
-// One pass for the current input (every keystroke): search, draw, keep the active row when asked.
+// One pass for the current input (every keystroke): search, draw, keep the active row when asked. Only a row
+// the person moved to is kept: the first row (the default) follows the best match, so when the contacts index
+// arrives after an email was typed, the site of that exact address becomes the active row (Enter opens it).
 function run({ keep = false } = {}) {
   if (!ui) return;
   const q = parseQuery(ui.input.value);
-  const keepKey = keep && ui.active >= 0 && ui.rows[ui.active] ? ui.rows[ui.active].key : null;
+  const keepKey = keep && ui.active > 0 && ui.rows[ui.active] ? ui.rows[ui.active].key : null;
   const res = compute(q);
   const { rows, markup } = build(res);
   ui.rows = rows;
@@ -598,7 +622,8 @@ function activate(i) {
       openAddSite(input || row.domain);
       break;
     case "more":
-      router.go("sites", { tab: "all", q: input });
+      // big=1: the search counts big sites too, so the list has the same N.
+      router.go("sites", { tab: "all", q: input, big: "1" });
       break;
     default:
       break;

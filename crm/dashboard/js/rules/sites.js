@@ -182,11 +182,12 @@ export const SORT_CHOICES = [
 /**
  * One pass over records that already passed the shared filters (search, client, type, country, DR, source,
  * has contact, has suggestion). Applies the tab, the big-sites rule, the tab's owner filter, the stage
- * filter (All only), the preset (All only) and quiet (Waiting only).
+ * filter (All only), the preset (All only), flag (All only: a test(r) the page passes for flag=<id>, the
+ * Team overview's lists in rules/team.js#FLAGS) and quiet (Waiting only).
  * Returns {rows, counts: {mine, unowned, waiting, all}, quiet}: the rows of `tab`, what each tab would
  * show with these filters, and the "No reply in 14+ days" count of Waiting for reply (quiet on or off).
  */
-export function siteView(records, { meta, me, today, tab, owner, stage, big = false, quiet = false, preset } = {}) {
+export function siteView(records, { meta, me, today, tab, owner, stage, big = false, quiet = false, preset, flag = null } = {}) {
   const t = tabOf(tab);
   const counts = { mine: 0, unowned: 0, waiting: 0, all: 0 };
   const rows = [];
@@ -194,6 +195,7 @@ export function siteView(records, { meta, me, today, tab, owner, stage, big = fa
   const ownWaiting = ownerFilter("waiting", owner);
   const ownAll = ownerFilter("all", owner);
   const pre = has(preset) && presets[preset] && presets[preset].test ? presets[preset].test : null;
+  const flagged = typeof flag === "function" ? flag : null;
   const wantQuiet = !!quiet && quiet !== "0";
   for (const r of records || []) {
     if (!r) continue;
@@ -215,7 +217,7 @@ export function siteView(records, { meta, me, today, tab, owner, stage, big = fa
         if (t === "waiting") rows.push(r);
       }
     }
-    if (!hidden && ownerMatches(r, ownAll, me) && (!has(stage) || same(r.stage, stage)) && (!pre || pre(r))) {
+    if (!hidden && ownerMatches(r, ownAll, me) && (!has(stage) || same(r.stage, stage)) && (!pre || pre(r)) && (!flagged || flagged(r))) {
       counts.all++;
       if (t === "all") rows.push(r);
     }

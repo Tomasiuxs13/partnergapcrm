@@ -581,6 +581,88 @@ test("presets on All: Recently active, Replied no date, Has a suggestion", async
   }
 });
 
+test("flag= (a Team overview number): a removable chip with the list's name, All only, the same count", async () => {
+  const overdue = recs.filter((r) => !r.closed && r.due && r.due < TODAY);
+  const kOverdue = overdue.filter((r) => r.owner === "Kamile");
+  const noOwner = recs.filter((r) => !has(r.owner) && !r.closed);
+  assert.ok(kOverdue.length > 0 && overdue.length > kOverdue.length, "the fixture has overdue sites of several owners");
+  const { page, close } = await open({ hash: "#sites?tab=all&flag=overdue&big=1&sort=next" });
+  try {
+    await waitCount(page, overdue.length, "Overdue follow-ups");
+    const chip = page.locator(".si-filters .ui-chiprow .ui-fchip", { hasText: "Overdue follow-ups" });
+    assert.equal(await chip.count(), 1, "the chip names the list");
+    assert.equal(await chip.getAttribute("title"), "The follow-up date has passed.");
+    assert.equal((await page.textContent("[data-si-sub]")).trim(), "The follow-up date has passed.", "the line under the h1 says what the list is");
+    assert.equal(await page.inputValue(".si-tools [data-si-sort]"), "next:asc", "the oldest follow-up date first");
+    const tabs = await tabCounts(page);
+    assert.equal(tabs.all, overdue.length);
+    assert.equal(tabs.mine, EXPECT.mine.length, "the other tabs don't use it");
+    assert.deepEqual((await allKeys(page)).sort(), overdue.map((r) => r.id).sort());
+    // Opened rows step through the list as a queue named after it.
+    const first = (await keys(page))[0];
+    await page.click('.si-list tr[data-key="' + first + '"] a.ui-row-link');
+    await page.waitForSelector("#layer-panel .ui-queue-text");
+    assert.equal((await page.textContent("#layer-panel .ui-queue-text")).trim(), "1 of " + overdue.length + " · Overdue follow-ups");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !/[?&]rec=/.test(location.hash));
+    // With an owner as well (Kamile is signed in: "Me").
+    await pickFilter(page, "owner", "Me");
+    await waitCount(page, kOverdue.length, "Kamile's overdue");
+    const chips = await page.$$eval(".si-filters .ui-chiprow .ui-fchip", (cs) => cs.map((c) => c.firstChild.textContent.trim()));
+    assert.deepEqual(chips, ["Overdue follow-ups", "Owner: Me", "Show big sites"], "the list's name first, then the bar's own filters");
+    await shot(page, "sites-flag-1440");
+    // × removes it; the owner stays.
+    await page.click('.si-filters [data-fremove="flag"]');
+    await page.waitForFunction(() => !/flag=/.test(location.hash));
+    await waitCount(page, recs.filter((r) => r.owner === "Kamile").length, "every site of Kamile's");
+    assert.equal((await params(page)).owner, "me");
+    // Clear all removes it too; a tab link drops it (like the presets).
+    await go(page, "#sites?tab=all&flag=no_owner&big=1");
+    await waitCount(page, noOwner.length, "No owner (open sites only)");
+    assert.notEqual(noOwner.length, recs.filter((r) => !has(r.owner)).length, "unlike owner=none, closed sites are left out");
+    await page.click('[data-si-tab="waiting"]');
+    await page.waitForFunction(() => /tab=waiting/.test(location.hash) && !/flag=/.test(location.hash));
+    await go(page, "#sites?tab=all&flag=no_type&big=1");
+    await page.waitForSelector('.si-filters [data-fremove="flag"]');
+    await page.click(".si-filters [data-fclear]");
+    await page.waitForFunction(() => !/flag=/.test(location.hash));
+    // An unknown list is left out (no chip, nothing filtered).
+    await go(page, "#sites?tab=all&flag=nope");
+    await waitCount(page, EXPECT.all, "flag=nope");
+    assert.equal(await page.locator('.si-filters [data-fremove="flag"]').count(), 0);
+    assert.equal((await page.textContent("[data-si-sub]")).trim(), "Every site in the CRM, in every stage.");
+    // On phones the chip sits under the Filters button and the bar's count includes it.
+    await go(page, "#sites?tab=all&flag=overdue&big=1");
+    await waitCount(page, overdue.length, "back to the flag");
+  } finally {
+    await close();
+  }
+});
+
+test("search text matches what Search matches: words in any order, an ID, a site's address", async () => {
+  // The router writes params as URLSearchParams does (a space is "+").
+  const at = (text) => "#sites?" + new URLSearchParams({ tab: "all", big: "1", q: text }).toString();
+  const { page, close } = await open({ hash: at("mr money") });
+  try {
+    await waitCount(page, 1, "mr money");
+    const id = (await keys(page))[0];
+    await go(page, at("money mr"));
+    await waitCount(page, 1, "money mr");
+    assert.deepEqual(await keys(page), [id], "the same site, words in another order");
+    await go(page, at(EXPECT.mine[0].toLowerCase()));
+    assert.ok((await keys(page)).includes(EXPECT.mine[0]), "an ID");
+    const r = byId.get(EXPECT.mine[0]);
+    await go(page, at("https://www." + r.domain + "/some/page?x=1"));
+    await waitCount(page, 1, "a full address");
+    assert.deepEqual(await keys(page), [r.id]);
+    // One letter is too short for Search: the list filters by plain text then.
+    await go(page, at("a"));
+    assert.ok(await count(page) > 100, "one letter still filters");
+  } finally {
+    await close();
+  }
+});
+
 test("Waiting for reply: No reply in 14+ days (N), oldest first, Start opens queue mode", async () => {
   const dated = fx.groups["kamile-contacted-20d"];
   assert.ok(QUIET_K.length >= 100, "enough quiet sites for a page of 100");
