@@ -33,6 +33,7 @@ const ADDED = "Added. It reaches the Google Sheet on the next weekday morning.";
 const NOT_SITE = "That doesn't look like a website address.";
 const NEED_ONE = "Add a website or a name.";
 const TEST = "Nothing is sent from this site.";
+const FROM_TITLE = html`<span>From the site's title. Change it if it's wrong.</span>`;
 // The v1 row of POST /api/partners (used only when the response has no v2 row).
 const V1_COLS = ["id", "domain", "name", "type", "dr", "traffic", "owner", "stage", "last_touch", "clients", "country",
   "contacts", "next_step", "next_due", "deal_model", "deal_flat", "deal_pct", "deal_value", "live_date", "content_url"];
@@ -395,7 +396,9 @@ export function openAddSite(prefill) {
     toast(readOnlyText(), { kind: "error" });
     return null;
   }
-  if (current && current.modal) {
+  // Already open: bring it forward. (A form that is closing still has `current` until its close event, a task
+  // later; a new one opens then.)
+  if (current && current.modal && current.modal.el.open) {
     current.focusFirst();
     return current.modal;
   }
@@ -406,6 +409,7 @@ export function openAddSite(prefill) {
     open: null,
     other: false,
     dupes: [],
+    dupesKey: "",
     serverFor: null, // the website the server's 409 answered for
     saving: false,
     done: false,
@@ -464,9 +468,15 @@ export function openAddSite(prefill) {
     else domainInput.removeAttribute("aria-invalid");
   }
 
+  // Redraws the box only when the duplicates change: the field's blur runs the check again, and a redraw
+  // between mousedown and mouseup would swallow the click on Ask, Open site or Add anyway.
   function showDupes(list) {
+    const key = list.map((d) => [d.id, d.kind, d.owner, d.stage, d.label, d.cl.join(",")].join("\u0001")).join("\u0002");
     st.dupes = list;
-    render(dupesEl, dupesHtml(list));
+    if (key !== st.dupesKey) {
+      st.dupesKey = key;
+      render(dupesEl, dupesHtml(list));
+    }
     primary.disabled = list.length > 0 || st.saving;
     primary.title = list.length ? "Already in the CRM. Open it, or choose Add anyway." : "";
   }
@@ -515,6 +525,7 @@ export function openAddSite(prefill) {
       if (!title || st.done || st.nameTouched || normDomain(domainInput.value) !== q) return;
       nameInput.value = title;
       st.namePrefilled = title;
+      setNameHint(FROM_TITLE);
       scheduleSimilar();
     }, 450);
   }
@@ -525,7 +536,7 @@ export function openAddSite(prefill) {
       const name = nameInput.value.trim();
       const skip = new Set(st.dupes.map((d) => d.id));
       const hits = name ? similarNames(store.all(), name, { skip }) : [];
-      const from = st.namePrefilled && name === st.namePrefilled ? html`<span>From the site's title. Change it if it's wrong.</span>` : null;
+      const from = st.namePrefilled && name === st.namePrefilled ? FROM_TITLE : null;
       if (!hits.length) {
         setNameHint(from);
         return;
@@ -579,8 +590,9 @@ export function openAddSite(prefill) {
     if (t && !st.picked.some((x) => x.key === t.key)) st.picked.push(t);
     otherInput.value = "";
     otherError("");
-    drawChips();
-    otherInput.focus();
+    st.other = false;
+    otherBox.hidden = true;
+    drawChips(t ? t.key : "__other");
     return true;
   }
 

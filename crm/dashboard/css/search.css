@@ -151,18 +151,22 @@
     border-radius: 0;
   }
   .se-bar { padding: 0 var(--sp-2) 0 var(--sp-3); }
-  .se-esc, .se-keys { display: none; }
-  .se-cancel { display: inline; }
-  .se-close { min-height: var(--tap); padding: 0 var(--sp-2); color: var(--link); font-size: var(--fs-16); }
+  .se-keys { display: none; }
   .se-row { min-height: 56px; margin: 0 var(--sp-1); }
   .se-side { max-width: 34%; }
   .se-when { display: none; }
   .se-body > .se-hint, .se-nomatch { padding: var(--sp-4); }
 }
+/* Phones and touch screens: "Cancel" instead of the Esc key. */
+@media (max-width: 639.98px), (pointer: coarse) {
+  .se-dialog .se-esc { display: none; }
+  .se-cancel { display: inline; }
+  .se-close { min-height: var(--tap); padding: 0 var(--sp-2); color: var(--link); font-size: var(--fs-16); }
+}
 @media (pointer: coarse) {
   .se-keys { display: none; }
   .se-row { min-height: 56px; }
-  .se-close { min-height: var(--tap); min-width: var(--tap); justify-content: center; }
+  .se-close { min-width: var(--tap); justify-content: center; }
   .se-note-cell .ui-linkbtn { min-height: var(--tap); }
 }
 

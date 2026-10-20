@@ -386,7 +386,7 @@ function siteRow(rec, i, today) {
   if (rec.cl && rec.cl.length) bits.push(rec.cl.join(", "));
   const when = rec.lastActivity ? ago(rec.lastActivity, today) : "";
   const claim = !has(rec.owner) && !readOnly();
-  return html`<div role="row" class="se-row" data-i="${i}">
+  return html`<div role="row" class="se-row" data-i="${i}" data-kind="site" data-id="${rec.id}">
 <div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
   <span class="se-lead">${stageDot(rec.stage)}</span>
   <span class="se-main"><span class="se-title"><span class="se-name">${label}</span>${newDot(rec)}</span><span class="se-sub">${bits.join(" · ")}</span></span>
@@ -404,7 +404,7 @@ function contactRow(hit, i) {
   const bits = [];
   if (c.emails.length && (c.name || c.emails.length > 1)) bits.push(c.emails.join(", "));
   bits.push("at " + siteLabel);
-  return html`<div role="row" class="se-row" data-i="${i}">
+  return html`<div role="row" class="se-row" data-i="${i}" data-kind="contact" data-id="${c.acc}" data-contact="${c.id}">
 <div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
   <span class="se-lead">${avatar(c.name || c.emails[0] || "?", { size: "xs" })}</span>
   <span class="se-main"><span class="se-title"><span class="se-name">${title}</span></span><span class="se-sub">${bits.join(" · ")}</span></span>
@@ -414,8 +414,8 @@ function contactRow(hit, i) {
 </div>`;
 }
 
-function simpleRow(i, lead, title, sub) {
-  return html`<div role="row" class="se-row" data-i="${i}">
+function simpleRow(i, kind, lead, title, sub) {
+  return html`<div role="row" class="se-row" data-i="${i}" data-kind="${kind}">
 <div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
   <span class="se-lead">${lead}</span>
   <span class="se-main"><span class="se-title"><span class="se-name">${title}</span></span>${sub ? html`<span class="se-sub">${sub}</span>` : ""}</span>
@@ -459,7 +459,7 @@ function build(res) {
     const list = s.rows.map((h) => siteRow(h.e.rec, add({ key: "s:" + h.e.id, kind: "site", id: h.e.id }), today));
     if (s.total > s.rows.length) {
       const i = add({ key: "more", kind: "more" });
-      list.push(simpleRow(i, icon("list"), "See all " + num(s.total) + " matching sites", "Opens Sites with this search"));
+      list.push(simpleRow(i, "more", icon("list"), "See all " + num(s.total) + " matching sites", "Opens Sites with this search"));
     }
     parts.push(group("sites", "Sites", s.total > s.rows.length ? s.rows.length + " of " + num(s.total) : String(s.total), list));
   }
@@ -467,7 +467,7 @@ function build(res) {
     const text = readOnly() ? "Not in the CRM: " + res.add : "Not in the CRM: Add " + res.add;
     const list = readOnly()
       ? [noteRow(text)]
-      : [simpleRow(add({ key: "add", kind: "add", domain: res.add }), icon("plus"), text, "Opens Add site with this address filled in")];
+      : [simpleRow(add({ key: "add", kind: "add", domain: res.add }), "add", icon("plus"), text, "Opens Add site with this address filled in")];
     parts.push(group("add", null, "", list, { label: "Not in the CRM" }));
   }
   const cq = q.name.length >= 2 || q.email || q.dom || q.id;
@@ -494,10 +494,10 @@ function build(res) {
     parts.push(group("goto", "Go to", "", res.goto.map((g) => {
       if (g.kind === "client") {
         const i = add({ key: "g:c:" + g.client.k, kind: "client", client: g.client });
-        return simpleRow(i, icon("client"), g.client.name, g.past ? "Client page · past client" : "Client page" + (g.client.what ? " · " + g.client.what : ""));
+        return simpleRow(i, "client", icon("client"), g.client.name, g.past ? "Client page · past client" : "Client page" + (g.client.what ? " · " + g.client.what : ""));
       }
       const i = add({ key: "g:p:" + g.name, kind: "person", name: g.name });
-      return simpleRow(i, avatar(g.name, { size: "xs" }), g.name, g.name === me.get() ? "Your sites" : "Sites owned by " + g.name);
+      return simpleRow(i, "person", avatar(g.name, { size: "xs" }), g.name, g.name === me.get() ? "Your sites" : "Sites owned by " + g.name);
     })));
   }
   return { rows, markup: html`${parts}` };
