@@ -16,6 +16,15 @@ const DAY_MS = 86400000;
 
 const pad = (n) => String(n).padStart(2, "0");
 
+const DAYS_IN = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+// Whether y-m-d is a real calendar day. Years 0-99 are not (Date.UTC would read them as 1900-1999).
+function realDay(y, m, d) {
+  if (y < 100 || m < 1 || m > 12 || d < 1) return false;
+  const leap = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
+  return d <= (m === 2 && leap ? 29 : DAYS_IN[m - 1]);
+}
+
 // {y, m, d, hh, mm, hasTime} for a date string, a timestamp string or a Date; null when invalid.
 function parts(v) {
   if (v == null || v === "") return null;
@@ -27,8 +36,7 @@ function parts(v) {
   const m = DAY_RE.exec(s);
   if (m) {
     const y = +m[1], mo = +m[2], d = +m[3];
-    const t = new Date(Date.UTC(y, mo - 1, d));
-    if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return null;
+    if (!realDay(y, mo, d)) return null;
     return { y, m: mo, d, hh: 0, mm: 0, hasTime: false };
   }
   if (!/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(s)) return null;
@@ -53,6 +61,11 @@ function weekdayOf(n) {
 
 // The local calendar date 'YYYY-MM-DD' of a date or a timestamp, or null.
 export function toDay(v) {
+  // Fast path (7,500 sites x 5 dates on every load): a plain 'YYYY-MM-DD' is already its own answer.
+  if (typeof v === "string" && v.length === 10) {
+    const m = DAY_RE.exec(v);
+    if (m && +m[1] >= 1000) return realDay(+m[1], +m[2], +m[3]) ? v : null;
+  }
   const p = parts(v);
   return p ? fromDayNum(dayNum(p)) : null;
 }
@@ -116,11 +129,31 @@ export function date(iso, style = "short") {
   }
 }
 
+// Day numbers of 'YYYY-MM-DD' strings already seen (speed, G3-4: the rules ask for the same few
+// thousand dates over and over on 7,500 sites). Bounded, so a long session can't grow it forever.
+const DAY_NUMS = new Map();
+
+function dayNumOf(v) {
+  if (typeof v === "string" && v.length === 10) {
+    const hit = DAY_NUMS.get(v);
+    if (hit !== undefined) return hit;
+    const p = parts(v);
+    const n = p ? dayNum(p) : null;
+    if (DAY_NUMS.size >= 20000) DAY_NUMS.clear();
+    DAY_NUMS.set(v, n);
+    return n;
+  }
+  const p = parts(v);
+  return p ? dayNum(p) : null;
+}
+
 // Calendar days from a to b (b - a), in local dates. null when either is missing or invalid.
 export function daysBetween(a, b) {
-  const pa = parts(a), pb = parts(b);
-  if (!pa || !pb) return null;
-  return dayNum(pb) - dayNum(pa);
+  const na = dayNumOf(a);
+  if (na == null) return null;
+  const nb = dayNumOf(b);
+  if (nb == null) return null;
+  return nb - na;
 }
 
 // "today", "yesterday", "12d ago"; future dates: "tomorrow", "in 3d"; unknown: "".

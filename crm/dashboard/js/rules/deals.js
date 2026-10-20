@@ -76,8 +76,13 @@ export function isQuiet(r, { meta } = {}) {
   return false;
 }
 
+// One collator for every comparison: localeCompare(b, "en", {numeric: true}) builds a new one on each
+// call (same order, about 20 times slower on lists of thousands of sites).
+let idOrder = null;
+
 function byId(a, b) {
-  return String(a.id).localeCompare(String(b.id), "en", { numeric: true });
+  if (!idOrder) idOrder = new Intl.Collator("en", { numeric: true });
+  return idOrder.compare(String(a.id), String(b.id));
 }
 
 // Compares two keys; null goes first or last as asked. 0 when equal.

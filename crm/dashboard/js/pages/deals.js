@@ -19,7 +19,7 @@
 import { html, render, on, safeUrl } from "../core/dom.js";
 import { num, plural, money, pct, date as fmtDate, ago } from "../core/format.js";
 import { dealGroups, dealValue, isQuiet, GROUPS } from "../rules/deals.js";
-import { createList, toCsv, csvColumnsOf, downloadText, csvFileName } from "../ui/list.js";
+import { createList, toCsv, csvColumnsOf, downloadText, csvFileName, FIRST_ROWS } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
 import { COLUMNS, CSV_DEALS, resolveColumn } from "../ui/columns.js";
 import { clientTags, newDot, waitingBadge, stagePill } from "../ui/pills.js";
@@ -229,8 +229,14 @@ function say(text, { now = false } = {}) {
 }
 
 function makeLists() {
+  // The groups share the rows drawn before the first paint (ui/list.js): a group below a full screen
+  // of rows draws its rows right after that paint.
+  let first = FIRST_ROWS;
   for (const g of GROUPS) {
     const el = st.root.querySelector('[data-dl-list="' + g.id + '"]');
+    const n = st.view ? st.view.groups[g.id].length : 0;
+    const firstRows = first;
+    first = Math.max(0, first - n);
     st.lists[g.id] = createList(el, {
       id: "deals-" + g.id,
       rows: () => (st && st.view ? st.view.groups[g.id] : []),
@@ -243,12 +249,15 @@ function makeLists() {
       loading: () => false,
       queueLabel: g.label,
       openRecord: (id, o) => st.ctx.openRecord(id, o || {}),
+      firstRows,
     });
   }
 }
 
 // what: 'route' (filters changed), 'store' (rows changed), 'all' (first draw, meta or person changed).
-function draw(what = "all") {
+// fresh: the first draw from mount(), right after the lists were made with st.view: each list has
+// already drawn itself from that view (drawing them again at once doubled the time Deals takes to open).
+function draw(what = "all", { fresh = false } = {}) {
   if (!st) return;
   st.frame = 0;
   const ctx = st.ctx;
@@ -268,14 +277,14 @@ function draw(what = "all") {
   body.removeAttribute("aria-busy");
   if (skel) skel.hidden = true;
   const f = focusInfo();
-  st.view = compute(ctx);
+  if (!fresh) st.view = compute(ctx);
   const v = st.view;
   for (const g of GROUPS) {
     const sec = st.root.querySelector('[data-dl-group="' + g.id + '"]');
     const n = v.groups[g.id].length;
     sec.hidden = n === 0;
     render(sec.querySelector("[data-dl-n]"), countHtml(g, v));
-    if (st.lists[g.id]) st.lists[g.id].refresh();
+    if (st.lists[g.id] && !fresh) st.lists[g.id].refresh();
   }
   const none = v.groups.count === 0;
   emptyEl.hidden = !none;
@@ -354,7 +363,7 @@ export default {
     st.view = loaded(ctx) ? compute(ctx) : { groups: dealGroups([], {}), byId: new Map() };
     makeLists();
     bind();
-    draw("all");
+    draw("all", { fresh: loaded(ctx) });
     if (!st.announced) ctx.announce("Deals"); // rows not loaded yet: the count follows when they are
   },
   update(ctx, change) {

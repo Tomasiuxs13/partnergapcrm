@@ -42,8 +42,13 @@ function idNumber(id) {
   return m ? Number(m[1]) : 0;
 }
 
+// One collator for every comparison: localeCompare(b, "en", {numeric: true}) builds a new one on each
+// call (same order, about 20 times slower; Today sorts thousands of sites).
+let idOrder = null;
+
 function byId(a, b) {
-  return String(a.id).localeCompare(String(b.id), "en", { numeric: true });
+  if (!idOrder) idOrder = new Intl.Collator("en", { numeric: true });
+  return idOrder.compare(String(a.id), String(b.id));
 }
 
 // Ascending by key (nulls where `nulls` says), then by id.
@@ -145,9 +150,16 @@ export function doNow(records, opts = {}) {
   return doNowInfo(records, opts).rows;
 }
 
-/** The Today badge: the number of Do now rows. */
-export function doNowCount(records, opts = {}) {
-  return doNow(records, opts).length;
+/** The Today badge: the number of Do now rows (counted without sorting them). */
+export function doNowCount(records, { meta, today, me } = {}) {
+  let n = 0;
+  let noreply = 0;
+  for (const r of mine(records, me)) {
+    const reason = reasonOf(r, { meta, today });
+    if (reason === "noreply") noreply++;
+    else if (reason) n++;
+  }
+  return n + Math.min(noreply, cap(meta));
 }
 
 /** The Do now rows of one header chip ('all', 'replies', 'followups', 'deals'). */

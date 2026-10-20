@@ -15,6 +15,7 @@ import * as keys from "./core/keys.js";
 import * as bus from "./core/bus.js";
 import { api } from "./core/api.js";
 import { todayIso } from "./core/format.js";
+import { nextTask } from "./core/dom.js";
 import * as shell from "./shell/shell.js";
 import { openMePicker } from "./shell/me-picker.js";
 import * as actions from "./ui/actions.js";
@@ -213,6 +214,7 @@ async function boot() {
     return busy;
   });
   await store.load();
+  await nextTask(); // the cached list was derived in this task; draw the shell and page in the next one
   main = shell.mount({ nav: NAV, ctx: () => makeCtx(), onSearch: () => search.openSearch(), onAddSite: addSite });
   if (!main) return;
 

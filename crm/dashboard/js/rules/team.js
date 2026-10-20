@@ -32,8 +32,13 @@ function sla(meta, k, fallback) {
   return isFinite(v) ? v : fallback;
 }
 
+// One collator for every comparison: localeCompare(b, "en", {numeric: true}) builds a new one on each
+// call (same order, about 20 times slower on lists of thousands of sites).
+let idOrder = null;
+
 function byId(a, b) {
-  return String(a.id).localeCompare(String(b.id), "en", { numeric: true });
+  if (!idOrder) idOrder = new Intl.Collator("en", { numeric: true });
+  return idOrder.compare(String(a.id), String(b.id));
 }
 
 // Ascending by key (null first or last), then by id.

@@ -17,7 +17,7 @@
 //   value) ("Filter by this" in the pill menus), csvColumns, noun [one, many], label (table caption),
 //   recOf(row) -> site id (default row.id for site rows), link(row) -> href, params (for fetchPage),
 //   onState({sort, dir, page, per}), loading() -> boolean (skeleton while true and empty).
-import { html, raw, render, on } from "../core/dom.js";
+import { html, raw, render, on, afterPaint } from "../core/dom.js";
 import { num, plural, todayIso } from "../core/format.js";
 import * as router from "../core/router.js";
 import * as store from "../core/store.js";
@@ -128,13 +128,17 @@ function sortRows(list, fn, dir) {
 
 // ---------- createList ----------
 
+// Rows drawn before the first paint of a list (drawBody): more than a 1440 x 900 screen shows.
+// opts.firstRows lowers it for a list that starts lower on its page (Deals: the groups share it).
+export const FIRST_ROWS = 20;
+
 const SORT_ICON = raw('<svg class="ui-sorticon" viewBox="0 0 24 24" aria-hidden="true"><path class="ui-sort-up" d="M8 10l4-4 4 4"/><path class="ui-sort-dn" d="M8 14l4 4 4-4"/></svg>');
 
 export function createList(root, opts = {}) {
   const {
     id = "list", rows, fetchPage, columns = ["site"], sort, pageSize, selectable = false, bulk,
     csv = true, csvName, empty, queueLabel, openRecord, onFilter, csvColumns, noun = ["site", "sites"],
-    label, recOf, link, params, onState, loading,
+    label, recOf, link, params, onState, loading, firstRows = FIRST_ROWS,
   } = opts;
   if (!root) return { refresh() {}, selected() { return []; }, destroy() {} };
   const cols = columns.map(resolveColumn).filter(Boolean);
@@ -272,7 +276,16 @@ export function createList(root, opts = {}) {
     return !!(store.status && store.status.loading) && store.size() === 0;
   }
 
-  function drawBody() {
+  // Speed (G3-4): the first draw shows the rows a screen holds and adds the rest once that frame has
+  // been painted, so opening a page with 50 or 100 rows (or Deals with four lists) stays within the
+  // 50 ms page-switch budget. Every later draw (sort, filter, refresh, selection) draws all the rows at
+  // once, which keeps focus and scroll where they were, and cancels a pending rest.
+  let stopRest = null;
+  function drawBody(first = false) {
+    if (stopRest) {
+      stopRest();
+      stopRest = null;
+    }
     const page = visible();
     byKey.clear();
     for (const r of current()) byKey.set(keyOf(r), r);
@@ -283,9 +296,19 @@ export function createList(root, opts = {}) {
       return;
     }
     const c = cx();
-    render(bodyEl, html`<div class="ui-table-wrap"><table class="ui-table${canSelect() ? " is-selectable" : ""}">${label ? html`<caption class="sr-only">${label}</caption>` : ""}${headHtml()}<tbody>${page.map((r) => rowHtml(r, c))}</tbody></table></div>`);
+    const cut = first && page.length > firstRows ? Math.max(0, firstRows) : page.length;
+    render(bodyEl, html`<div class="ui-table-wrap"><table class="ui-table${canSelect() ? " is-selectable" : ""}">${label ? html`<caption class="sr-only">${label}</caption>` : ""}${headHtml()}<tbody>${page.slice(0, cut).map((r) => rowHtml(r, c))}</tbody></table></div>`);
     const all = bodyEl.querySelector("[data-selall]");
     if (all && all.hasAttribute("data-mixed")) all.indeterminate = true;
+    if (cut < page.length) {
+      const rest = page.slice(cut);
+      stopRest = afterPaint(() => {
+        stopRest = null;
+        const tbody = bodyEl.querySelector("tbody");
+        const c2 = cx();
+        if (tbody) tbody.insertAdjacentHTML("beforeend", html`${rest.map((r) => rowHtml(r, c2))}`.s);
+      });
+    }
   }
 
   function countText() {
@@ -374,11 +397,11 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
     if (target) target.focus({ preventScroll: true });
   }
 
-  function drawAll() {
+  function drawAll(first = false) {
     const f = rememberFocus();
     countEl.textContent = countText();
     drawTools();
-    drawBody();
+    drawBody(first);
     drawPager();
     drawBulk();
     restoreFocus(f);
@@ -582,6 +605,8 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
     },
     destroy() {
       state.token++;
+      if (stopRest) stopRest();
+      stopRest = null;
       for (const off of offs) off();
       if (bulkApi && typeof bulkApi.destroy === "function") bulkApi.destroy();
       render(root, html``);
@@ -591,7 +616,7 @@ ${remaining > 0 ? html`<button type="button" class="ui-btn ui-more-btn" data-mor
   if (server) fetchMore({ reset: true });
   else {
     computeClient();
-    drawAll();
+    drawAll(true);
   }
   return api;
 }
