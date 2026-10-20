@@ -459,3 +459,27 @@ Still open (owners in brackets):
 - F1 3 follow-up (F1, or G3-1): the form outcomes through `quiet`/`throw`; the panel would have to own the
   form's busy state, Retry and Undo. Not required by the spec.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+
+# NEEDS (G3-6b)
+
+Snapshot from Google Sheets dumps (`crm/scripts/build_snapshot.mjs`, `crm/scripts/snapshot/sheet.mjs`). G3-6b kept
+its needs in the task log; they are copied here so they stay with the branch.
+
+1. **G3-5, `crm/docs/daily-run-changes.md` (6.5 Friday digest text).** Dump `Accounts!A1:AC`, `Contacts!A1:Q` and
+   `'Activity log'!A1:H` with the Sheets connector, then run `node crm/scripts/build_snapshot.mjs --rows
+   <scratchpad>/accounts.json --contacts-sheet <scratchpad>/contacts.json --activity-sheet
+   <scratchpad>/activity-log.json --out <scratchpad>/crm-snapshot.html`. Then the rows equal
+   `GET /api/partners?v=2` after `build_d1_import.py` loads the same sheet. The 6.5 text as written (Accounts only)
+   also builds, but every site then shows 0 contacts and no reply date from email. Team overview's "Changes this
+   week" and "Last active" cannot come from the sheet.
+2. **Whoever is authorised (spec 7.3): publish the real-data preview.** It was built outside git in the session
+   scratchpad (`release/crm-preview.html`). Nothing has been published.
+
+# Status after the G3-6b merge (crm-easy-site)
+
+Merged with no conflicts, and no fix was needed. Nothing above was applied at the merge: item 1 is a doc owned by
+G3-5, and item 2 is a release step.
+
+Still open: G3-6b 1 (G3-5) and 2 (release), plus the list at the G2 checkpoint: G2 checkpoint 1, F6 1, F6 2,
+F8 2, the F1 3 follow-up and G1-B 6. G3-1's task-log note says `crm-easy-site-g31` (not merged yet) closes
+G2 checkpoint 1, F6 1 and G1-B 6.
