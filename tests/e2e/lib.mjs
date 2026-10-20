@@ -110,13 +110,27 @@ function parseJsonOutput(stdout) {
  * wrangler 4.40 prints SQL NULL as the string "null" in --json output. d1All turns every "null" string
  * back into null (pass {rawNulls: true} to keep them). Where a real "null" string must stay apart from
  * NULL, select json_object(...) and parse it, as editsAfter() does.
+ *
+ * The CLI opens the same SQLite file as the running dev server, so a call can meet the server's lock
+ * and fail at once with SQLITE_BUSY ("database is locked"): workerd does not wait for it. Such a call is
+ * retried (up to 6 more times, 0.4 s longer each time). miniflare runs all the statements of one call in
+ * one transaction (transactionSync), so a call that failed this way wrote nothing and is safe to repeat.
  */
 export async function d1All(sql, opts = {}) {
   const { persistDir, root } = d1Target(opts);
   const args = ["d1", "execute", "PARTNERS_DB", "--local", "--persist-to", persistDir, "--json"];
   if (opts.file) args.push("--file", path.resolve(opts.file));
   else args.push("--command", sql);
-  const { stdout } = await runWrangler(args, { cwd: root });
+  let stdout = "";
+  for (let i = 0; ; i++) {
+    try {
+      ({ stdout } = await runWrangler(args, { cwd: root }));
+      break;
+    } catch (e) {
+      if (i >= 6 || !/SQLITE_BUSY|database is locked/i.test(String(e && e.message))) throw e;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
   let out = parseJsonOutput(stdout);
   out = Array.isArray(out) ? out : [out];
   if (!opts.rawNulls) {

@@ -428,3 +428,34 @@ Still open:
 - F6 1 (F3, then F6) and F6 2 (G1-C or G3-3) as listed after the F6 merge.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
+
+# NEEDS (G2 checkpoint)
+
+1. **`functions/api/partner/[id].js` (B1) PATCH, optional: a D1 failure answers 400 with the raw error text.**
+   `onRequestPatch` wraps `updatePartner()` (which runs the D1 batch) in `catch (msg) { return bad(String(msg)); }`,
+   as d5e91d9 did. The string throws are the validation messages ("Pick a stage from the list.", …), but a D1
+   error lands there too and comes back as 400 `{"error":"Error: D1_ERROR: … internal error; reference = …"}`.
+   `api.js` shows 400 texts as they are (spec 4.11), so the panel and the inline editors would say that text,
+   where 4.11 wants "The server couldn't save this. Try again in a moment." for a 5xx/D1 failure. Seen on a local
+   fixture server: 11 of 6,983 PATCHes got this 400 while a `wrangler d1 execute --local` held the database lock
+   (3 more got workerd's own 500 page). Suggested change: in that catch, `if (msg instanceof Error) throw msg;`
+   (or return 500 JSON) before `return bad(String(msg));`, so only the string validation messages stay 400. The
+   same applies to `settings.js` PUT, whose `catch (msg)` also wraps one D1 read (`readKv`). The other
+   `catch (msg)` blocks (`partners.js` POST, `bulk.js`, `outcome.js`) wrap validation only.
+
+# Status at the G2 checkpoint (tag g2-checkpoint)
+
+Read every section above. No open item is small and clearly right, so nothing was applied to product files at
+this checkpoint. Test change: `tests/e2e/lib.mjs` `d1All()` now retries a `wrangler d1 execute --local` call that
+fails with SQLITE_BUSY ("database is locked"), as the page test files' own `retry()` already did for their reads;
+`90-api-contract`, `91-migrations`, `96-snapshot` and the lib helpers (`maxEditN`, `editsAfter`, `applyBefore`,
+`replayCase`) had no retry (`90-api-contract` failed once on it in F4's full run).
+
+Still open (owners in brackets):
+- G2 checkpoint 1 (B1, or G3-1): PATCH (and settings PUT) turn a D1 error into a 400 with the raw text (above).
+- F6 1 (F3, then F6; or G3-1 as cross-link work): Sites `flag=` filter, then `SITES_FLAGS`. Not small.
+- F6 2 (G1-C or G3-3): chart bar focus; needs a different chart structure (the suggested change fails axe).
+- F8 2 (B1 + a spec change): `total` in `GET /api/edits`.
+- F1 3 follow-up (F1, or G3-1): the form outcomes through `quiet`/`throw`; the panel would have to own the
+  form's busy state, Retry and Undo. Not required by the spec.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
