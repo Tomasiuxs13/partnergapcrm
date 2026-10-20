@@ -483,3 +483,14 @@ G3-5, and item 2 is a release step.
 Still open: G3-6b 1 (G3-5) and 2 (release), plus the list at the G2 checkpoint: G2 checkpoint 1, F6 1, F6 2,
 F8 2, the F1 3 follow-up and G1-B 6. G3-1's task-log note says `crm-easy-site-g31` (not merged yet) closes
 G2 checkpoint 1, F6 1 and G1-B 6.
+
+# NEEDS (G3-5)
+
+Docs only; no product file changed. G3-6b 1 is closed: `crm/docs/daily-run-changes.md` uses the three-dump digest command.
+
+1. **Release (whoever opens the pull request).** The prepared description and the J3–J9 message are outside git, in the
+   session scratchpad (`release/pr-body.md`, `release/j5-j9.md`). The description's test line was measured at `c92bc69`;
+   update it with the numbers on the release candidate commit.
+2. **Jonas, with J3.** `crm/docs/daily-run-changes.md` differs from spec 6.5 in a few words (its last section lists
+   them): only a conflict may stay unapplied, the suggestion inserts skip an account with an open row of the same
+   kind, the runs row carries `error` on failure, and the digest uses three dumps.

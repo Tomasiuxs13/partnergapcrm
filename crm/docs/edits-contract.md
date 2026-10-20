@@ -4,6 +4,8 @@ The website never writes to the Google Sheet. Every change made on the site land
 
 **The executable definition is `tests/e2e/golden/`.** Those files hold the rows the live code (`d5e91d9`) wrote for every write path on the synthetic fixture. `tests/e2e/90-api-contract.test.mjs` (T22) and `tests/e2e/91-migrations.test.mjs` replay them against the new code. Never re-capture them from new code. A change to them needs a matching change to the daily-run prompt in the same release (`crm/docs/daily-run-changes.md`).
 
+This is the final text for the release. It was checked against the code on `crm-easy-site`.
+
 ## 1. Kinds and columns
 
 `edits` columns: `n` (INTEGER PK, the order), `at` (ISO UTC to the second, `2026-10-22T09:15:02Z`), `by_whom` (self-declared name, max 40 characters, default `Someone`), `kind`, `account_id`, `contact_id`, `field`, `old`, `new`, `applied` (0 = waiting, 1 = copied; only the daily run sets 1).
@@ -25,11 +27,12 @@ Details that are part of the contract (the golden files compare them as strings)
 - `activity.date` and `create_account.added` are the server's UTC date.
 - Stage values are the stored ones: `New, Researching, Contacted, Replied, Negotiating, Active, Lost`. `Do not contact` is accepted only while the Settings switch "Allow 'Do not contact'" is on (kv_meta `allow_dnc` = `"1"`, spec D3), which waits for diff (a) of the daily-run prompt.
 - `owner` is free text (max 40), so "Someone else" names and Settings team changes need no change here.
+- "Waiting on client" (spec D2) is not a field. Ticking it writes `next_step` with the prefix `Waiting on client: `, as an ordinary `update` row; unticking removes the prefix.
 
 ## 2. Rules
 
 - **One `update` row per changed field.** Unchanged fields write nothing, and a request that changes nothing writes no row. The rows follow the order of the keys in the request's `fields`; the page sends them in EDITABLE order.
-- **`applied = 0` waits.** The daily run applies rows in `n` order and then sets `applied = 1` directly in D1. Edit history shows three states: Waiting (`applied = 0`), Copied (`applied = 1`), and "Not copied – a sheet edit won; check the sheet" (`applied = 0` with `n` below the highest applied `n`, rule R5).
+- **`applied = 0` waits.** The daily run applies rows in `n` order and then sets `applied = 1` directly in D1. Edit history shows three states (`GET /api/edits` `state`): Waiting (`applied = 0` with `n` above the highest applied `n`), Copied (`applied = 1`), and "Not copied – a sheet edit won; check the sheet" (`applied = 0` with `n` below the highest applied `n`, rule R5). So the run may leave a row unapplied behind an applied one only for a conflict; the prompt change in `crm/docs/daily-run-changes.md` (insertion 1) says so.
 - **`NEW-` / `NEWC-` ids** are temporary: `NEW-` + (highest NEW number + 1) padded to 4 digits, the same for `NEWC-`. The daily run gives them the next free `PG-` / `C-` id (R2). `update`, `activity` and `create_contact` rows may point at a `NEW-` id created earlier the same day.
   - A number is never handed out twice. After the run renames `NEW-0012`, the highest `NEW-` number left in `partners` drops, so "highest + 1" alone would give the next new site `NEW-0012` again, and an old link to it would open that other site. `kv_meta` therefore keeps the highest number handed out (`new_site_n`, `new_contact_n`), written in the same batch as the insert, and the next id is 1 + the larger of that and the highest number in the table (`lib/crm.js#nextTempId`). Before migration 003 (no `kv_meta`) it is the table's highest + 1, as on `d5e91d9`. The `edits` rows are unchanged; only which number a new site gets after a rename differs. The 4-digit padding grows to 5 digits after `NEW-9999`.
 - **Full imports only when nothing is waiting** (`crm/scripts/build_d1_import.py`): a full import replaces partners and drops and recreates contacts and activity, so waiting rows would point at the wrong activity `n`. After a full import, re-run migration 003 (it recreates the indexes on `activity`).
@@ -47,6 +50,8 @@ Details that are part of the contract (the golden files compare them as strings)
 | POST `/api/partner/:id/contacts` (Add contact, Add as contact) | one `create_contact` |
 | PUT `/api/clients/:k` | one `client_program` |
 | PUT `/api/settings`, POST `/api/suggestions/:id`, the freshness check of GET `/api/meta` | **nothing** (D1-only tables) |
+
+Every site change on the page goes through `crm/dashboard/js/ui/actions.js` (PATCH, outcome, bulk), so Claim, Follow up, Waiting on client, Assign to client manager and "Mark N as handled" write `update` rows only. Add site, Add contact and the client program use their own `api.*` call. "Add as contact" on a suggestion is Add contact (one `create_contact` row), then POST `/api/suggestions/:id` marks the suggestion used (no row).
 
 How one outcome is written (spec 6.3.3), in one batch, in the old page's order (drawer Save, then Log):
 
@@ -78,12 +83,12 @@ From the stored prompt of `trig_01W5Wr581htK5Xzf1BDrufxq` (these replace the ear
 - **R4.** `client_program` is only noted in the run file (no sheet tab yet).
 - **R5.** Conflict rule: if a person changed the sheet cell after the edit time and it differs, the sheet value wins and the edit stays `applied=0`. Step 6 then copies the sheet value into D1. The site shows this as **"Not copied – a sheet edit won; check the sheet"**.
 - **R6.** Step 6 copies the run's Accounts changes (and rows people edited in the sheet, detected by Last touch) into D1 with `UPDATE` by id, plus new Activity rows. **Contacts are not mirrored**, so `last_email`, `replied` and `outreach_status` can be stale in D1. Diff (f) fixes this.
-- **R7.** Step 3 keeps Apollo candidates out of Contacts by design, and step 4 writes test emails to `/mnt/project-files/crm/outreach/<date>-test-run.md`. The site can show them only through `suggestions`, which needs diffs (d) and (e).
+- **R7.** Step 3 keeps Apollo candidates out of Contacts by design, and step 4 writes test emails to `/mnt/project-files/crm/outreach/<date>-test-run.md`. The site can show them only through `suggestions`, which needs insertions 3 and 4 in `crm/docs/daily-run-changes.md`.
 - **R8.** "Do not contact" is not mentioned in the prompt. Diff (a) states it is valid. Until then the `allow_dnc` setting stays off.
 - **R9.** The run's follow-up rule (no touch 7 days after Contacted) differs from the site's "No reply in 14+ days". This is accepted: the site's list is the work queue, and the run's list is a report.
 - **R10.** Edits made directly in the sheet reach D1 only through step 6, the next weekday. Help and Edit history say so.
 
-The exact prompt diffs (a)–(f) and the memory notes are in `crm/docs/daily-run-changes.md` (spec 6.5). They are applied only after Jonas's OK (J3).
+The exact prompt changes (rules (a)–(f), the suggestions and `runs` rows, the Friday digest) and the memory notes are in `crm/docs/daily-run-changes.md` (spec 6.5). They are applied only after Jonas's OK (J3), in release step 6 (`crm/docs/release.md`).
 
 ## 6. How the site sees the sheet's side (freshness, `lib/freshness.js`)
 
