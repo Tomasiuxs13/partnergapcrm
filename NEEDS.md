@@ -193,3 +193,6 @@ Changes the Sites page (F3) needs in files it does not own. Each has a local wor
    keeps `primary`, but the log box always makes the stage's first outcome primary ("They replied" for
    Contacted). Suggested: when `queue.primary` is one of the shown outcomes, move it first and give it
    `is-primary`. No workaround on the page (it cannot reach into the panel).
+
+F2 2 is handled on this branch: `#sites?tab=waiting&quiet=14` and `#sites?tab=mine` open those views, and
+`30-sites` covers both.
