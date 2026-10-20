@@ -530,3 +530,15 @@ Docs only; no product file changed. G3-6b 1 is closed: `crm/docs/daily-run-chang
 2. **Jonas, with J3.** `crm/docs/daily-run-changes.md` differs from spec 6.5 in a few words (its last section lists
    them): only a conflict may stay unapplied, the suggestion inserts skip an account with an open row of the same
    kind, the runs row carries `error` on failure, and the digest uses three dumps.
+
+# Status after the G3-5 merge (crm-easy-site)
+
+Merged `--no-ff` with one conflict, here in NEEDS.md (the G3-1 status sections and the G3-5 section are both kept).
+G3-5 changed docs only; the docs already name `easy-rc0`, which G3-1 set. One test fix: `97-capabilities` "Home
+Automations card" read the morning run rows right after `teamReady`, but they arrive with Team overview's side
+requests (team activity, suggestions, runs); it failed once in a full run and now waits for them, as `60-team`
+does. Unit 202/202; full e2e 218 tests, 216 pass, 0 fail, 2 todo (95-mobile-a11y for G3-3, 99-perf for G3-4).
+
+Still open: G3-5 1 (refresh the PR description's test line on the release candidate) and 2 (Jonas, J3), G3-6b 2
+(publishing the preview, a release step), F6 2 (G1-C or G3-3), F8 2 (B1 + a spec change), F1 3 follow-up (F1,
+optional).
