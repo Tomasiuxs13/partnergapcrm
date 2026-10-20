@@ -30,7 +30,7 @@ import * as chartsUi from "./ui/charts.js";
 import * as inlineEditUi from "./ui/inline-edit.js";
 import * as columnsUi from "./ui/columns.js";
 import * as record from "./features/record/index.js";
-import { openSearch } from "./features/search.js";
+import * as search from "./features/search.js";
 import { openAddSite } from "./features/add-site.js";
 import { doNowCount } from "./rules/today.js";
 import todayPage from "./pages/today.js";
@@ -213,7 +213,7 @@ async function boot() {
     return busy;
   });
   await store.load();
-  main = shell.mount({ nav: NAV, ctx: () => makeCtx(), onSearch: () => openSearch(), onAddSite: addSite });
+  main = shell.mount({ nav: NAV, ctx: () => makeCtx(), onSearch: () => search.openSearch(), onAddSite: addSite });
   if (!main) return;
 
   router.onChange((route, prev) => {
@@ -237,8 +237,11 @@ async function boot() {
   if (typeof record.start === "function") record.start(makeCtx);
 
   router.start(PAGES, { home: me.home(meta.get()) });
+  // Search's "Recently opened" list records every site the panel opens from boot on. start() is an extra
+  // export beyond spec 5.4, so a search module without it (such as 00-smoke's stub) still boots.
+  if (typeof search.start === "function") search.start();
   keys.start({
-    search: () => openSearch(),
+    search: () => search.openSearch(),
     addSite,
     escape: onEscape,
     queue: (dir) => bus.emit("queue", { dir }),

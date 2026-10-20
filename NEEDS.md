@@ -189,3 +189,18 @@ Changes F7 (Search + Add site) needs in files it does not own. Search and Add si
    website string, or `{ domain, name, clients, owner, type, stage, next_step, next_due, notes }` (`clients` as
    the stored text, such as `"Soro"` or `"Melograno - Amelia"`). For example a client page's "Add site" can call
    `openAddSite({ clients: "Soro" })`. `openSearch({ query })` opens Search with a query typed in.
+
+# Status after the F7 merge (crm-easy-site)
+
+Applied at the F7 merge:
+- F7 1: `js/app.js` calls Search's `start()` right after `router.start(PAGES, ...)` in `boot()`, so the "Recently
+  opened" list records sites opened before the first search. Changed from the suggested named import: app.js
+  imports `* as search` and calls `search.start()` only when it exists (like `record.start`), because `start` is
+  not in spec 5.4 and `00-smoke`'s shortcut test stubs `features/search.js` with `openSearch` alone; a named
+  import of `start` failed to link there and the app never booted (smoke test 7 timed out). `70-search-add`'s
+  recents test now opens a site by URL before its first search and expects it third.
+
+Still open:
+- F7 2 (F5 Clients, F3 Sites; optional): a page that adds a site for a context calls `openAddSite(prefill)`, for
+  example a client page's "Add site" with `openAddSite({ clients: "Soro" })`. Neither page is merged yet.
+- F2 1 (F8), F2 2 (F3), G1-B 6 (G3-1, release) and the F1 3 follow-up (panel owner) as listed after the F2 merge.

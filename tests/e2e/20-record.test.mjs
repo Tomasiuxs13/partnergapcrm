@@ -581,13 +581,15 @@ test("T32: a Lost site with terms shows and edits Deal terms and Placement; Show
   await page.click('.ui-pop button[type="submit"]');
   assert.deepEqual(await waitEdits(n0, 1), [upd(id, "tracking_id", r0.tracking_id, "EF-2002")]);
   await page.waitForSelector(P + '[data-psec="deal"]:has-text("EF-2002")');
-  // Edit the went-live date.
+  // Edit the went-live date. The fixture's date is 60 days before the fixture day, so on 20 Oct it is already
+  // 21 Aug and saving that would change nothing; pick the other day then.
+  const live = r0.live_date === "2026-08-21" ? { iso: "2026-08-20", label: "Thu 20 Aug" } : { iso: "2026-08-21", label: "Fri 21 Aug" };
   n0 = await lastEdit();
   await page.click(P + '[data-pplace="edit"]');
-  await page.fill('.ui-pop input[name="live_date"]', "2026-08-21");
+  await page.fill('.ui-pop input[name="live_date"]', live.iso);
   await page.click('.ui-pop button[type="submit"]');
-  assert.deepEqual(await waitEdits(n0, 1), [upd(id, "live_date", r0.live_date, "2026-08-21")]);
-  await page.waitForSelector(P + '[data-psec="place"]:has-text("Fri 21 Aug")');
+  assert.deepEqual(await waitEdits(n0, 1), [upd(id, "live_date", r0.live_date, live.iso)]);
+  await page.waitForSelector(P + '[data-psec="place"]:has-text("' + live.label + '")');
   await reset(page);
 
   // A Replied site without terms: hidden until Show all fields; then Add terms writes the golden rows.

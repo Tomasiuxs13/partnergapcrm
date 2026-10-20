@@ -421,6 +421,10 @@ test("Go to (at most 3): a client opens its page, a person opens Sites filtered 
 test("An empty search lists the sites opened most recently", async () => {
   const { page, close } = await openPage();
   try {
+    // A site opened before the first search counts too (app.js starts the list at boot).
+    await page.evaluate((id) => { location.hash = "#today?rec=" + id; }, ID.channel);
+    await panelOpen(page, ID.channel);
+    await closePanel(page);
     for (const text of ["PG-00008", "mr money"]) {
       await openSearch(page);
       await search(page, text);
@@ -432,7 +436,7 @@ test("An empty search lists the sites opened most recently", async () => {
     await openSearch(page);
     assert.match(await page.$eval(".se-ghead", (h) => h.innerText), /Recently opened/);
     const ids = (await rowsOf(page, "site")).map((r) => r.id);
-    assert.deepEqual(ids.slice(0, 2), [ID.money, ID.pg8]);
+    assert.deepEqual(ids.slice(0, 3), [ID.money, ID.pg8, ID.channel]);
     await page.keyboard.press("Enter");
     assert.match(await panelOpen(page, ID.money), new RegExp("rec=" + ID.money));
   } finally {
