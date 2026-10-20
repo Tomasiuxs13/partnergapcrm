@@ -152,16 +152,32 @@ export function baseSort({ quiet, preset } = {}) {
   return { key: "newest", dir: "desc" };
 }
 
-// The sort choices of the page's Sort menu.
+// Short names for every sort a Sites list can show (the Sort menu, or a column header's sort): each one says
+// what comes first, and fits the Sort menu on a phone.
+const SORT_WORDS = {
+  newest: ["Oldest first", "Newest first"],
+  site: ["Name (A–Z)", "Name (Z–A)"],
+  stage: ["Stage (New first)", "Stage (Lost first)"],
+  owner: ["Owner (A–Z)", "Owner (Z–A)"],
+  clients: ["Client (A–Z)", "Client (Z–A)"],
+  dr: ["Lowest DR first", "Highest DR first"],
+  traffic: ["Least traffic first", "Most traffic first"],
+  last_activity: ["Quietest first", "Recently active first"],
+  next: ["Next follow-up first", "Latest follow-up first"],
+};
+
+export function sortLabel(key, dir) {
+  const w = SORT_WORDS[key];
+  if (w) return w[dir === "desc" ? 1 : 0];
+  return String(key || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()) + (dir === "desc" ? " (Z–A)" : " (A–Z)");
+}
+
+// The sort choices of the page's Sort menu (spec 2.2.2: newest first, then Name, DR, Traffic, Last activity
+// and Follow-up date). "Quietest first" (longest without activity) is the order of "No reply in 14+ days".
 export const SORT_CHOICES = [
-  { key: "newest", dir: "desc", label: "Newest first" },
-  { key: "site", dir: "asc", label: "Name (A–Z)" },
-  { key: "dr", dir: "desc", label: "DR (highest first)" },
-  { key: "traffic", dir: "desc", label: "Traffic (highest first)" },
-  { key: "last_activity", dir: "desc", label: "Last activity (newest first)" },
-  { key: "last_activity", dir: "asc", label: "Longest without activity" },
-  { key: "next", dir: "asc", label: "Follow-up date (soonest first)" },
-];
+  ["newest", "desc"], ["site", "asc"], ["dr", "desc"], ["traffic", "desc"], ["last_activity", "desc"],
+  ["last_activity", "asc"], ["next", "asc"],
+].map(([key, dir]) => ({ key, dir, label: sortLabel(key, dir) }));
 
 /**
  * One pass over records that already passed the shared filters (search, client, type, country, DR, source,

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { derive } from "../../crm/dashboard/js/core/model.js";
 import {
   tabs, noReply, presets, cleanupCounts, siteView, isNoReply, inTab, ownerFilter, sortFor, baseSort, tabOf, hidesBig,
-  TABS, TAB_IDS, SORT_CHOICES, defaultDir,
+  TABS, TAB_IDS, SORT_CHOICES, defaultDir, sortLabel,
 } from "../../crm/dashboard/js/rules/sites.js";
 import { buildFixture, fixtureMeta, addDays } from "../fixtures/make-seed.mjs";
 
@@ -190,6 +190,23 @@ test("sortFor: the URL's sort wins, then the preset, then quiet, then newest fir
   assert.equal(defaultDir("traffic"), "desc");
   assert.ok(SORT_CHOICES.some((c) => c.key === "newest" && c.dir === "desc"));
   for (const k of ["site", "dr", "traffic", "last_activity", "next"]) assert.ok(SORT_CHOICES.some((c) => c.key === k), "sort by " + k);
+});
+
+test("sortLabel: every sort says what comes first, short enough for the phone Sort menu", () => {
+  assert.equal(sortLabel("newest", "desc"), "Newest first");
+  assert.equal(sortLabel("last_activity", "asc"), "Quietest first", "the No reply in 14+ days order");
+  assert.equal(sortLabel("last_activity", "desc"), "Recently active first", "the Recently active preset");
+  assert.equal(sortLabel("dr", "desc"), "Highest DR first");
+  assert.equal(sortLabel("owner", "desc"), "Owner (Z–A)", "a header sort that isn't in the menu");
+  assert.equal(sortLabel("country", "asc"), "Country (A–Z)", "an unknown key still gets words");
+  for (const key of ["newest", "site", "stage", "owner", "clients", "dr", "traffic", "last_activity", "next"]) {
+    for (const dir of ["asc", "desc"]) {
+      const l = sortLabel(key, dir);
+      assert.ok(l.length <= 22, key + " " + dir + ": " + l);
+      assert.ok(!/record|sync|outcome/i.test(l), l);
+    }
+  }
+  assert.equal(new Set(SORT_CHOICES.map((c) => c.label)).size, SORT_CHOICES.length, "menu labels are distinct");
 });
 
 // ---------- siteView ----------

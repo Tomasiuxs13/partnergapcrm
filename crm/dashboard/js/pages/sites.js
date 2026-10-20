@@ -19,10 +19,10 @@
 import { html, raw, render, on } from "../core/dom.js";
 import { num, plural } from "../core/format.js";
 import { clientManager, firstClientName } from "../core/outcomes.js";
-import { TABS, tabOf, tabInfo, siteView, sortFor, baseSort, defaultDir, SORT_CHOICES } from "../rules/sites.js";
+import { TABS, tabOf, tabInfo, siteView, ownerFilter, sortFor, baseSort, defaultDir, sortLabel, SORT_CHOICES } from "../rules/sites.js";
 import { createList } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
-import { CSV_SITES, resolveColumn } from "../ui/columns.js";
+import { CSV_SITES } from "../ui/columns.js";
 import { rowActions } from "../ui/inline-edit.js";
 import { EMPTY } from "../ui/empty.js";
 import { createBulkBar } from "../ui/bulk.js";
@@ -32,7 +32,9 @@ const FIELDS = {
   mine: ["q", "client", "type", "country", "drb", "source", "has_contact", "sugg", "big"],
   unowned: ["q", "client", "type", "country", "drb", "source", "has_contact", "sugg", "big"],
   waiting: ["q", "client", "owner", "type", "country", "drb", "source", "has_contact", "sugg"],
-  all: ["q", "client", "owner", "stage", "type", "country", "drb", "source", "has_contact", "sugg", "big"],
+  // On All, "Has a suggestion" is one of the quick presets right under the bar (same sugg=1 param), so the
+  // bar leaves it out: one control for one thing, and the bar fits on one line at 1440 px.
+  all: ["q", "client", "owner", "stage", "type", "country", "drb", "source", "has_contact", "big"],
 };
 // Params a tab link carries over.
 const KEEP = ["q", "client", "owner", "stage", "type", "country", "drb", "source", "has_contact", "sugg", "big"];
@@ -145,13 +147,6 @@ function sortParams(key, dir, base) {
   return { sort: key, dir: dir === defaultDir(key) ? null : dir };
 }
 
-function sortLabel(key, dir) {
-  const c = SORT_CHOICES.find((x) => x.key === key && x.dir === dir);
-  if (c) return c.label;
-  const col = resolveColumn(key);
-  return (col ? col.label : key) + (dir === "desc" ? " (Z–A, highest first)" : " (A–Z, lowest first)");
-}
-
 // The params that decide the sort: quiet only counts on Waiting for reply, the presets only on All.
 function effective(p) {
   const tab = tabOf(p.tab);
@@ -174,7 +169,9 @@ function claimCell(r, cx) {
   if (cx && cx.readOnly) return html``;
   if (has(r.owner) || !r.notContacted) return rowActions(r);
   const ctx = st ? st.ctx : null;
-  const m = ctx ? clientManager(r, ctx.meta) : null;
+  let m = ctx ? clientManager(r, ctx.meta) : null;
+  // When I manage the site's client, Claim already makes me the owner (with a follow-up): no second button.
+  if (m && ctx && String(m).toLowerCase() === String(me(ctx) || "").toLowerCase()) m = null;
   const name = r.label || r.domain || r.id;
   const client = m && ctx ? firstClientName(r, ctx.meta) : "";
   return html`<span class="si-claim"><button type="button" class="ui-btn is-sm" data-row-act="claim" data-id="${r.id}" aria-label="${"Claim " + name}" title="You become the owner, with a follow-up in 2 working days">Claim</button>${m ? html`<button type="button" class="ui-btn is-sm is-ghost" data-row-act="assign" data-id="${r.id}" aria-label="${"Assign " + name + " to " + m}" title="${m + " manages " + (client || "this client")}">Assign to ${m}</button>` : ""}</span>`;
@@ -234,17 +231,22 @@ const SORTED = {
   next: { id: "next", sort: (r) => dayKey(r.due) },
 };
 const col = (id, extra) => Object.assign({ id }, SORTED[id] || {}, extra || {});
+const ACT = { className: "si-c-act" }; // Last activity: a gap after the right-aligned numbers before it
 
 const ACTIONS_COL = { id: "actions", label: "Actions", labelHidden: true, priority: 1, className: "is-actions si-acts", cell: actsCell, csv: false };
 const CLAIM_COL = Object.assign({}, ACTIONS_COL, { cell: claimCell });
 // Columns per tab (spec 2.2.2), minus the one that says nothing there: Owner on Mine to contact and
 // Unowned (every row has the same owner), Traffic on Waiting for reply (they're already emailed). The CSV
 // always has the full set (CSV_SITES).
+// The si-c-* classes reach the header cell too (sites.css hides some columns on narrower screens).
+const OWNER = col("owner", { className: "si-c-owner" });
+const DR = col("dr", { className: "si-c-dr" });
+const NEXT = col("next", { className: "si-c-next" });
 const COLUMNS = {
-  mine: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), ACTIONS_COL],
-  unowned: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), CLAIM_COL],
-  waiting: [col("site"), "stage", col("owner"), col("clients"), "dr", col("last_activity"), col("next"), ACTIONS_COL],
-  all: [col("site"), "stage", col("owner"), col("clients"), "dr", col("traffic", { className: "si-c-traffic" }), col("last_activity"), col("next"), ACTIONS_COL],
+  mine: [col("site"), "stage", col("clients"), DR, "traffic", col("last_activity", ACT), NEXT, ACTIONS_COL],
+  unowned: [col("site"), "stage", col("clients"), DR, "traffic", col("last_activity", ACT), NEXT, CLAIM_COL],
+  waiting: [col("site"), "stage", OWNER, col("clients"), DR, col("last_activity", ACT), NEXT, ACTIONS_COL],
+  all: [col("site"), "stage", OWNER, col("clients"), DR, col("traffic", { className: "si-c-traffic" }), col("last_activity", ACT), NEXT, ACTIONS_COL],
 };
 const SORT_KEYS = ["newest", "last_activity"]; // columns.js SORTS: sortable without a column
 
@@ -283,7 +285,7 @@ function quietHtml(p, v) {
 }
 
 function presetsHtml(p) {
-  return html`<div class="si-chips" role="group" aria-label="Quick views">${PRESET_CHIPS.map((c) => {
+  return html`<div class="si-chips si-presets" role="group" aria-label="Quick views">${PRESET_CHIPS.map((c) => {
     const on = c.id === "sugg" ? p.sugg === "1" || p.preset === "sugg" : p.preset === c.id;
     return html`<button type="button" class="ui-chipbtn" data-si-preset="${c.id}" aria-pressed="${on ? "true" : "false"}" title="${c.title}">${c.label}</button>`;
   })}</div>`;
@@ -319,7 +321,7 @@ function drawTools(ctx, p, v) {
   const f = rememberFocus(el);
   const left = tab === "waiting" ? quietHtml(p, v) : tab === "all" ? presetsHtml(p) : "";
   const n = v && loaded(ctx) ? v.rows.length : null;
-  render(el, html`${left}<div class="si-tools-r"><p class="si-count" data-si-count>${n == null ? "" : sites(n)}</p>${sortHtml(p)}<button type="button" class="ui-btn is-sm is-ghost si-csv" data-si-csv data-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></div>`);
+  render(el, html`${left}<div class="si-tools-r"><p class="si-count" data-si-count>${n == null ? "" : sites(n)}</p>${sortHtml(p)}<button type="button" class="ui-btn is-sm is-ghost si-csv" data-si-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></div>`);
   restoreFocus(el, f);
 }
 
@@ -490,6 +492,8 @@ function draw(what = "all") {
     st.key = key;
   }
   drawTabs(ctx, p, st.view);
+  const listEl = st.root.querySelector("[data-si-list]");
+  if (listEl) listEl.toggleAttribute("data-one-owner", (tab === "waiting" || tab === "all") && ownerFilter(tab, p.owner) != null);
   if (!switched && st.bar) st.bar.update(barParams(tab, p));
   drawTools(ctx, p, st.view);
   if (switched || !st.list) {
@@ -583,7 +587,8 @@ export default {
     if (st) this.unmount();
     st = fresh(root, ctx);
     const p = params(ctx);
-    render(root, html`<div class="si-page"><header class="si-head"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${tabInfo(p.tab).desc}</p></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
+    // Phones show Export CSV in the header (the tool row below keeps the whole width for Sort).
+    render(root, html`<div class="si-page"><header class="si-head"><div class="si-head-text"><h1 tabindex="-1">Sites</h1><p class="si-sub" data-si-sub>${tabInfo(p.tab).desc}</p></div><button type="button" class="ui-btn is-sm is-ghost si-csv si-csv-head" data-si-csv><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button></header>${tabsHtml(ctx, p)}<div class="si-filters" data-si-filters></div><div class="si-tools" data-si-tools></div><div class="si-list" data-si-list></div></div>`);
     bind();
     draw("all");
     if (!st.announced) ctx.announce("Sites");

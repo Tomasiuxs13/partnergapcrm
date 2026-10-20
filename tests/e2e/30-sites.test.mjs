@@ -421,7 +421,10 @@ test("tabs: B.4 counts and rows for Kamile; the nav link opens Mine to contact; 
     await page.click('[data-si-tab="all"]');
     await page.waitForFunction(() => /tab=all/.test(location.hash));
     await ready(page);
-    assert.deepEqual(await fieldButtons(page), ["client", "owner", "stage", "type", "country", "drb", "source", "has_contact", "sugg", "big"]);
+    // "Has a suggestion" is a quick preset on All, so the bar doesn't repeat it; the bar fits on one line.
+    assert.deepEqual(await fieldButtons(page), ["client", "owner", "stage", "type", "country", "drb", "source", "has_contact", "big"]);
+    const rowTops = await page.$$eval(".si-filters .ui-frow > *:not([hidden])", (els) => els.filter((e) => e.getClientRects().length).map((e) => Math.round(e.getBoundingClientRect().top)));
+    assert.equal(new Set(rowTops).size, 1, "search and filter buttons on one line at 1440");
     await noHorizontalScroll(page, "All 1440");
     await shot(page, "sites-all-kamile-1440");
     assert.deepEqual(watch.pageErrors, []);
@@ -477,16 +480,23 @@ test("filters: Melograno (all) and its products, Has suggestion, search, Sort; U
       assert.equal(await current(page), "all", "Clear filters keeps the tab");
     }
 
-    // Has suggestion (filter button).
+    // Has suggestion: a filter button on Mine to contact; on All the "Has a suggestion" preset shows it.
     if (HAS_SUGG) {
       const sugg = visible.filter((r) => Number(r.sugg) > 0);
-      assert.ok(sugg.length > 0);
+      const mineSugg = sugg.filter((r) => EXPECT.mine.includes(r.id));
+      assert.ok(sugg.length > mineSugg.length && mineSugg.length > 0);
+      await go(page, "#sites?tab=mine");
       await page.click('.si-filters [data-ffield="sugg"]');
-      await waitCount(page, sugg.length, "Has suggestion");
+      await waitCount(page, mineSugg.length, "Has suggestion on Mine to contact");
       assert.equal((await params(page)).sugg, "1");
-      assert.equal(await page.getAttribute('[data-si-preset="sugg"]', "aria-pressed"), "true", "the preset chip shows it too");
-      await page.click('.si-filters [data-fremove="sugg"]');
+      assert.match(await page.textContent(".si-filters .ui-chiprow"), /Has suggestion/);
+      await page.click('[data-si-tab="all"]');
+      await page.waitForFunction(() => /tab=all/.test(location.hash));
+      await waitCount(page, sugg.length, "Has suggestion on All");
+      assert.equal(await page.getAttribute('[data-si-preset="sugg"]', "aria-pressed"), "true", "the tab link keeps it; the preset shows it");
+      await page.click('[data-si-preset="sugg"]');
       await waitCount(page, EXPECT.all);
+      assert.equal((await params(page)).sugg, undefined);
     }
 
     // Search (debounced, replaces the history entry).
@@ -537,9 +547,15 @@ test("presets on All: Recently active, Replied no date, Has a suggestion", async
     await page.waitForFunction(() => /preset=activity/.test(location.hash));
     assert.equal(await page.getAttribute('[data-si-preset="activity"]', "aria-pressed"), "true");
     assert.equal(await page.inputValue(".si-tools [data-si-sort]"), "last_activity:desc");
-    const days = visible.map((r) => r.lastActivity).filter(Boolean).sort().reverse();
-    const shown = await page.$$eval(".si-list tbody tr", (trs) => trs.slice(0, 5).map((t) => t.getAttribute("data-key")));
-    for (const id of shown) assert.equal(byId.get(id).lastActivity, days[shown.indexOf(id)], "newest activity first");
+    // Checked against the page's own store: an earlier test file on the same server may have edited sites.
+    const order = await page.evaluate(async () => {
+      const store = await import("/js/core/store.js");
+      const all = store.all().filter((r) => !r.isPlatform);
+      const days = all.map((r) => r.lastActivity).filter(Boolean).sort().reverse().slice(0, 5);
+      const shown = Array.from(document.querySelectorAll(".si-list tbody tr")).slice(0, 5).map((t) => store.get(t.getAttribute("data-key")).lastActivity);
+      return { days, shown };
+    });
+    assert.deepEqual(order.shown, order.days, "newest activity first");
     await shot(page, "sites-preset-activity-1440");
 
     await page.click('[data-si-preset="replied_nodate"]');
@@ -555,7 +571,11 @@ test("presets on All: Recently active, Replied no date, Has a suggestion", async
     await page.click('[data-si-preset="sugg"]');
     await page.waitForFunction(() => /sugg=1/.test(location.hash));
     await waitCount(page, visible.filter((r) => Number(r.sugg) > 0).length, "Has a suggestion");
-    assert.equal(await page.getAttribute('.si-filters [data-ffield="sugg"]', "aria-pressed"), "true");
+    assert.equal(await page.locator('.si-filters [data-ffield="sugg"]').count(), 0, "no second Has suggestion control on All");
+    await page.click('[data-si-tab="unowned"]');
+    await page.waitForFunction(() => /tab=unowned/.test(location.hash));
+    await ready(page);
+    assert.equal(await page.getAttribute('.si-filters [data-ffield="sugg"]', "aria-pressed"), "true", "the filter on another tab");
   } finally {
     await close();
   }
@@ -659,6 +679,12 @@ test("phone 390: 2 x 2 tabs, Filters sheet, one Actions menu for bulk, Claim on 
       await noHorizontalScroll(page, tab + " 390");
       await shot(page, "sites-" + tab + "-kamile-390");
     }
+    // Export CSV sits in the header on phones, so Sort gets the whole row.
+    assert.ok(await page.locator(".si-tools [data-si-csv]").isHidden());
+    const csv = await exportCsv(page, ".si-head [data-si-csv]");
+    assert.equal(csv.rows.length - 1, await count(page), "phone Export CSV has the tab's rows");
+    const sortBox = await page.locator(".si-tools [data-si-sort]").boundingBox();
+    assert.ok(sortBox.width > 250, "Sort has room for its longest label");
     // Filters in a bottom sheet.
     assert.ok(await page.locator(".si-filters .ui-fsheet-btn").isVisible());
     await page.click(".si-filters .ui-fsheet-btn");
@@ -684,6 +710,28 @@ test("phone 390: 2 x 2 tabs, Filters sheet, one Actions menu for bulk, Claim on 
     await shot(page, "sites-unowned-bulk-390");
   } finally {
     await close();
+  }
+});
+
+test("narrower desktops (1024, 1280, 1366): no sideways scroll on any tab; one owner's list drops the Owner column", async () => {
+  for (const viewport of [{ width: 1024, height: 768 }, { width: 1280, height: 800 }, { width: 1366, height: 768 }]) {
+    const { page, close } = await open({ hash: "#sites?tab=mine", viewport });
+    try {
+      for (const hash of ["#sites?tab=mine", "#sites?tab=unowned", "#sites?tab=waiting", "#sites?tab=waiting&owner=all", "#sites?tab=all"]) {
+        await go(page, hash);
+        await noHorizontalScroll(page, hash + " " + viewport.width);
+        const ownerCol = await page.locator(".si-list thead th.si-c-owner").count() ? await page.isVisible(".si-list thead th.si-c-owner") : false;
+        if (/tab=waiting$/.test(hash)) assert.equal(ownerCol, false, "Waiting for reply shows my sites: no Owner column");
+        if (/owner=all|tab=all/.test(hash)) assert.equal(ownerCol, true, hash + ": everyone's sites show the Owner column");
+        // Every row can still log and follow up (⋯ when the buttons don't fit).
+        const acts = await page.$eval(".si-list tbody tr", (tr) => Array.from(tr.querySelectorAll("[data-row-act]"))
+          .filter((b) => b.getClientRects().length).map((b) => b.getAttribute("data-row-act")));
+        assert.ok(acts.some((a) => ["log", "more", "claim"].includes(a)), hash + " " + viewport.width + ": a row action is visible (" + acts + ")");
+      }
+      if (viewport.width === 1024) await shot(page, "sites-all-kamile-1024");
+    } finally {
+      await close();
+    }
   }
 });
 
@@ -735,7 +783,8 @@ test("7,500 sites: tab switch, filters, search and sort redraw in well under 100
   try {
     await page.waitForFunction(() => Number(document.querySelector('[data-si-tab="all"] [data-si-n]').textContent.replace(/[^\d]/g, "")) > 7000,
       null, { timeout: 30000 });
-    // Two passes over the same steps: the first warms the engine up, the second is measured.
+    // Four passes over the same steps: the first warms the engine up; each step's time is the median of
+    // the other three, so one garbage collection pause doesn't decide the result.
     const times = await page.evaluate(async () => {
       const router = await import("/js/core/router.js");
       const steps = [
@@ -744,22 +793,23 @@ test("7,500 sites: tab switch, filters, search and sort redraw in well under 100
         { stage: "Contacted" }, { stage: null }, { sort: "dr" }, { sort: "site" }, { sort: null }, { preset: "activity" },
         { preset: null }, { big: "1" }, { big: null }, { tab: "mine" },
       ];
-      let out = [];
-      for (let pass = 0; pass < 2; pass++) {
-        out = [];
-        for (const s of steps) {
+      const runs = steps.map(() => []);
+      for (let pass = 0; pass < 4; pass++) {
+        for (let i = 0; i < steps.length; i++) {
           const t0 = performance.now();
-          router.setParams(s);
+          router.setParams(steps[i]);
           document.body.getBoundingClientRect(); // style and layout of the new rows
-          const ms = performance.now() - t0;
-          out.push({ step: JSON.stringify(s), ms: Math.round(ms * 10) / 10, count: document.querySelector(".si-count").textContent });
+          if (pass > 0) runs[i].push(performance.now() - t0);
           await new Promise((r) => setTimeout(r, 20));
         }
       }
-      return out;
+      return steps.map((s, i) => {
+        const ms = runs[i].sort((a, b) => a - b)[1];
+        return { step: JSON.stringify(s), ms: Math.round(ms * 10) / 10, max: Math.round(runs[i][2] * 10) / 10 };
+      });
     });
     const worst = times.reduce((m, t) => (t.ms > m.ms ? t : m), times[0]);
-    console.log("# 7,500 sites, ms per step: " + times.map((t) => t.step + " " + t.ms).join(", "));
+    console.log("# 7,500 sites, ms per step (median of 3, max): " + times.map((t) => t.step + " " + t.ms + " (" + t.max + ")").join(", "));
     assert.ok(worst.ms < 100, "slowest step " + worst.step + " took " + worst.ms + " ms");
     const sorted = times.map((t) => t.ms).sort((a, b) => a - b);
     assert.ok(sorted[Math.floor(sorted.length / 2)] < 50, "median under 50 ms");
@@ -773,13 +823,21 @@ test("7,500 sites: tab switch, filters, search and sort redraw in well under 100
 test("Unowned: Claim sets me and a follow-up in 2 working days; Assign to client manager sets the manager", async () => {
   const claimId = EXPECT.unowned.find((id) => !has(byId.get(id).next_step) && !(byId.get(id).ck || []).length);
   const managers = new Map((meta.clients || []).map((c) => [c.k, (c.managers || [])[0]]));
-  const assignRec = EXPECT.unowned.map((id) => byId.get(id)).find((r) => r.clientParts && r.clientParts.length && managers.get(r.clientParts[0].k));
+  const managerOf = (r) => (r.clientParts && r.clientParts.length ? managers.get(r.clientParts[0].k) : null);
+  const assignRec = EXPECT.unowned.map((id) => byId.get(id)).find((r) => managerOf(r) && managerOf(r) !== "Kamile");
+  const mineToManage = EXPECT.unowned.map((id) => byId.get(id)).find((r) => managerOf(r) === "Kamile");
   assert.ok(claimId && assignRec, "fixture rows for Claim and Assign");
   const manager = managers.get(assignRec.clientParts[0].k);
   await remember([claimId, assignRec.id]);
   const { page, close } = await open({ hash: "#sites?tab=unowned" });
   try {
     const before = await tabCounts(page);
+    if (mineToManage) {
+      // Kamile manages this site's client: Claim already makes her the owner, so there is no "Assign to Kamile".
+      const row = page.locator('.si-list tr[data-key="' + mineToManage.id + '"]');
+      assert.equal(await row.locator('[data-row-act="claim"]').count(), 1);
+      assert.equal(await row.locator('[data-row-act="assign"]').count(), 0);
+    }
     await page.click('.si-list tr[data-key="' + claimId + '"] [data-row-act="claim"]');
     await toastWith(page, "Claimed");
     const row = await waitFor(async () => { const r = await readRow(claimId); return r.owner === "Kamile" ? r : null; }, "claim saved");

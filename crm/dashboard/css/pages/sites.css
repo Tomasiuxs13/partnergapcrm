@@ -3,7 +3,9 @@
    list (ui/list.js) and its bulk bar (ui/bulk.js). Phone (< 640 px): tabs in a 2 x 2 grid, filters in a
    sheet, bulk actions in one "Actions" menu, Claim on its own line in the card. */
 
-.si-head { margin-bottom: var(--sp-3); }
+.si-head { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.si-head-text { flex: 1 1 auto; min-width: 0; }
+.si-head .si-csv-head { display: none; }
 .page .si-head h1 { margin: 0; }
 .si-sub { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-14); }
 
@@ -82,29 +84,55 @@
 
 .si-list .ui-table th, .si-list .ui-table td { padding-left: 8px; padding-right: 8px; }
 .si-list .ui-table td.is-c-next { min-width: 110px; }
-/* When the list is narrower than the whole table (screens up to 1580 px with the sidebar), the columns
-   give way instead of the table scrolling sideways under the sticky actions column:
-   - the domain under the site name and long client names end in "…" instead of widening their column;
-   - on Waiting for reply and All, Follow up moves into ⋯ (Log what happened ▾ stays) and All drops
-     Traffic (still in the CSV and the Sort menu);
-   - below 1440 px, Log what happened moves into ⋯ too on Waiting for reply and All (⋯ offers both, and
-     the row still opens the site); below 1366 px, Follow up moves into ⋯ on every tab.
+/* Last activity is left-aligned text right after the right-aligned DR and Traffic numbers: keep them apart. */
+@media (min-width: 640px) {
+  .si-list .ui-table .si-c-act { padding-left: var(--sp-4); }
+}
+/* A list of one owner's sites (Waiting for reply's default "Me", an Owner filter or "No owner") says the same
+   name on every row, so it drops the Owner column (the CSV keeps it). */
+.si-list[data-one-owner] .ui-table .si-c-owner { display: none; }
+
+/* When the list is narrower than the whole table, columns give way instead of the table scrolling sideways
+   under the sticky actions column (⋯ always offers Log what happened and Follow up, and the row still opens
+   the site; everything hidden stays in the CSV and the Sort menu):
+   - below 1580 px: the domain under the site name and long client names end in "…"; All drops Traffic;
+     on everyone's Waiting for reply and All, Follow up moves into ⋯;
+   - below 1440 px: on those two, Log what happened moves into ⋯ too;
+   - below 1366 px: Follow up moves into ⋯ on every tab;
+   - below 1280 px: only ⋯ (and Claim) stays; Mine to contact, Unowned and All drop Last activity (a new
+     site rarely has any), Unowned drops Next step, Waiting for reply drops DR, and the owner pill loses its
+     initials and "(past owner)";
+   - below 1100 px (where the kit already hides Traffic and Last activity): All drops DR.
    Media queries, not container queries: they are cheaper to lay out with 7,500 sites. */
 @media (min-width: 640px) and (max-width: 1579.98px) {
   .si-list .ui-table .ui-site { display: flex; }
   .si-list .ui-table .ui-site .ui-sub { contain: inline-size; }
   .si-list .ui-table .ui-tag { max-width: 128px; }
-  .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-acts > [data-row-act="follow"] { display: none; }
-  .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-more { display: inline-flex; }
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-acts > [data-row-act="follow"] { display: none; }
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-more { display: inline-flex; }
   .si-list[data-tab="all"] .ui-table .si-c-traffic { display: none; }
   .si-list .ui-table th, .si-list .ui-table td { padding-left: 6px; padding-right: 6px; }
 }
 @media (min-width: 640px) and (max-width: 1439.98px) {
-  .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-acts > [data-row-act="log"] { display: none; }
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-acts > [data-row-act="log"] { display: none; }
 }
 @media (min-width: 640px) and (max-width: 1365.98px) {
   .si-list .ui-row-acts > [data-row-act="follow"] { display: none; }
   .si-list .ui-row-more { display: inline-flex; }
+}
+@media (min-width: 640px) and (max-width: 1279.98px) {
+  .si-list .ui-table .is-site { min-width: 160px; }
+  .si-list .ui-row-acts > [data-row-act="log"] { display: none; }
+  .si-list:is([data-tab="mine"], [data-tab="unowned"], [data-tab="all"]) .ui-table .si-c-act { display: none; }
+  .si-list[data-tab="unowned"] .ui-table .is-c-next,
+  .si-list[data-tab="unowned"] .ui-table .si-c-next { display: none; }
+  .si-list[data-tab="waiting"] .ui-table .si-c-dr { display: none; }
+  .si-list .ui-table .ui-owner .ui-faint { display: none; }
+  .si-list .ui-table .ui-owner .ui-avatar { display: none; }
+  .si-list .ui-table .ui-owner { padding-left: 10px; }
+}
+@media (min-width: 640px) and (max-width: 1099.98px) {
+  .si-list[data-tab="all"] .ui-table .si-c-dr { display: none; }
 }
 
 .si-claim { display: inline-flex; align-items: center; gap: 4px; }
@@ -165,8 +193,20 @@
   .si-count { display: none; } /* the open tab shows the same number */
   .si-sort { flex: 1 1 auto; min-width: 0; }
   .si-sort select { flex: 1 1 auto; width: 100%; min-width: 0; }
-  .si-csv { flex: none; }
+  .si-tools .si-csv { display: none; }
+  .si-head .si-csv-head { display: inline-flex; flex: none; margin-top: 2px; }
   .si-tools > .si-chips { flex-basis: 100%; }
+  /* The quick presets stay on one line and scroll sideways instead of taking two lines (as Today's chips). */
+  .si-tools > .si-presets {
+    flex: 0 0 calc(100% + 2 * var(--sp-3)); /* to the screen edges: the phone gutter is --sp-3 (layout.css) */
+    flex-wrap: nowrap;
+    margin: 0 calc(-1 * var(--sp-3));
+    padding: 0 var(--sp-3) 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .si-presets::-webkit-scrollbar { display: none; }
+  .si-presets > .ui-chipbtn { flex: none; }
   .si-hint { flex-basis: 100%; }
   .si-bulk-acts { display: none; }
   .si-bulk-menu { display: inline-flex; }
