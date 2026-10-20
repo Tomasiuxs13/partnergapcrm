@@ -272,3 +272,22 @@ Still open:
 - F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
+
+# NEEDS (F6)
+
+1. **`js/pages/sites.js` (F3): a `flag=<id>` filter on the All tab, so every Team overview number can open Sites.**
+   Sites can't show some Team overview numbers exactly: Prospects of someone else (New and Researching), Replies
+   waiting, Overdue now, Quiet deals now, Unanswered replies (3+ days), Deals going quiet, and the clean-up counts
+   "Replied, last touch over 30 days", "No owner" (owner=none also lists closed sites), "Client name variants" and
+   "Type not set" (type=none leaves out "Uncategorized"). Meanwhile those numbers open the Team overview's own list
+   (`#team?show=<flag>&owner=<name|none>`, same columns, CSV and queue mode), and every count still matches
+   (`tests/e2e/60-team.test.mjs`). Suggested change: on All, read `flag` and keep the rows where
+   `FLAGS[flag].test(r, {meta, today})` from `js/rules/team.js` (read-only import, no circle: rules/team.js imports
+   rules/sites.js, pages/sites.js imports both), shown as a removable chip "FLAGS[flag].label"; then set
+   `SITES_FLAGS` in `js/rules/team.js` to the flags Sites reads and `target()` links there (`{tab: "all", flag,
+   owner, big: "1"}`). `tests/unit/rules-team.test.mjs` already checks every target against `siteView` and
+   accepts `flag` once it is in `SITES_FLAGS`; Sites' own view would need the same `flag` test.
+2. **`js/ui/charts.js` (G1-C), optional: keyboard focus on the bars.** The visible bar labels are links with
+   `tabindex="-1"`, and the hidden table's links take the Tab stops, so a keyboard user tabs onto links they can't
+   see (no visible focus ring). Suggested change: keep the visible label links in the Tab order and give the
+   hidden table's links `tabindex="-1"` (screen readers still read them as table cells).
