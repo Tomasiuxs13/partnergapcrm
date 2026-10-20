@@ -9,8 +9,15 @@
 //
 //   node crm/scripts/build_snapshot.mjs --rows partners.json [--meta meta.json] [--programs clients.json]
 //        [--activity team-activity.json] [--as-of 2026-10-21T19:00] [--out snapshot.html] [--redact-emails]
+//   node crm/scripts/build_snapshot.mjs --rows accounts.json [--contacts-sheet contacts.json]
+//        [--activity-sheet activity-log.json] [...the same options]
 //
-//   --rows       a GET /api/partners?v=2 body ({v:2, cols, rows}). Required.
+//   --rows       a GET /api/partners?v=2 body ({v:2, cols, rows}), or a Google Sheets dump of Accounts!A1:AC
+//                ({range, values}; told apart by shape), turned into the same v2 rows the site serves after
+//                build_d1_import.py loaded that sheet (scripts/snapshot/sheet.mjs). Required.
+//   --contacts-sheet  with a Sheets dump: Contacts!A1:Q, for each site's contact count, last email, reply and
+//                the label of a nameless creator. Its emails are read, never embedded.
+//   --activity-sheet  with a Sheets dump: 'Activity log'!A1:H, for each site's last activity date.
 //   --meta       a GET /api/meta body. Default: the constants of lib/meta.js (no kv_meta overrides).
 //   --programs   a GET /api/clients body (client programs), shown on client pages.
 //   --activity   a GET /api/team-activity?days=7 body ("Changes this week" and "Last active" on Team overview).
@@ -27,6 +34,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { bundle, scan } from "./snapshot/bundle.mjs";
+import { isSheetDump, sheetRows, SheetError } from "./snapshot/sheet.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "../..");
@@ -62,7 +70,9 @@ function readJson(file, what) {
 
 function checkRows(body) {
   if (Array.isArray(body)) fail("--rows: this is the old list (GET /api/partners). Use the GET /api/partners?v=2 body.");
-  if (!body || !Array.isArray(body.cols) || !Array.isArray(body.rows)) fail("--rows: expected a GET /api/partners?v=2 body ({v:2, cols, rows}).");
+  if (!body || !Array.isArray(body.cols) || !Array.isArray(body.rows)) {
+    fail("--rows: expected a GET /api/partners?v=2 body ({v:2, cols, rows}) or a Sheets dump of Accounts!A1:AC ({range, values}).");
+  }
   if (!body.cols.includes("id")) fail("--rows: the cols list has no \"id\".");
   body.rows.forEach((r, i) => {
     if (!Array.isArray(r) || r.length !== body.cols.length) fail("--rows: row " + i + " doesn't have " + body.cols.length + " values.");
@@ -229,12 +239,33 @@ const escHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 
 // ---------- build ----------
 
+// The rows to embed: a v2 body as it is, or a Sheets dump of Accounts (with the optional Contacts and
+// Activity log dumps) turned into the same v2 rows.
+function siteRows(rows, contactsSheet, activitySheet) {
+  if (!isSheetDump(rows)) {
+    if (contactsSheet != null || activitySheet != null) {
+      fail("--contacts-sheet and --activity-sheet go with a Sheets dump of Accounts!A1:AC in --rows.");
+    }
+    return { ...checkRows(rows), source: "v2", warnings: [] };
+  }
+  try {
+    const s = sheetRows({ accounts: rows, contacts: contactsSheet, activity: activitySheet });
+    return { cols: s.cols, rows: s.rows, source: "sheet", warnings: s.warnings, counts: s.counts };
+  } catch (e) {
+    if (e instanceof SheetError) fail(e.message);
+    throw e;
+  }
+}
+
 /**
  * Builds the snapshot from parsed bodies. Returns {html, stats}. Throws SnapshotError when an input is
- * wrong or an email would be embedded.
+ * wrong or an email would be embedded. rows: a v2 body or a Sheets dump of Accounts; contactsSheet and
+ * activitySheet: the Contacts and Activity log dumps that may go with the latter.
  */
-export async function buildSnapshot({ rows, meta, programs = null, activity = null, asOf, redact = false, now = new Date() } = {}) {
-  const list = checkRows(rows);
+export async function buildSnapshot({
+  rows, contactsSheet = null, activitySheet = null, meta, programs = null, activity = null, asOf, redact = false, now = new Date(),
+} = {}) {
+  const list = siteRows(rows, contactsSheet, activitySheet);
   const m = snapshotMeta(checkMeta(meta || (await defaultMeta())));
   if (programs != null && !Array.isArray(programs)) fail("--programs: expected a GET /api/clients body (a list).");
   if (activity != null && (typeof activity !== "object" || Array.isArray(activity) || !activity.by || typeof activity.by !== "object")) {
@@ -293,13 +324,19 @@ ${safeScript(js.code, "The bundle")}
   }
   return {
     html,
-    stats: { rows: list.rows.length, bytes: Buffer.byteLength(html), modules: js.modules, redacted, asOf: data.asOf },
+    stats: {
+      rows: list.rows.length, bytes: Buffer.byteLength(html), modules: js.modules, redacted, asOf: data.asOf,
+      source: list.source, sheet: list.counts || null, warnings: list.warnings,
+    },
   };
 }
 
 // ---------- command line ----------
 
-const FLAGS = { "--rows": "rows", "--meta": "meta", "--programs": "programs", "--activity": "activity", "--as-of": "asOf", "--out": "out" };
+const FLAGS = {
+  "--rows": "rows", "--contacts-sheet": "contactsSheet", "--activity-sheet": "activitySheet", "--meta": "meta", "--programs": "programs",
+  "--activity": "activity", "--as-of": "asOf", "--out": "out",
+};
 
 export function parseArgs(argv) {
   const o = { redact: false };
@@ -318,8 +355,10 @@ export function parseArgs(argv) {
   return o;
 }
 
-const HELP = `Usage: node crm/scripts/build_snapshot.mjs --rows <partners-v2.json> [options]
-  --rows <file>       GET /api/partners?v=2 body (required)
+const HELP = `Usage: node crm/scripts/build_snapshot.mjs --rows <partners-v2.json | accounts.json> [options]
+  --rows <file>       GET /api/partners?v=2 body, or a Sheets dump of Accounts!A1:AC ({range, values}) (required)
+  --contacts-sheet <file>   with a Sheets dump: Contacts!A1:Q (contact counts, replies; emails never embedded)
+  --activity-sheet <file>   with a Sheets dump: 'Activity log'!A1:H (last activity dates)
   --meta <file>       GET /api/meta body (default: lib/meta.js constants)
   --programs <file>   GET /api/clients body
   --activity <file>   GET /api/team-activity?days=7 body
@@ -337,6 +376,8 @@ async function main(argv) {
   if (!o.rows) fail("--rows is required. Run with --help.");
   const built = await buildSnapshot({
     rows: readJson(o.rows, "--rows"),
+    contactsSheet: o.contactsSheet ? readJson(o.contactsSheet, "--contacts-sheet") : null,
+    activitySheet: o.activitySheet ? readJson(o.activitySheet, "--activity-sheet") : null,
     meta: o.meta ? readJson(o.meta, "--meta") : null,
     programs: o.programs ? readJson(o.programs, "--programs") : null,
     activity: o.activity ? readJson(o.activity, "--activity") : null,
@@ -349,9 +390,14 @@ async function main(argv) {
   fs.writeFileSync(tmp, built.html);
   fs.renameSync(tmp, out);
   const s = built.stats;
+  for (const w of s.warnings) console.warn("  Note: " + w);
   console.log("Snapshot written: " + out);
   console.log("  " + s.rows + " sites, " + (s.bytes / 1024).toFixed(0) + " KB, " + s.modules + " modules, data from " + s.asOf +
     (s.redacted ? ", " + s.redacted + " email " + (s.redacted === 1 ? "address" : "addresses") + " hidden" : ""));
+  if (s.sheet) {
+    console.log("  from the Sheets dump: Accounts" + (o.contactsSheet ? ", Contacts (" + s.sheet.contacts + ")" : " (no Contacts dump: 0 contacts each)") +
+      (o.activitySheet ? ", Activity log (" + s.sheet.activity + ")" : " (no Activity log dump: no activity dates)"));
+  }
   if (s.bytes > 15 * 1024 * 1024) console.warn("  Warning: over 15 MB; an artifact page may be at most 16 MB.");
   return 0;
 }

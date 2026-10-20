@@ -1,0 +1,22 @@
+{
+  "range": "Accounts!A1:AC1000",
+  "values": [
+    ["Account ID","Domain","Brand / site name","Affiliate type","Vertical","Source","Seed keyword","Domain rating","Organic traffic","Owner","Claimed by","Claimed date","Stage","Everflow partner ID","Apollo account ID","Brands promoted","Last touch","Next step","Next step due","Notes","Clients pitched","Top traffic country","Deal model","Flat fee (USD)","Commission %","Deal value (USD)","Placement URL","Go-live date","Tracking ID"],
+    ["PG-00001","alpha-reviews.example.test","Alpha Reviews","Review","","Ahrefs","best vpn","45","12,345","Kamile","","","Contacted","","","","2026-10-12","Follow up on the fee","2026-10-23","","Ultahost","US"],
+    ["PG-00002","beta-coupons.example.test","","Coupon / Deals","","Manual","","45.9"," 1,234 ","  Jonas ","","","Replied","","","","46301","Write to ana.berg@beta-coupons.example.test about terms","46315.75","Old address: sales@beta-coupons.example.test, call first","Weglot, Ultahost","DE"],
+    ["PG-00003","contact@gamma-mail.example.test","Gamma Media","Media / Publisher","","Gmail outreach","","-3.7","12.5K","Monica","","","Negotiating","","","","10/14/2026","Waiting on client: Agree terms","2026-10-19","","Termly","","Flat fee","$1,200.50","12.5%","0.125"],
+    ["PG-00004","video.example.test/@maker-four","","Influencer / Social","","Manual","","","","Eivyda","","","New"],
+    ["PG-00005","","hello@nameless-five.example.test","Influencer / Social","","","","","","Kamile","","","Researching","","","","","Find a contact"],
+    ["PG-00006","","","Influencer / Social","","","","","","Kamile","","","New"],
+    ["PG-00007","","","","","","","","","Vik","","","Contacted"],
+    ["PG-00008","","","","","","","","","Denisse","","","Lost"],
+    ["PG-00009","delta-hosting.example.test","Delta Hosting","Web Hosting","","Referral","","1_000","1e3","Mantvydas","","","Active","","","","2026-09-30","","","","Melograno - Trafft","","Commission","0.375","2.675","1.005","https://delta-hosting.example.test/review","46310","TRK-9"],
+    ["PG-00010","epsilon.example.test","Epsilon","","","","","nan","","","","","New","","","","","","","","","","","abc","-0.001","  $ 2,000 "],
+    ["","no-id.example.test","Skipped: no Account ID","","","","","","","","","","New"],
+    ["PG-00011","zeta.example.test","Zeta","","","","","","","Egle","","","Replied","","","","2026-10-16"],
+    ["PG-00012","eta-short.example.test"],
+    ["PG-00013","theta.example.test","Théta Blog","Review",null,"Ahrefs","","38","980","Kamile","","","Contacted","","","","2026-10-02","Mail jürgen@münchen-theta.example.test today","4630"],
+    ["PG-00100","iota.example.test","Iota","","","","","","","Jonas","","","Replied","","","","2026-10-01"],
+    [" PG-00099 "," kappa.example.test ","Kappa","","","","","","","Jonas","","","Contacted"]
+  ]
+}
