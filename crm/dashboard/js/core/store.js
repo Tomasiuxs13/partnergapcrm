@@ -15,6 +15,7 @@ import * as meta from "./meta.js";
 import * as bus from "./bus.js";
 import { derive, fromV2Row, V2_COLS, DERIVED } from "./model.js";
 import { todayIso, lastRunAt } from "./format.js";
+import { nextTask } from "./dom.js";
 
 const raws = new Map(); // id -> raw v2 object
 const recs = new Map(); // id -> derived Record
@@ -96,6 +97,7 @@ export const status = {
 };
 
 const hasWindow = () => typeof window !== "undefined";
+
 const snapshot = () => (hasWindow() && window.__SNAPSHOT__) || null;
 
 function emitStatus() {
@@ -124,31 +126,101 @@ function rederive(c) {
 
 const same = (a, b) => String(a == null ? "" : a) === String(b == null ? "" : b);
 
-function changed(a, b) {
-  for (const k of cols) if (!same(a[k], b[k])) return true;
+function changed(a, b, keys = cols) {
+  for (const k of keys) if (!same(a[k], b[k])) return true;
   return false;
 }
 
-function setAll(objs, reason) {
+// The stored raw row and o hold exactly the same keys and values (so the stored record can stay).
+function identical(old, o) {
+  const keys = Object.keys(old);
+  if (keys.length !== Object.keys(o).length) return false;
+  for (const k of keys) if (old[k] !== o[k] || !(k in o)) return false;
+  return true;
+}
+
+// Speed (G3-4): the work on a whole list (7,500 rows) runs in slices of about 8 ms with a yield
+// between them, so loading or refreshing it never blocks the page for one long task. prepare() only
+// reads: it compares each row with the stored one and derives the rows that need it. setAll() then
+// swaps the store in one step and uses a prepared answer only while it still holds (the same day and
+// meta, and the same stored row it was compared with); anything written in between is redone there.
+const SLICE_MS = 8;
+const clock = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+async function prepare(rows, keys, reason) {
   const c = ctxNow();
+  const objs = new Array(rows.length);
+  const map = new Map(); // obj -> {old, same, changed} or {raw, rec}
+  let t = clock();
+  for (let i = 0; i < rows.length; i++) {
+    if ((i & 127) === 127 && clock() - t > SLICE_MS) {
+      await nextTask();
+      t = clock();
+    }
+    const row = rows[i];
+    const o = Array.isArray(row) ? fromV2Row(row, keys) : row;
+    objs[i] = o;
+    if (!o || o.id == null || o.id === "") continue;
+    const id = String(o.id);
+    const p = {};
+    if (reason === "refresh") {
+      const old = raws.get(id);
+      p.old = old;
+      p.same = !!old && identical(old, o);
+      p.changed = !old || (!p.same && changed(old, o, keys));
+      if (p.same) {
+        map.set(o, p);
+        continue;
+      }
+    }
+    p.raw = { ...o, id };
+    p.rec = derive(p.raw, c);
+    map.set(o, p);
+  }
+  return { c, objs, map };
+}
+
+function setAll(objs, reason, pre = null) {
+  const c = ctxNow();
+  const ready = pre && pre.c.meta === c.meta && pre.c.today === c.today ? pre.map : null;
   let ids = null;
+  // A refresh usually brings back the same rows: those keep their record instead of being derived
+  // again (speed, G3-4), when the day and meta they were derived with are still current.
+  const keep = new Map();
   if (reason === "refresh") {
+    const reuse = derivedWith.meta === c.meta && derivedWith.today === c.today;
     ids = [];
     const seen = new Set();
     for (const o of objs) {
       const id = String(o.id);
       seen.add(id);
       const old = raws.get(id);
-      if (!old || changed(old, o)) ids.push(id);
+      const p = pre ? pre.map.get(o) : null;
+      const known = p && "old" in p && p.old === old;
+      if (known ? p.changed : !old || changed(old, o)) ids.push(id);
+      else if (reuse && recs.has(id) && (known ? p.same : identical(old, o))) keep.set(id, recs.get(id));
     }
     for (const id of raws.keys()) if (!seen.has(id)) ids.push(id);
   }
+  const before = keep.size ? new Map(raws) : null;
   raws.clear();
   recs.clear();
   for (const o of objs) {
     if (!o || o.id == null || o.id === "") continue;
     const id = String(o.id);
-    const raw = Object.assign({}, o, { id });
+    const rec = keep.get(id);
+    if (rec) {
+      raws.set(id, before.get(id));
+      recs.set(id, rec);
+      continue;
+    }
+    const p = ready ? ready.get(o) : null;
+    if (p && p.rec) {
+      raws.set(id, p.raw);
+      recs.set(id, p.rec);
+      continue;
+    }
+    const raw = { ...o, id };
     raws.set(id, raw);
     recs.set(id, derive(raw, c));
   }
@@ -199,21 +271,25 @@ export function setBusy(fn) {
 
 const isV2 = (d) => d && typeof d === "object" && !Array.isArray(d) && Array.isArray(d.cols) && Array.isArray(d.rows);
 
-function applyResult(r, reason, w) {
+// Applies a full list (pre: what prepare() made of it) and returns the cache write, which the caller
+// runs in the next task (encoding 1.6 MB for Cache Storage is a task of its own).
+function applyResult(r, reason, w, pre = null) {
   const d = r && r.data;
+  let write = null;
   if (isV2(d)) {
     cols = d.cols.slice();
-    const objs = d.rows.map((row) => fromV2Row(row, cols));
+    const objs = pre ? pre.objs : d.rows.map((row) => fromV2Row(row, cols));
     const merged = keepLocal(objs, w);
-    setAll(merged || objs, reason);
+    setAll(merged || objs, reason, pre);
     if (merged) {
       // Not the server's body: cache what the store holds, without an ETag, so the next load asks in full.
       status.etag = null;
-      const rows = merged.map((o) => cols.map((k) => (o[k] === undefined ? null : o[k])));
-      cache.write({ v: d.v, cols, rows }, { etag: null, generatedAt: r.generatedAt || null });
+      const keys = cols;
+      const rows = merged.map((o) => keys.map((k) => (o[k] === undefined ? null : o[k])));
+      write = () => cache.write({ v: d.v, cols: keys, rows }, { etag: null, generatedAt: r.generatedAt || null });
     } else {
       status.etag = r.etag || null;
-      cache.write(r.text != null ? r.text : d, { etag: r.etag || null, generatedAt: r.generatedAt || null });
+      write = () => cache.write(r.text != null ? r.text : d, { etag: r.etag || null, generatedAt: r.generatedAt || null });
     }
   } else {
     throw new Error("The site list isn't available.");
@@ -222,6 +298,7 @@ function applyResult(r, reason, w) {
   status.loadedAt = r.generatedAt || new Date().toISOString();
   status.error = null;
   markChecked();
+  return write;
 }
 
 function markChecked() {
@@ -248,7 +325,13 @@ async function settle(promise, { cachedEtag, sentEtag, w }) {
       r = await api.partners({});
     }
     if (!r || r.status === 304) throw new Error("The site list isn't available.");
-    applyResult(r, raws.size ? "refresh" : "load", w);
+    await nextTask(); // the body was parsed in this task; work on it in the next ones
+    const pre = isV2(r.data) ? await prepare(r.data.rows, r.data.cols, raws.size ? "refresh" : "load") : null;
+    const write = applyResult(r, raws.size ? "refresh" : "load", w, pre);
+    if (write) {
+      await nextTask();
+      write();
+    }
   } catch (e) {
     status.error = failText(e);
   } finally {
@@ -280,10 +363,14 @@ export async function load() {
     return;
   }
   let cached = null;
-  try { cached = await cache.read(); } catch (e) { cached = null; }
+  const early = hasWindow() && window.__boot ? window.__boot.cached : null;
+  if (early) window.__boot.cached = null; // read once: a later load reads Cache Storage itself
+  try { cached = await cache.read(early); } catch (e) { cached = null; }
+  if (cached) await nextTask(); // the cached body was parsed in this task; derive it in the next ones
   if (cached && isV2(cached.data)) {
+    const pre = await prepare(cached.data.rows, cached.data.cols, "load");
     cols = cached.data.cols.slice();
-    setAll(cached.data.rows.map((row) => fromV2Row(row, cols)), "load");
+    setAll(pre.objs, "load", pre);
     status.fromCache = true;
     status.loadedAt = cached.generatedAt || cached.cachedAt;
     status.etag = cached.etag;

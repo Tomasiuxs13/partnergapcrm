@@ -92,3 +92,27 @@ export async function copyText(t) {
     return false;
   }
 }
+
+// Resolves in a new task, so the browser can paint and handle input between the steps of a long job
+// (G3-4: no task over 100 ms while 7,500 sites load). scheduler.yield() where there is one (it is not
+// throttled in a background tab like a timer), else a 0 ms timer.
+export function nextTask() {
+  const s = typeof scheduler !== "undefined" ? scheduler : null;
+  if (s && typeof s.yield === "function") return s.yield();
+  return new Promise((r) => setTimeout(r, 0));
+}
+
+// Runs fn once the next frame has been painted (a 0 ms timer queued from that frame's animation
+// callback). Returns the function that cancels it.
+export function afterPaint(fn) {
+  let timer = 0;
+  if (typeof requestAnimationFrame !== "function") {
+    timer = setTimeout(fn, 0);
+    return () => clearTimeout(timer);
+  }
+  const frame = requestAnimationFrame(() => { timer = setTimeout(fn, 0); });
+  return () => {
+    cancelAnimationFrame(frame);
+    clearTimeout(timer);
+  };
+}

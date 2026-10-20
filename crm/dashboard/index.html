@@ -7,6 +7,23 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#213343">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>
+window.__boot = (() => {
+  // These start before the stylesheets and modules load (a script after a stylesheet waits for it, and
+  // these two requests would then queue behind ~70 files). A failed request is read and shown by
+  // core/meta.js and core/store.js (the cached list and "Couldn't refresh"); quiet() keeps it from being
+  // reported as uncaught. cached: the list in Cache Storage, read and parsed while the modules load
+  // (core/cache.js#read; null when there is none).
+  const quiet = (p) => { p.catch(() => {}); return p; };
+  let e = null; try { e = localStorage.getItem('pgcrm-cache-etag'); } catch (x) {}
+  return {
+    meta: quiet(fetch('/api/meta', {credentials: 'same-origin'})),
+    partners: quiet(fetch('/api/partners?v=2', {credentials: 'same-origin', headers: e ? {'If-None-Match': e} : {}})),
+    cached: typeof caches === 'undefined' ? null : quiet(caches.open('pgcrm').then((c) => c.match('/api/partners?v=2'))
+      .then((r) => (r ? r.json().then((data) => ({data, headers: r.headers})) : null)))
+  };
+})();
+</script>
 <link rel="preload" href="/assets/fonts/lexend-deca-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
@@ -78,18 +95,6 @@
 <link rel="modulepreload" href="/js/pages/team.js">
 <link rel="modulepreload" href="/js/pages/today.js">
 <script>window.BUILD = 'easy-rc0';</script>
-<script>
-window.__boot = (() => {
-  // These start before the modules load. A failed request is read and shown by core/meta.js and
-  // core/store.js (the cached list and "Couldn't refresh"); quiet() keeps it from being reported as uncaught.
-  const quiet = (p) => { p.catch(() => {}); return p; };
-  let e = null; try { e = localStorage.getItem('pgcrm-cache-etag'); } catch (x) {}
-  return {
-    meta: quiet(fetch('/api/meta', {credentials: 'same-origin'})),
-    partners: quiet(fetch('/api/partners?v=2', {credentials: 'same-origin', headers: e ? {'If-None-Match': e} : {}}))
-  };
-})();
-</script>
 <script type="module" src="/js/app.js"></script>
 </head>
 <body>

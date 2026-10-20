@@ -313,7 +313,12 @@ const inMonth = (v, ym) => {
   return !!d && d.slice(0, 7) === ym;
 };
 
-const byName = (a, b) => safeName(a).localeCompare(safeName(b), "en", { sensitivity: "base" });
+// One collator (localeCompare with options builds a new one on each call; same order).
+let nameOrder = null;
+const byName = (a, b) => {
+  if (!nameOrder) nameOrder = new Intl.Collator("en", { sensitivity: "base" });
+  return nameOrder.compare(safeName(a), safeName(b));
+};
 
 /**
  * The monthly report for a client (and product), client-safe (spec 2.2.4). Returns null for an unknown

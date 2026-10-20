@@ -9,19 +9,26 @@ const ETAG = "pgcrm-cache-etag";
 
 const available = () => typeof caches !== "undefined";
 
-// {data, etag, generatedAt, cachedAt} or null.
-export async function read() {
+// {data, etag, generatedAt, cachedAt} or null. early: the read index.html started at boot (a promise of
+// {data, headers} or null), used instead of reading again; it is read again when that one failed.
+export async function read(early = null) {
   if (!available()) return null;
   try {
-    const c = await caches.open(NAME);
-    const res = await c.match(KEY);
-    if (!res) return null;
-    const data = await res.json();
+    let hit;
+    if (early) {
+      try { hit = await early; } catch (e) { hit = undefined; }
+    }
+    if (hit === undefined) {
+      const c = await caches.open(NAME);
+      const res = await c.match(KEY);
+      hit = res ? { data: await res.json(), headers: res.headers } : null;
+    }
+    if (!hit) return null;
     return {
-      data,
-      etag: res.headers.get("ETag") || null,
-      generatedAt: res.headers.get("X-Generated-At") || null,
-      cachedAt: res.headers.get("X-Cached-At") || null,
+      data: hit.data,
+      etag: hit.headers.get("ETag") || null,
+      generatedAt: hit.headers.get("X-Generated-At") || null,
+      cachedAt: hit.headers.get("X-Cached-At") || null,
     };
   } catch (e) {
     return null;
