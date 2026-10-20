@@ -207,15 +207,26 @@ export function scoreContact(c, q) {
   return c.all.includes(q.lower) ? 40 : 0;
 }
 
-// The best `limit` contacts: [{c, s}], best first (score, then named before unnamed, then the name).
+// A contact's email score as the score of its site in the Sites group: the site of an exact address ranks
+// above a site whose domain is the email's domain (ann@x.example.test belongs to Annex Reviews, not x.example.test).
+const CONTACT_SITE = { 100: 105, 80: 85 };
+
+// The best `limit` contacts: {rows: [{c, s}], total, sites}, best first (score, then named before unnamed,
+// then the name). sites: Map(site id -> score) of the sites whose contacts have the typed email (exact or
+// prefix), for scoreSite().
 export function searchContacts(list, q, { limit = LIMITS.contacts } = {}) {
   const top = [];
+  const sites = new Map();
   let total = 0;
   const better = (a, b) => (a.s !== b.s ? a.s > b.s : !!a.c.name !== !!b.c.name ? !!a.c.name : (a.c.name || a.c.all) < (b.c.name || b.c.all));
   for (let i = 0; i < list.length; i++) {
     const s = scoreContact(list[i], q);
     if (!s) continue;
     total++;
+    if (q.email && CONTACT_SITE[s] && list[i].acc) {
+      const prev = sites.get(list[i].acc) || 0;
+      if (CONTACT_SITE[s] > prev) sites.set(list[i].acc, CONTACT_SITE[s]);
+    }
     const hit = { c: list[i], s };
     if (top.length >= limit && !better(hit, top[top.length - 1])) continue;
     let k = top.length;
@@ -223,7 +234,7 @@ export function searchContacts(list, q, { limit = LIMITS.contacts } = {}) {
     top.splice(k, 0, hit);
     if (top.length > limit) top.pop();
   }
-  return { rows: top, total };
+  return { rows: top, total, sites };
 }
 
 // ---------- Go to ----------
@@ -307,3 +318,452 @@ function loadContacts() {
   return contacts.promise;
 }
 
+
+// ---------- The dialog ----------
+
+let ui = null; // the open dialog: {dialog, input, grid, note, live, rows, active, ...}
+
+const ICONS = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  client: '<path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-6h6v6"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+};
+const icon = (name) => raw('<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + "</svg>");
+
+const readOnly = () => !!(metaMod.get() || {}).read_only;
+
+function siteEntries() {
+  const recs = store.all();
+  const out = new Array(recs.length);
+  for (let i = 0; i < recs.length; i++) out[i] = siteEntry(recs[i]);
+  return out;
+}
+
+function recentRecords() {
+  const out = [];
+  for (const id of recentIds()) {
+    const r = store.get(id);
+    if (r) out.push(r);
+    if (out.length >= LIMITS.recent) break;
+  }
+  return out;
+}
+
+// What one input shows: {q, recent, sites, contacts, goto, add}. Pure apart from reading the store and
+// the contacts index.
+function compute(q) {
+  const res = { q, recent: null, sites: null, contacts: null, goto: [], add: "" };
+  if (!q.raw) {
+    res.recent = recentRecords();
+    return res;
+  }
+  let contactSites = null;
+  if (contacts.state === "ready") {
+    res.contacts = searchContacts(contacts.list, q);
+    if (q.email) contactSites = res.contacts.sites;
+  }
+  res.sites = searchSites(siteEntries(), q, { contactSites });
+  res.goto = goTo(q, { meta: metaMod.get() });
+  if (q.dom && !res.sites.domainHit) res.add = q.dom;
+  return res;
+}
+
+// ----- rows -----
+
+function ownerHtml(owner) {
+  if (!has(owner)) return html`<span class="se-owner is-none">No owner</span>`;
+  const mine = owner === me.get();
+  return html`<span class="se-owner">${avatar(owner, { size: "xs" })}<span>${mine ? owner + " (me)" : owner}</span></span>`;
+}
+
+function siteRow(rec, i, today) {
+  const label = rec.label || rec.name || rec.domain || rec.id;
+  const bits = [];
+  if (rec.domain && rec.domain !== label) bits.push(rec.domain);
+  bits.push(rec.stage || "No stage");
+  if (rec.cl && rec.cl.length) bits.push(rec.cl.join(", "));
+  const when = rec.lastActivity ? ago(rec.lastActivity, today) : "";
+  const claim = !has(rec.owner) && !readOnly();
+  return html`<div role="row" class="se-row" data-i="${i}">
+<div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
+  <span class="se-lead">${stageDot(rec.stage)}</span>
+  <span class="se-main"><span class="se-title"><span class="se-name">${label}</span>${newDot(rec)}</span><span class="se-sub">${bits.join(" · ")}</span></span>
+  <span class="se-side">${ownerHtml(rec.owner)}${when ? html`<span class="se-when">Last activity ${when}</span>` : ""}</span>
+</div>
+<div role="gridcell" class="se-actcell">${claim ? html`<button type="button" class="ui-btn is-sm se-claim" data-claim="${rec.id}" aria-label="${"Claim " + label}" title="Make it yours, with a follow-up in 2 working days">Claim</button>` : ""}</div>
+</div>`;
+}
+
+function contactRow(hit, i) {
+  const c = hit.c;
+  const site = store.get(c.acc);
+  const siteLabel = site ? site.label || site.name || site.domain || site.id : c.acc;
+  const title = c.name || c.emails[0] || "Unnamed contact";
+  const bits = [];
+  if (c.emails.length && (c.name || c.emails.length > 1)) bits.push(c.emails.join(", "));
+  bits.push("at " + siteLabel);
+  return html`<div role="row" class="se-row" data-i="${i}">
+<div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
+  <span class="se-lead">${avatar(c.name || c.emails[0] || "?", { size: "xs" })}</span>
+  <span class="se-main"><span class="se-title"><span class="se-name">${title}</span></span><span class="se-sub">${bits.join(" · ")}</span></span>
+  <span class="se-side">${ownerHtml(site ? site.owner : "")}</span>
+</div>
+<div role="gridcell" class="se-actcell"></div>
+</div>`;
+}
+
+function simpleRow(i, lead, title, sub) {
+  return html`<div role="row" class="se-row" data-i="${i}">
+<div role="gridcell" class="se-cell" id="${"se-opt-" + i}" aria-selected="false">
+  <span class="se-lead">${lead}</span>
+  <span class="se-main"><span class="se-title"><span class="se-name">${title}</span></span>${sub ? html`<span class="se-sub">${sub}</span>` : ""}</span>
+</div>
+<div role="gridcell" class="se-actcell"></div>
+</div>`;
+}
+
+function noteRow(text, { tone = "", action = null } = {}) {
+  return html`<div role="row" class="${"se-note-row" + (tone ? " is-" + tone : "")}"><div role="gridcell" class="se-note-cell" aria-colspan="2"><span>${text}</span>${action
+    ? html` <button type="button" class="ui-linkbtn" data-note-act="${action.act}">${action.label}</button>` : ""}</div></div>`;
+}
+
+// A group of rows with a heading row; title null: no heading (label: its accessible name).
+function group(id, title, count, rows, { label = "" } = {}) {
+  if (title == null) return html`<div role="rowgroup" class="${"se-group is-" + id}" aria-label="${label}">${rows}</div>`;
+  return html`<div role="rowgroup" class="${"se-group is-" + id}" aria-labelledby="${"se-h-" + id}">
+<div role="row" class="se-ghead"><span role="columnheader" id="${"se-h-" + id}" aria-colspan="2">${title}${count ? html` <span class="se-gcount">${count}</span>` : ""}</span></div>
+${rows}
+</div>`;
+}
+
+// The grid's markup and the selectable rows ({key, kind, ...}) in order.
+function build(res) {
+  const q = res.q;
+  const today = todayIso();
+  const rows = [];
+  const parts = [];
+  const add = (row) => {
+    rows.push(row);
+    return rows.length - 1;
+  };
+  if (res.recent) {
+    if (res.recent.length) {
+      parts.push(group("recent", "Recently opened", "", res.recent.map((r) => siteRow(r, add({ key: "s:" + r.id, kind: "site", id: r.id }), today))));
+    }
+    return { rows, markup: html`${parts}` };
+  }
+  const s = res.sites;
+  if (s.rows.length) {
+    const list = s.rows.map((h) => siteRow(h.e.rec, add({ key: "s:" + h.e.id, kind: "site", id: h.e.id }), today));
+    if (s.total > s.rows.length) {
+      const i = add({ key: "more", kind: "more" });
+      list.push(simpleRow(i, icon("list"), "See all " + num(s.total) + " matching sites", "Opens Sites with this search"));
+    }
+    parts.push(group("sites", "Sites", s.total > s.rows.length ? s.rows.length + " of " + num(s.total) : String(s.total), list));
+  }
+  if (res.add) {
+    const text = readOnly() ? "Not in the CRM: " + res.add : "Not in the CRM: Add " + res.add;
+    const list = readOnly()
+      ? [noteRow(text)]
+      : [simpleRow(add({ key: "add", kind: "add", domain: res.add }), icon("plus"), text, "Opens Add site with this address filled in")];
+    parts.push(group("add", null, "", list, { label: "Not in the CRM" }));
+  }
+  const cq = q.name.length >= 2 || q.email || q.dom || q.id;
+  if (cq) {
+    let list = [];
+    let count = "";
+    if (contacts.state === "ready" && res.contacts) {
+      const c = res.contacts;
+      list = c.rows.map((h) => contactRow(h, add({ key: "c:" + h.c.id, kind: "contact", id: h.c.acc, cid: h.c.id })));
+      if (c.total) count = c.total > c.rows.length ? c.rows.length + " of " + num(c.total) : String(c.total);
+      if (!c.total && q.email) {
+        list.push(noteRow("No contacts match “" + q.raw + "”. New contacts from the sheet appear the next weekday morning."));
+      }
+    } else if (contacts.state === "loading" || contacts.state === "idle") {
+      list.push(noteRow("Looking up contacts…", { tone: "muted" }));
+    } else if (contacts.state === "none") {
+      list.push(noteRow("Contact search: Not available yet.", { tone: "muted" }));
+    } else if (contacts.state === "error") {
+      list.push(noteRow("Couldn't load the contacts.", { tone: "muted", action: { act: "retry", label: "Try again" } }));
+    }
+    if (list.length) parts.push(group("contacts", "Contacts", count, list));
+  }
+  if (res.goto.length) {
+    parts.push(group("goto", "Go to", "", res.goto.map((g) => {
+      if (g.kind === "client") {
+        const i = add({ key: "g:c:" + g.client.k, kind: "client", client: g.client });
+        return simpleRow(i, icon("client"), g.client.name, g.past ? "Client page · past client" : "Client page" + (g.client.what ? " · " + g.client.what : ""));
+      }
+      const i = add({ key: "g:p:" + g.name, kind: "person", name: g.name });
+      return simpleRow(i, avatar(g.name, { size: "xs" }), g.name, g.name === me.get() ? "Your sites" : "Sites owned by " + g.name);
+    })));
+  }
+  return { rows, markup: html`${parts}` };
+}
+
+// ----- drawing -----
+
+function emptyText(res) {
+  if (!res.recent || res.recent.length) return "";
+  return "Type a site name, paste a link or an email, or type an ID such as PG-00123.";
+}
+
+function summary(res) {
+  if (res.recent) return res.recent.length ? res.recent.length + " recently opened " + plural(res.recent.length, "site") : "";
+  const bits = [];
+  if (res.sites && res.sites.total) bits.push(num(res.sites.total) + " " + plural(res.sites.total, "site"));
+  if (res.contacts && res.contacts.total) bits.push(num(res.contacts.total) + " " + plural(res.contacts.total, "contact"));
+  if (res.goto.length) bits.push(res.goto.length + " to go to");
+  if (res.add && !bits.length) return "Not in the CRM";
+  return bits.length ? bits.join(", ") : "No matches";
+}
+
+function setActive(i, { scroll = true } = {}) {
+  if (!ui) return;
+  const prev = ui.grid.querySelector('.se-cell[aria-selected="true"]');
+  if (prev) {
+    prev.setAttribute("aria-selected", "false");
+    prev.parentElement.classList.remove("is-active");
+  }
+  if (i == null || i < 0 || i >= ui.rows.length) {
+    ui.active = -1;
+    ui.input.removeAttribute("aria-activedescendant");
+    return;
+  }
+  ui.active = i;
+  const cell = ui.grid.querySelector("#se-opt-" + i);
+  if (!cell) return;
+  cell.setAttribute("aria-selected", "true");
+  cell.parentElement.classList.add("is-active");
+  ui.input.setAttribute("aria-activedescendant", cell.id);
+  if (scroll) cell.parentElement.scrollIntoView({ block: "nearest" });
+}
+
+// One pass for the current input (every keystroke): search, draw, keep the active row when asked.
+function run({ keep = false } = {}) {
+  if (!ui) return;
+  const q = parseQuery(ui.input.value);
+  const keepKey = keep && ui.active >= 0 && ui.rows[ui.active] ? ui.rows[ui.active].key : null;
+  const res = compute(q);
+  const { rows, markup } = build(res);
+  ui.rows = rows;
+  ui.res = res;
+  render(ui.grid, markup);
+  const hasRows = ui.grid.firstElementChild != null;
+  ui.grid.hidden = !hasRows;
+  ui.input.setAttribute("aria-expanded", hasRows ? "true" : "false");
+  const text = emptyText(res);
+  ui.note.textContent = text;
+  ui.note.hidden = !text;
+  ui.noMatch.hidden = !(q.raw && !hasRows);
+  if (!ui.noMatch.hidden) render(ui.noMatch, html`<p class="se-nomatch-h">Nothing matches “${q.raw}”.</p><p>Try a link, a domain, an email, a name or an ID such as PG-00123.</p>`);
+  let next = rows.length ? 0 : -1;
+  if (keepKey) {
+    const k = rows.findIndex((r) => r.key === keepKey);
+    if (k >= 0) next = k;
+  }
+  setActive(next, { scroll: false });
+  if (next === 0) ui.body.scrollTop = 0;
+  clearTimeout(ui.timers.live);
+  const said = summary(res);
+  ui.timers.live = setTimeout(() => {
+    if (ui) ui.live.textContent = said;
+  }, 500);
+}
+
+// ----- actions -----
+
+function activate(i) {
+  if (!ui) return;
+  const row = ui.rows[i];
+  if (!row) return;
+  const input = ui.input.value.trim();
+  close();
+  switch (row.kind) {
+    case "site":
+      openRecord(row.id);
+      break;
+    case "contact":
+      openRecord(row.id, { focus: "contacts" });
+      break;
+    case "client":
+      router.go("clients", {}, { sub: row.client.slug || row.client.k });
+      break;
+    case "person":
+      router.go("sites", { tab: "all", owner: row.name === me.get() ? "me" : row.name });
+      break;
+    case "add":
+      openAddSite(input || row.domain);
+      break;
+    case "more":
+      router.go("sites", { tab: "all", q: input });
+      break;
+    default:
+      break;
+  }
+}
+
+async function claim(btn) {
+  const id = btn.getAttribute("data-claim");
+  btn.disabled = true;
+  btn.textContent = "Claiming…";
+  let rec = null;
+  try {
+    rec = await actions.claim(id);
+  } catch (e) {
+    rec = null;
+  }
+  if (!ui) return;
+  if (!rec && btn.isConnected) {
+    btn.disabled = false;
+    btn.textContent = "Claim";
+  }
+  run({ keep: true });
+  if (ui) ui.input.focus();
+}
+
+function onKey(e) {
+  if (!ui || e.isComposing) return;
+  const n = ui.rows.length;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (e.target !== ui.input) ui.input.focus();
+    e.preventDefault();
+    if (!n) return;
+    const d = e.key === "ArrowDown" ? 1 : -1;
+    setActive(ui.active < 0 ? (d > 0 ? 0 : n - 1) : (ui.active + d + n) % n);
+  } else if (e.key === "Enter" && e.target === ui.input) {
+    e.preventDefault();
+    if (ui.active >= 0) activate(ui.active);
+  } else if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+    e.preventDefault();
+    ui.input.focus();
+    ui.input.select();
+  }
+}
+
+function close() {
+  if (!ui) return;
+  const u = ui;
+  ui = null;
+  for (const t of Object.values(u.timers)) clearTimeout(t);
+  for (const off of u.offs) off();
+  releaseToasts(u.dialog);
+  if (u.dialog.open) u.dialog.close();
+  u.dialog.remove();
+  const o = u.opener;
+  if (o && o.isConnected && typeof o.focus === "function") {
+    try { o.focus({ preventScroll: true }); } catch (e) { /* not focusable */ }
+  }
+}
+
+// True while the search dialog is open.
+export function isOpen() {
+  return !!ui;
+}
+
+// Opens Search (spec 4.3). query: text to start with (selected, so typing replaces it).
+export function openSearch({ query = "" } = {}) {
+  if (typeof document === "undefined") return;
+  start();
+  if (ui) {
+    if (query) {
+      ui.input.value = query;
+      run();
+    }
+    ui.input.focus();
+    ui.input.select();
+    return;
+  }
+  const dialog = document.createElement("dialog");
+  dialog.className = "se-dialog";
+  dialog.setAttribute("aria-label", "Search");
+  render(dialog, html`<div class="se-box">
+<div class="se-bar">
+  <span class="se-glass">${icon("search")}</span>
+  <input class="se-input" type="text" role="combobox" aria-expanded="false" aria-controls="se-grid" aria-haspopup="grid" aria-autocomplete="list"
+    aria-label="Search sites, contacts, clients and people" aria-describedby="se-keys" placeholder="Search or paste a link…"
+    autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="300">
+  <button type="button" class="se-close" data-close aria-label="Close search"><kbd class="se-esc">Esc</kbd><span class="se-cancel">Cancel</span></button>
+</div>
+<div class="se-body">
+  <p class="se-hint" data-note hidden></p>
+  <div class="se-nomatch" data-nomatch hidden></div>
+  <div role="grid" id="se-grid" class="se-grid" aria-label="Search results" hidden></div>
+</div>
+<p class="se-keys" id="se-keys"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>Esc</kbd> close</span></p>
+<p class="sr-only" aria-live="polite" data-live></p>
+</div>`);
+  const u = {
+    dialog,
+    input: dialog.querySelector(".se-input"),
+    grid: dialog.querySelector(".se-grid"),
+    body: dialog.querySelector(".se-body"),
+    note: dialog.querySelector("[data-note]"),
+    noMatch: dialog.querySelector("[data-nomatch]"),
+    live: dialog.querySelector("[data-live]"),
+    rows: [],
+    res: null,
+    active: -1,
+    timers: {},
+    offs: [],
+    opener: document.activeElement && document.activeElement !== document.body ? document.activeElement : null,
+  };
+  ui = u;
+  u.offs.push(trapFocus(dialog));
+  u.offs.push(on(u.input, "input", null, () => run()));
+  u.offs.push(on(dialog, "keydown", null, onKey));
+  u.offs.push(on(dialog, "click", "[data-close]", () => close()));
+  u.offs.push(on(dialog, "click", "[data-claim]", (e, b) => {
+    e.stopPropagation();
+    claim(b);
+  }));
+  u.offs.push(on(dialog, "click", "[data-note-act]", () => {
+    if (contacts.state === "error") contacts.state = "idle";
+    loadContacts();
+    run({ keep: true });
+  }));
+  u.offs.push(on(u.grid, "click", ".se-row[data-i]", (e, row) => {
+    if (e.target.closest("button")) return;
+    activate(Number(row.getAttribute("data-i")));
+  }));
+  u.offs.push(on(u.grid, "mousemove", ".se-row[data-i]", (e, row) => {
+    const i = Number(row.getAttribute("data-i"));
+    if (i !== u.active) setActive(i, { scroll: false });
+  }));
+  // Esc: close (the browser would close the dialog without cleaning up). A click on the backdrop closes too.
+  const onCancel = (e) => {
+    e.preventDefault();
+    close();
+  };
+  dialog.addEventListener("cancel", onCancel);
+  u.offs.push(() => dialog.removeEventListener("cancel", onCancel));
+  u.offs.push(on(dialog, "click", null, (e) => {
+    if (e.target !== dialog) return;
+    const r = dialog.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
+  }));
+  // A store change (a claim, a refresh) redraws the results; the active row stays.
+  u.offs.push(store.subscribe(() => {
+    if (ui === u) run({ keep: true });
+  }));
+
+  document.body.appendChild(dialog);
+  dialog.showModal();
+  raiseToasts(dialog);
+  u.input.value = query || "";
+  run();
+  u.input.focus();
+  if (query) u.input.select();
+  loadContacts();
+  // Warm the per-site search fields after the first paint, so the first keystroke is as fast as the rest.
+  u.timers.warm = setTimeout(() => {
+    if (ui === u) siteEntries();
+  }, 0);
+}
+
+// Test and measurement aid: the number of /api/contacts-index requests this page session made.
+export function contactsFetches() {
+  return contacts.fetches;
+}
