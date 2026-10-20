@@ -164,6 +164,12 @@ function effective(p) {
 
 // ---------- markup ----------
 
+// Row actions: Log what happened ▾ and Follow up ▾. On Unowned (spec 2.2.2), a site nobody has emailed
+// yet gets Claim and Assign to <client manager> instead. Other tabs keep the usual buttons: their Log what
+// happened ▾ offers Claim for an unowned site, and the narrower column keeps Next step readable.
+function actsCell(r, cx) {
+  return cx && cx.readOnly ? html`` : rowActions(r);
+}
 function claimCell(r, cx) {
   if (cx && cx.readOnly) return html``;
   if (has(r.owner) || !r.notContacted) return rowActions(r);
@@ -229,13 +235,14 @@ const SORTED = {
 };
 const col = (id, extra) => Object.assign({ id }, SORTED[id] || {}, extra || {});
 
-const ACTIONS_COL = { id: "actions", label: "Actions", labelHidden: true, priority: 1, className: "is-actions si-acts", cell: claimCell, csv: false };
+const ACTIONS_COL = { id: "actions", label: "Actions", labelHidden: true, priority: 1, className: "is-actions si-acts", cell: actsCell, csv: false };
+const CLAIM_COL = Object.assign({}, ACTIONS_COL, { cell: claimCell });
 // Columns per tab (spec 2.2.2), minus the one that says nothing there: Owner on Mine to contact and
 // Unowned (every row has the same owner), Traffic on Waiting for reply (they're already emailed). The CSV
 // always has the full set (CSV_SITES).
 const COLUMNS = {
   mine: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), ACTIONS_COL],
-  unowned: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), ACTIONS_COL],
+  unowned: [col("site"), "stage", col("clients"), "dr", "traffic", col("last_activity"), col("next"), CLAIM_COL],
   waiting: [col("site"), "stage", col("owner"), col("clients"), "dr", col("last_activity"), col("next"), ACTIONS_COL],
   all: [col("site"), "stage", col("owner"), col("clients"), "dr", col("traffic", { className: "si-c-traffic" }), col("last_activity"), col("next"), ACTIONS_COL],
 };

@@ -151,3 +151,21 @@ Still open:
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw` so the
   panel words them like its other saves (see "Status after the F1 merge").
+
+# NEEDS (F3)
+
+Changes the Sites page (F3) needs in files it does not own. Each has a local workaround, so nothing blocks.
+
+1. **`crm/dashboard/js/ui/list.js` (G1-C): sort text with one shared `Intl.Collator`.** `compareValues()` calls
+   `String(a).localeCompare(b, "en", {numeric: true, sensitivity: "base"})`, which builds a collator per call:
+   sorting 7,500 sites by name took about 350 ms (Chromium 141). A module-level
+   `const COLLATOR = new Intl.Collator("en", {numeric: true, sensitivity: "base"})` and `COLLATOR.compare(a, b)`
+   gives the same order in about 20 ms. Workaround in `pages/sites.js`: the Site, Owner and Clients columns sort
+   by a numeric rank (one collator sort per column, cached until the store changes), and Last activity and
+   Next step by a YYYYMMDD number. With the fix, those `col()` overrides can go.
+2. **`crm/dashboard/js/features/record/log.js` (F1): honour `queue.primary`.** Spec 2.2.2: in the Waiting for
+   reply queue (`quiet=14`, Start) the primary outcome is "Sent a follow-up". Sites opens the queue with
+   `{queue: {ids, index, label: "No reply in 14+ days", primary: "followed_up"}}`; `features/record/queue.js`
+   keeps `primary`, but the log box always makes the stage's first outcome primary ("They replied" for
+   Contacted). Suggested: when `queue.primary` is one of the shown outcomes, move it first and give it
+   `is-primary`. No workaround on the page (it cannot reach into the panel).

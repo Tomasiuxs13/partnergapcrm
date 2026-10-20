@@ -24,7 +24,7 @@ import * as metaMod from "../core/meta.js";
 import * as me from "../core/me.js";
 import * as actions from "./actions.js";
 import { openMenu } from "./menu.js";
-import { openModal } from "./dialog.js";
+import { openModal, confirm as confirmModal } from "./dialog.js";
 import { toast } from "./toast.js";
 
 export const BULK_MAX = 100;
@@ -301,7 +301,14 @@ ${over ? html`<p class="si-bulk-over" role="status">Bulk changes work on up to $
     } else if (id === "type") {
       const v = await openMenu(anchor, { items: typeItems(), label: "Set type", search: true });
       if (v == null) return;
-      await run("type", () => actions.bulk(list, { type: v }, { label: has(v) ? "Type: " + v : "Type cleared" }));
+      // actions.bulk asks over 20 sites with "Set the type of N sites to …?"; clearing it needs its own words.
+      let ask = true;
+      if (!has(v) && list.length > 20) {
+        const ok = await confirmModal({ title: "Clear the type of " + num(list.length) + " sites?", body: SHEET, confirmLabel: "Change " + num(list.length) + " sites" });
+        if (!ok) return;
+        ask = false;
+      }
+      await run("type", () => actions.bulk(list, { type: v }, { confirm: ask, label: has(v) ? "Type: " + v : "Type cleared" }));
     } else if (id === "follow") {
       await run("follow", () => actions.followUpMenu(anchor, list));
     } else if (id === "next") {

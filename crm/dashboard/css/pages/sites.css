@@ -82,15 +82,29 @@
 
 .si-list .ui-table th, .si-list .ui-table td { padding-left: 8px; padding-right: 8px; }
 .si-list .ui-table td.is-c-next { min-width: 110px; }
-/* When the list is narrower than the whole table (about 1300 px of list: screens up to 1580 px with the
-   sidebar), Waiting for reply and All keep the Next step column readable instead of scrolling sideways:
-   Follow up moves into ⋯ (Log what happened ▾ stays) and All drops Traffic (still in the CSV and the Sort
-   menu). A media query, not a container query: it is cheaper to lay out with 7,500 sites. */
+/* When the list is narrower than the whole table (screens up to 1580 px with the sidebar), the columns
+   give way instead of the table scrolling sideways under the sticky actions column:
+   - the domain under the site name and long client names end in "…" instead of widening their column;
+   - on Waiting for reply and All, Follow up moves into ⋯ (Log what happened ▾ stays) and All drops
+     Traffic (still in the CSV and the Sort menu);
+   - below 1440 px, Log what happened moves into ⋯ too on Waiting for reply and All (⋯ offers both, and
+     the row still opens the site); below 1366 px, Follow up moves into ⋯ on every tab.
+   Media queries, not container queries: they are cheaper to lay out with 7,500 sites. */
 @media (min-width: 640px) and (max-width: 1579.98px) {
+  .si-list .ui-table .ui-site { display: flex; }
+  .si-list .ui-table .ui-site .ui-sub { contain: inline-size; }
+  .si-list .ui-table .ui-tag { max-width: 128px; }
   .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-acts > [data-row-act="follow"] { display: none; }
   .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-more { display: inline-flex; }
   .si-list[data-tab="all"] .ui-table .si-c-traffic { display: none; }
   .si-list .ui-table th, .si-list .ui-table td { padding-left: 6px; padding-right: 6px; }
+}
+@media (min-width: 640px) and (max-width: 1439.98px) {
+  .si-list:is([data-tab="waiting"], [data-tab="all"]) .ui-row-acts > [data-row-act="log"] { display: none; }
+}
+@media (min-width: 640px) and (max-width: 1365.98px) {
+  .si-list .ui-row-acts > [data-row-act="follow"] { display: none; }
+  .si-list .ui-row-more { display: inline-flex; }
 }
 
 .si-claim { display: inline-flex; align-items: center; gap: 4px; }
