@@ -13,7 +13,7 @@ Nobody pushes a branch, runs `--remote` or changes Cloudflare before the step th
 ## Before the preflight: the release candidate
 
 1. **The branch is ready** (agent). `crm-easy-site` has every Group 3 merge.
-   - `window.BUILD` in `crm/dashboard/index.html` and `BUILD` in `lib/meta.js` hold the same release name (`easy-rc0` for the first release candidate). If they differ, every page shows "A new version is ready".
+   - `window.BUILD` in `crm/dashboard/index.html` and `BUILD` in `lib/meta.js` hold the same release name (`easy-rc1` for the first release candidate). If they differ, every page shows "A new version is ready".
    - On that commit, these pass on a local test server (synthetic data, local database only):
      - `node --test tests/unit/`
      - `bash tests/e2e/run.sh` (every e2e file, about 22 minutes)
