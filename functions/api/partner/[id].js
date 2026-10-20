@@ -11,7 +11,8 @@
 //           about_pending is true (GET /api/partner/:id/about answers it); the cache is warmed in the
 //           background, so the next open has it.
 //         404 {"error":"Not found"}.
-//   PATCH /api/partner/:id: unchanged, plus "v2" (the row in /api/partners?v=2 column order).
+//   PATCH /api/partner/:id: unchanged, plus "v2" (the row in /api/partners?v=2 column order). 400 with
+//         the field check's sentence; a D1 failure is thrown (a 500), never a 400 with the D1 text.
 import { json, bad, body, who, updatePartner, readPartner, v2Row } from "../../../lib/crm.js";
 import { hasTable } from "../../../lib/tables.js";
 import { cachedAbout, siteAbout, aboutable } from "../../../lib/about.js";
@@ -69,6 +70,9 @@ export async function onRequestPatch({ request, env, params }) {
   try {
     changed = await updatePartner(db, String(params.id || ""), b.fields && typeof b.fields === "object" ? b.fields : {}, who(b));
   } catch (msg) {
+    // A sentence from the field checks is the user's 400; a real Error (a D1 failure) is a 500, so the
+    // page shows its own "The server couldn't save this…" (spec 4.11), never the raw D1 text.
+    if (msg instanceof Error) throw msg;
     return bad(String(msg));
   }
   if (changed === null) return bad("Not found", 404);

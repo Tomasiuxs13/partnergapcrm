@@ -11,7 +11,8 @@
 //        - clients: [{k?, name, what?, managers?, markets?, past?}]: a new client's k is its name in lower
 //          case; an existing client keeps its k (it can't be renamed, only its shown name changes).
 //        - allow_dnc: true|false
-//        400 {"error": "<sentence>"} on a bad value, 403 for someone else; nothing is saved on error.
+//        400 {"error": "<sentence>"} on a bad value, 403 for someone else; nothing is saved on error. A D1
+//        failure is thrown (a 500), never a 400 with the D1 text.
 // Before migration 003 (no kv_meta): 404 {"error":"Not available yet","unavailable":true}.
 import { json, bad, body, who } from "../../lib/crm.js";
 import { hasTable } from "../../lib/tables.js";
@@ -107,6 +108,7 @@ export async function onRequestPut({ request, env }) {
       patch.allow_dnc = b.allow_dnc;
     }
   } catch (msg) {
+    if (msg instanceof Error) throw msg; // a D1 failure: a 500, not a 400 with the raw D1 text (spec 4.11)
     return bad(String(msg));
   }
   if (!Object.keys(patch).length) return bad("Nothing to save.");
