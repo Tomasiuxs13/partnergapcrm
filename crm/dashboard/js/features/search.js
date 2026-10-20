@@ -563,11 +563,13 @@ function setActive(i, { scroll = true } = {}) {
   if (scroll) cell.parentElement.scrollIntoView({ block: "nearest" });
 }
 
-// One pass for the current input (every keystroke): search, draw, keep the active row when asked.
+// One pass for the current input (every keystroke): search, draw, keep the active row when asked. Only a row
+// the person moved to is kept: the first row (the default) follows the best match, so when the contacts index
+// arrives after an email was typed, the site of that exact address becomes the active row (Enter opens it).
 function run({ keep = false } = {}) {
   if (!ui) return;
   const q = parseQuery(ui.input.value);
-  const keepKey = keep && ui.active >= 0 && ui.rows[ui.active] ? ui.rows[ui.active].key : null;
+  const keepKey = keep && ui.active > 0 && ui.rows[ui.active] ? ui.rows[ui.active].key : null;
   const res = compute(q);
   const { rows, markup } = build(res);
   ui.rows = rows;

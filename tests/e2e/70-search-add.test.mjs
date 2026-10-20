@@ -385,6 +385,28 @@ test("Contacts come from the in-memory index, fetched once per page session; ema
   }
 });
 
+// The index can arrive after the email is typed (a slow answer): the first row then follows the best match, so
+// Enter opens the site of the exact address, not the one at the email's domain. (G3-1: seen as a flake of the
+// test above when the index answered late.)
+test("An email typed before the contacts index arrives: the exact address's site becomes the active row", async () => {
+  const { page, close } = await openPage();
+  let release;
+  const held = new Promise((r) => { release = r; });
+  await page.route(/\/api\/contacts-index/, async (route) => { await held; await route.continue(); });
+  try {
+    await openSearch(page);
+    const row = await search(page, "ann@x.example.test");
+    assert.equal(row.id, ID.siteX, "before the index: the site at the email's domain");
+    release();
+    await page.waitForSelector('.se-row[data-kind="contact"]');
+    assert.equal((await activeRow(page)).id, ID.siteAnn, "the index arrived: the site of the exact address is the active row");
+    await page.keyboard.press("Escape");
+  } finally {
+    release();
+    await close();
+  }
+});
+
 test("Go to (at most 3): a client opens its page, a person opens Sites filtered by owner", async () => {
   const { page, close } = await openPage();
   try {
