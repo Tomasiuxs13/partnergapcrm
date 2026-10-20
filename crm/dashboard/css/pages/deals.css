@@ -1,1 +1,128 @@
-/* deals page. G0 stub; owner F4. Class prefix .dl- */
+/* Deals (spec 2.2.3, 4.7, 4.12). Owner F4. Class prefix .dl-
+   Desktop: the header with Export CSV, the filter bar, then one table per deal group (Negotiating, Signed,
+   not live, Live, Lost in the last 30 days) under its heading. The tables share fixed column widths, so the
+   groups line up like one list. Phone (< 640 px): the kit's cards, with Log what happened behind ⋯. */
+
+.dl-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.page .dl-head h1 { margin: 0; }
+.dl-csv { grid-column: 2; grid-row: 1; }
+.dl-sub { grid-column: 1 / -1; margin: 0; color: var(--ink-2); font-size: var(--fs-14); }
+
+.dl-filters .ui-filters { margin-bottom: var(--sp-4); }
+
+.dl-body { display: grid; gap: var(--sp-5); min-width: 0; }
+.dl-body[aria-busy="true"] .dl-loading { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--panel); }
+
+/* ---------- Group headings ---------- */
+
+.dl-group { min-width: 0; }
+.dl-ghead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.dl-h {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  font-size: var(--fs-16);
+  font-weight: 600;
+}
+.dl-h:focus { outline: none; }
+.dl-h:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.dl-h .ui-dot { width: 10px; height: 10px; }
+.dl-n { color: var(--ink-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.dl-total { color: var(--ink); font-weight: 600; }
+.dl-desc { margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+
+/* The page has one Export CSV and the counts sit in the headings: the lists' own heads are not needed. */
+.dl-list .ui-list-head { display: none; }
+.dl-list .ui-list { gap: var(--sp-2); }
+
+/* ---------- Rows ---------- */
+
+.dl-site .ui-row-link { white-space: normal; overflow-wrap: anywhere; }
+.dl-tags { display: flex; flex-basis: 100%; min-width: 0; margin-top: 3px; }
+.dl-tags .ui-tag { max-width: 150px; }
+.dl-tags .ui-tags.is-none:empty { display: none; }
+
+.dl-terms { display: flex; flex-direction: column; min-width: 0; }
+.dl-amt { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.dl-model { color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+
+.dl-next .ui-due, .dl-next .ui-chip { white-space: nowrap; }
+.dl-quiet { margin-left: 2px; }
+
+.dl-place { display: flex; flex-direction: column; min-width: 0; }
+.dl-plink {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--link);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dl-when, .dl-ago { color: var(--ink-2); font-size: var(--fs-12); }
+.dl-last { white-space: nowrap; }
+
+/* ---------- Shared column widths (>= 640 px): the four tables line up ---------- */
+/* Site and Terms take a share, Value, Owner and the actions a fixed width, and the step column (Next step,
+   Placement or Last activity) the rest. Names wrap rather than being cut. */
+
+@media (min-width: 640px) {
+  .dl-list .ui-table { table-layout: fixed; }
+  .dl-list .ui-table th, .dl-list .ui-table td { padding-left: 8px; padding-right: 8px; }
+  .dl-list .ui-table td { padding-top: 8px; padding-bottom: 8px; }
+  .dl-list .ui-table .dl-c-site { width: 21%; min-width: 0; max-width: none; }
+  .dl-list .ui-table .dl-c-terms { width: 16%; }
+  .dl-list .ui-table .dl-c-value { width: 88px; }
+  .dl-list .ui-table .dl-c-owner { width: 156px; }
+  .dl-list .ui-table .dl-c-acts { width: 184px; }
+  .dl-list .ui-table td.dl-c-owner .ui-owner { max-width: 100%; }
+  .dl-list .ui-table td.is-num, .dl-list .ui-table th.is-num { padding-right: var(--sp-3); }
+}
+
+/* Below 1440 px the Value column goes (the totals stay in the headings, the flat fee in Terms). */
+@media (min-width: 640px) and (max-width: 1439.98px) {
+  .dl-list .ui-table .dl-c-value { display: none; }
+  .dl-list .ui-table .dl-c-site { width: 23%; }
+  .dl-list .ui-table .dl-c-terms { width: 19%; }
+}
+/* Below 1280 px Log what happened moves into ⋯ (which offers it and Follow up). */
+@media (min-width: 640px) and (max-width: 1279.98px) {
+  .dl-list .ui-table .dl-c-acts { width: 64px; }
+  .dl-list .ui-row-acts > [data-row-act="log"] { display: none; }
+  .dl-list .ui-row-more { display: inline-flex; }
+}
+@media (min-width: 640px) and (max-width: 899.98px) {
+  .dl-list .ui-table .dl-c-site { width: 28%; }
+  .dl-list .ui-table .dl-c-terms { width: 19%; }
+  .dl-list .ui-table .dl-c-owner { width: 140px; }
+}
+
+/* ---------- Phone cards ---------- */
+/* Line 1: the name (with its client tags under it) and the owner, ⋯ in the corner (Log what happened is in
+   it). Then the terms, then the next step (or placement, or last activity). */
+
+@media (max-width: 639.98px) {
+  .dl-head { margin-bottom: var(--sp-2); }
+  .dl-sub { font-size: var(--fs-13); }
+  .dl-body { gap: var(--sp-4); }
+  .dl-ghead { flex-direction: column; gap: 0; }
+  .dl-list .ui-table tbody tr { align-items: flex-start; gap: 4px var(--sp-2); }
+  .dl-list .ui-table td.dl-c-site { order: 0; flex: 1 1 0; }
+  .dl-list .ui-table td.dl-c-owner { order: 1; flex: none; margin-right: 36px; }
+  .dl-list .ui-table td.dl-c-terms { order: 2; flex-basis: 100%; }
+  .dl-list .ui-table td.dl-c-what { order: 3; flex-basis: 100%; }
+  .dl-tags { margin-top: 2px; }
+  .dl-terms { flex-direction: row; flex-wrap: wrap; gap: 0 var(--sp-2); align-items: baseline; }
+  .dl-list .ui-table td.dl-c-terms .dl-noterms { font-size: var(--fs-13); }
+}
