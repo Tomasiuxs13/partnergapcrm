@@ -231,7 +231,25 @@
 }
 .cl-link:focus-visible { color: var(--link); text-decoration: underline; }
 .cl-l1 .ui-newdot { margin-left: -2px; }
-.cl-sep { color: var(--faint); }
+/* Separators between the parts of a row's second line: a "·" before every part, in a --cl-sep wide box.
+   The line is shifted left by that width and clipped back to its own edge, so the dot before the first
+   part of each line (the line start, or after a wrap) is cut off. Focus rings 4 px outside stay visible. */
+.cl-l2 {
+  --cl-sep: 14px;
+  column-gap: 0;
+  margin-left: calc(-1 * var(--cl-sep));
+  clip-path: inset(-8px -8px -8px calc(var(--cl-sep) - 4px));
+}
+.cl-part { display: flex; align-items: center; min-width: 0; }
+.cl-part::before {
+  flex: none;
+  content: "\00B7";
+  content: "\00B7" / "";
+  display: inline-block;
+  width: var(--cl-sep);
+  color: var(--faint);
+  text-align: center;
+}
 .cl-terms, .cl-wait-text { color: var(--ink); }
 .cl-soon { color: var(--warn-ink); font-weight: 500; }
 .cl-out { min-width: 0; overflow-wrap: anywhere; }
@@ -339,7 +357,8 @@
   .cl-table .cl-c-mgr { grid-column: 1 / -1; grid-row: 2; margin-top: -4px; font-size: var(--fs-13); }
   .cl-table .cl-c-mgr::before { content: attr(data-label) ": "; }
   .cl-table .cl-c-mgr:empty, .cl-table .cl-c-act:empty { display: none; }
-  .cl-table .cl-c-num { grid-row: 3; width: auto; text-align: left; white-space: normal; }
+  /* Label on top, number at the bottom: the numbers share one line when a label takes two. */
+  .cl-table .cl-c-num { display: flex; flex-direction: column; justify-content: space-between; grid-row: 3; align-self: stretch; width: auto; text-align: left; white-space: normal; }
   .cl-table .cl-c-act { width: auto; }
   .cl-table .cl-c-num::before {
     content: attr(data-label);
@@ -356,13 +375,15 @@
   .cl-products {
     flex-wrap: nowrap;
     margin-right: calc(-1 * var(--sp-4));
-    padding-right: var(--sp-4);
+    padding-right: var(--sp-5);
     padding-bottom: 2px;
     overflow-x: auto;
     scrollbar-width: none;
+    mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--sp-5)), transparent); /* as Today's chips */
   }
   .cl-products::-webkit-scrollbar { display: none; }
-  .cl-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  /* Four across where the labels fit (390 px), three below that, so no label breaks inside a word. */
+  .cl-tiles { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
   .cl-tile { padding: var(--sp-2); }
   .cl-tile-n { font-size: var(--fs-20); }
   .cl-tile-l { font-size: var(--fs-12); }
@@ -374,14 +395,20 @@
   .cl-prog-acts .ui-btn { flex: 1 1 auto; }
 
   .rp-doc { padding: var(--sp-3); }
+  /* The footer (warnings and both buttons) leaves room for the report: the warnings scroll sooner and
+     the two buttons share one row down to 320 px. */
+  .rp-warn { max-height: 22vh; max-height: 22dvh; }
+  .rp-modal .ui-modal-foot .ui-btn { padding-inline: var(--sp-2); }
   .rp-month { flex: 1 1 auto; }
 }
 
 @media (pointer: coarse) {
   .cl-past-sum { min-height: var(--tap); }
-  .cl-link, .cl-name { display: inline-flex; align-items: center; min-height: 32px; }
+  /* 44 px targets that keep the 32 px line: the extra height reaches into the row's padding. */
+  .cl-link, .cl-name { display: inline-flex; align-items: center; min-width: var(--tap); min-height: var(--tap); margin-block: -6px; }
   .cl-crumb a, .cl-card-f a { display: inline-flex; align-items: center; min-height: var(--tap); }
-  .cl-out { display: inline-flex; align-items: center; min-height: 32px; }
+  .cl-crumb a { min-width: var(--tap); }
+  .cl-out { display: inline-flex; align-items: center; min-height: var(--tap); margin-block: -6px; }
 }
 
 /* ---------- Print: the report prints alone (css/print.css hides the rest) ---------- */

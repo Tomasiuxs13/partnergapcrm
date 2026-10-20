@@ -625,6 +625,10 @@ select.ui-input { padding-right: 28px; }
   .ui-table .is-p3, .ui-table td.is-num { display: none; }
   .ui-table td.is-c-site { flex: 1 1 calc(100% - 56px); max-width: none; min-width: 0; font-size: var(--fs-16); }
   .ui-table td.ui-sel { order: -1; flex: none; width: auto; padding: 0; }
+  /* A selectable card: the checkbox sits in its own column on the left, so the name, the pills and the
+     next step all start at the same edge. */
+  .ui-table tbody tr:has(> td.ui-sel) { padding-left: var(--tap); }
+  .ui-table tbody tr > td.ui-sel { position: absolute; top: var(--sp-3); left: 0; display: flex; justify-content: center; width: var(--tap); }
   .ui-table td.is-actions { position: absolute; top: 4px; right: 4px; width: auto; }
   .ui-table td.is-c-next, .ui-table td.is-c-due, .ui-table td.is-c-terms { flex-basis: 100%; }
   .ui-row-acts > .ui-btn:not(.ui-row-more) { display: none; }
@@ -920,7 +924,27 @@ html[data-panel-open] { overflow: hidden; }
      classes set their own size, so they repeat it. */
   .ui-input, .ui-fsearch .ui-input, .ui-msearch, .ui-sortsel select, .ui-pager-per select { min-height: var(--tap); font-size: var(--fs-16); }
 }
-/* Phone cards: the checkbox stays in line with the pills; its target reaches into the card padding. */
-@media (pointer: coarse) and (max-width: 639.98px) {
-  .ui-table td.ui-sel .ui-selbox { margin-left: calc(-1 * var(--sp-3)); }
+/* Touch: a pill keeps its 44 px target but looks as slim as on a desktop. The visible pill is drawn by
+   ::before, inset into the target, so a row of pills doesn't turn into a row of tall buttons. */
+@media (pointer: coarse) {
+  button.ui-pill, button.ui-owner,
+  button.ui-pill.is-edit[aria-expanded="true"], button.ui-owner.is-edit[aria-expanded="true"],
+  button.ui-pill.is-edit:hover, button.ui-owner.is-edit:hover { position: relative; z-index: 0; border-color: transparent; background: transparent; }
+  button.ui-pill::before, button.ui-owner::before {
+    content: "";
+    position: absolute;
+    inset: 8px 0;
+    z-index: -1;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-pill);
+    background: var(--panel);
+  }
+  button.ui-owner.is-none::before { border-style: dashed; }
+  button.ui-pill.is-edit[aria-expanded="true"]::before, button.ui-owner.is-edit[aria-expanded="true"]::before { border-color: var(--ink-2); background: var(--panel-2); }
+  /* A link button inside running text: a 44 px target that doesn't stretch its line (the extra height
+     reaches into the lines above and below, as the record panel's inline "more" links do). */
+  :is(p, li, span) > .ui-linkbtn { justify-content: center; min-width: var(--tap); margin-block: -12px; }
+}
+@media (pointer: coarse) and (hover: hover) {
+  button.ui-pill.is-edit:hover::before, button.ui-owner.is-edit:hover::before { border-color: var(--ink-2); background: var(--panel-2); }
 }

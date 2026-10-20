@@ -215,9 +215,12 @@
     flex-wrap: nowrap;
     width: calc(100% + 2 * var(--sp-3));
     margin: 0 calc(-1 * var(--sp-3));
-    padding: 0 var(--sp-3) 2px;
+    padding: 0 var(--sp-5) 2px var(--sp-3);
     overflow-x: auto;
     scrollbar-width: none;
+    /* The chip cut by the card's edge fades out, so the row reads as "more to the side", not as cut off.
+       The wider right padding keeps the last chip clear of the fade once scrolled to the end. */
+    mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--sp-5)), transparent);
   }
   .td-chips::-webkit-scrollbar { display: none; }
   .td-row { align-items: start; gap: 4px var(--sp-2); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
@@ -233,6 +236,7 @@
 
 @media (pointer: coarse) {
   .td-sum { min-height: var(--tap); }
-  .td-link { display: inline-flex; align-items: center; min-height: 32px; }
+  /* A 44 px target that keeps the 32 px line: the extra height reaches into the row's padding. */
+  .td-link { display: inline-flex; align-items: center; min-height: var(--tap); margin-block: -6px; }
   .td-more { display: inline-flex; align-items: center; min-height: var(--tap); }
 }

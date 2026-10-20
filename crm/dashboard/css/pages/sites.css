@@ -194,16 +194,21 @@
   .si-sort { flex: 1 1 auto; min-width: 0; }
   .si-sort select { flex: 1 1 auto; width: 100%; min-width: 0; }
   .si-tools .si-csv { display: none; }
-  .si-head .si-csv-head { display: inline-flex; flex: none; margin-top: 2px; }
+  /* As the Deals head: Export CSV beside the title, the line under them at full width. */
+  .si-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px var(--sp-4); }
+  .si-head-text { display: contents; }
+  .si-head .si-csv-head { display: inline-flex; grid-column: 2; grid-row: 1; }
+  .si-head .si-sub { grid-column: 1 / -1; margin: 0; }
   .si-tools > .si-chips { flex-basis: 100%; }
   /* The quick presets stay on one line and scroll sideways instead of taking two lines (as Today's chips). */
   .si-tools > .si-presets {
     flex: 0 0 calc(100% + 2 * var(--sp-3)); /* to the screen edges: the phone gutter is --sp-3 (layout.css) */
     flex-wrap: nowrap;
     margin: 0 calc(-1 * var(--sp-3));
-    padding: 0 var(--sp-3) 2px;
+    padding: 0 var(--sp-5) 2px var(--sp-3);
     overflow-x: auto;
     scrollbar-width: none;
+    mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--sp-5)), transparent); /* as Today's chips */
   }
   .si-presets::-webkit-scrollbar { display: none; }
   .si-presets > .ui-chipbtn { flex: none; }

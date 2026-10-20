@@ -65,6 +65,10 @@
 
 .dl-place { display: flex; flex-direction: column; min-width: 0; }
 .dl-plink {
+  /* A block that clips its own text (an inline box ignores overflow, and the long link ran into the next
+     column) and holds its absolutely placed "(opens in a new tab)" (it widened the page by 2 px at 320 px). */
+  position: relative;
+  display: block;
   max-width: 100%;
   overflow: hidden;
   color: var(--link);
@@ -72,6 +76,9 @@
   white-space: nowrap;
 }
 .dl-when, .dl-ago { color: var(--ink-2); font-size: var(--fs-12); }
+@media (pointer: coarse) {
+  .dl-plink { padding-block: 12px; margin-block: -12px; } /* a 44 px target on its 20 px line */
+}
 .dl-last { white-space: nowrap; }
 
 /* ---------- Shared column widths (>= 640 px): the four tables line up ---------- */
@@ -110,8 +117,9 @@
 }
 
 /* ---------- Phone cards ---------- */
-/* Line 1: the name (with its client tags under it) and the owner, ⋯ in the corner (Log what happened is in
-   it). Then the terms, then the next step (or placement, or last activity). */
+/* Line 1: the name, ⋯ in the corner (Log what happened is in it); under it the stage pill and the client
+   tags. Then the owner with the terms beside it, then the next step (or placement, or last activity). The
+   name gets the whole line, so neither it nor the stage pill is cut at 320 px. */
 
 @media (max-width: 639.98px) {
   .dl-head { margin-bottom: var(--sp-2); }
@@ -119,9 +127,10 @@
   .dl-body { gap: var(--sp-4); }
   .dl-ghead { flex-direction: column; gap: 0; }
   .dl-list .ui-table tbody tr { align-items: flex-start; gap: 4px var(--sp-2); }
-  .dl-list .ui-table td.dl-c-site { order: 0; flex: 1 1 0; }
-  .dl-list .ui-table td.dl-c-owner { order: 1; flex: none; margin-right: 36px; }
-  .dl-list .ui-table td.dl-c-terms { order: 2; flex-basis: 100%; }
+  .dl-list .ui-table td.dl-c-site { order: 0; flex: 1 1 100%; }
+  .dl-list .dl-site > .ui-row-link { max-width: calc(100% - var(--tap)); } /* clear of ⋯ in the corner */
+  .dl-list .ui-table td.dl-c-owner { order: 1; flex: none; }
+  .dl-list .ui-table td.dl-c-terms { order: 2; flex: 1 1 auto; align-self: center; }
   .dl-list .ui-table td.dl-c-what { order: 3; flex-basis: 100%; }
   .dl-tags { margin-top: 2px; }
   .dl-terms { flex-direction: row; flex-wrap: wrap; gap: 0 var(--sp-2); align-items: baseline; }

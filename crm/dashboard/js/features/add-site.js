@@ -266,7 +266,7 @@ function bodyHtml(st) {
   return html`<div class="se-add">
 <div class="ui-field">
   <label class="ui-label" for="se-add-domain">Website</label>
-  <input id="se-add-domain" name="domain" class="ui-input" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="Paste a link, for example mashable.com" value="${st.init.domain || ""}" aria-describedby="se-add-domain-hint">
+  <input id="se-add-domain" name="domain" class="ui-input" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="For example mashable.com" value="${st.init.domain || ""}" aria-describedby="se-add-domain-hint">
   <p class="se-hint" id="se-add-domain-hint" data-domain-hint>Paste any link to the site. It's checked against the CRM as you type.</p>
 </div>
 <div data-dupes></div>
