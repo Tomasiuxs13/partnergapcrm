@@ -167,7 +167,9 @@ const ROWS = [
     await nav(p, "#help", ".hp-card");
     assert.ok((await texts(p, "main h2")).some((h) => /^Automatic jobs/.test(h) && /Vilnius time/.test(h)));
     await teamReady(p);
-    assert.ok(await p.$("[data-tm-run-card] [data-tm-run]"), "the morning run card lists the runs");
+    // The runs arrive with the side requests (team activity, suggestions, runs), after the table: wait for them.
+    const run = await p.waitForSelector("[data-tm-run-card] [data-tm-run]", { timeout: 20000 }).catch(() => null);
+    assert.ok(run, "the morning run card lists the runs");
   }],
   ["All sites (views, filters, sort, chips, CSV, bulk, pager)", "Sites › All (+ Last activity, Source, Has contact, big sites) (30)", async (p) => {
     await nav(p, "#sites?tab=all");
