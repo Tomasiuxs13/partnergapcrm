@@ -479,7 +479,8 @@ function drawOverview(what) {
 
 // ---------- the old list links (#team?show=<flag>&owner=…) ----------
 
-// The same list on Sites (rules/team.js#target), replacing the history entry; an unknown list: the overview.
+// The same list on Sites (rules/team.js#target), replacing the history entry; an unknown list: the overview
+// (the URL loses show=). True when the page is leaving, so mount() draws nothing.
 function redirectShow() {
   const ctx = st.ctx;
   const p = params(ctx);
@@ -487,7 +488,7 @@ function redirectShow() {
   const t = rules.target(String(p.show), { owner: has(p.owner) ? String(p.owner) : null });
   const go = ctx.go;
   setTimeout(() => go(t.page, t.params, { replace: true }), 0);
-  return true;
+  return t.page !== "team";
 }
 
 // ---------- back to the number that opened a list ----------

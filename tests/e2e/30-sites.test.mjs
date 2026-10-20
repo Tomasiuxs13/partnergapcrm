@@ -609,7 +609,7 @@ test("flag= (a Team overview number): a removable chip with the list's name, All
     await pickFilter(page, "owner", "Me");
     await waitCount(page, kOverdue.length, "Kamile's overdue");
     const chips = await page.$$eval(".si-filters .ui-chiprow .ui-fchip", (cs) => cs.map((c) => c.firstChild.textContent.trim()));
-    assert.deepEqual(chips.sort(), ["Overdue follow-ups", "Owner: Me"]);
+    assert.deepEqual(chips, ["Overdue follow-ups", "Owner: Me", "Show big sites"], "the list's name first, then the bar's own filters");
     await shot(page, "sites-flag-1440");
     // × removes it; the owner stays.
     await page.click('.si-filters [data-fremove="flag"]');
