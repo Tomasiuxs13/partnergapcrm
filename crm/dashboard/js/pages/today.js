@@ -72,6 +72,9 @@ function readOnly(ctx) {
   return !!(ctx.meta && ctx.meta.read_only);
 }
 
+// A snapshot (spec 4.14) holds no email address, so it has no Copy email (as in the record panel).
+const snapshotMode = () => typeof window !== "undefined" && !!window.__SNAPSHOT__;
+
 function compute(ctx) {
   const records = ctx.store.all();
   const o = { meta: ctx.meta, today: ctx.today, me: me(ctx) };
@@ -192,7 +195,7 @@ function prospectRow(ctx, r) {
   const dr = r.dr != null ? html`<span class="td-dr" title="${DR_TIP}">DR ${num(r.dr)}</span>` : "";
   const people = n ? html`<span class="td-muted">${num(n)} ${plural(n, "contact")}</span>` : "";
   const acts = html`${url ? html`<a class="ui-btn is-sm" href="${url}" target="_blank" rel="noopener noreferrer" data-td-act="visit">Visit site <span aria-hidden="true">↗</span></a>` : ""}${n
-    ? html`<button type="button" class="ui-btn is-sm" data-td-act="copy">Copy email</button>${write ? html`<button type="button" class="ui-btn is-sm" data-td-act="emailed" data-write>Sent first email</button>` : ""}` : ""}${write && !open
+    ? html`${snapshotMode() ? "" : html`<button type="button" class="ui-btn is-sm" data-td-act="copy">Copy email</button>`}${write ? html`<button type="button" class="ui-btn is-sm" data-td-act="emailed" data-write>Sent first email</button>` : ""}` : ""}${write && !open
     ? html`<button type="button" class="ui-btn is-sm" data-td-act="add" data-write>Add contact</button>` : ""}${write
     ? html`<button type="button" class="ui-btn is-sm is-ghost" data-td-act="notfit" data-write>Not a fit</button>` : ""}<button type="button" class="ui-btn is-sm is-ghost td-dots" data-td-act="more" aria-haspopup="menu" aria-label="${"Actions: " + (r.label || r.id)}"><span aria-hidden="true">⋯</span></button>`;
   return html`<li class="td-row td-prow" data-key="${r.id}" data-rec="${r.id}"><span class="td-av">${avatar(r.label || r.domain || r.id)}</span><div class="td-main"><div class="td-l1">${linkHtml(ctx, r)}${dom}</div><div class="td-l2">${clientTags(r, { edit: false })}${dr}${people}</div>${suggHtml(r)}</div><div class="td-acts">${acts}</div>${formHtml(r)}</li>`;
@@ -628,7 +631,7 @@ async function prospectMenu(anchor, r) {
   const url = siteUrl(r);
   const items = [];
   if (url) items.push({ label: "Visit site ↗", value: "visit" });
-  if (n) items.push({ label: "Copy email", value: "copy" });
+  if (n && !snapshotMode()) items.push({ label: "Copy email", value: "copy" });
   if (n && write) items.push({ label: "Sent first email", value: "emailed" });
   if (write) items.push({ label: "Add contact", value: "add" });
   if (write) items.push({ label: "Not a fit…", value: "notfit" });

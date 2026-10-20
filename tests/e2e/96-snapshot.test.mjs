@@ -7,14 +7,16 @@
 // pattern, refusals) and open it in Chromium with the network switched off: every request other than the
 // snapshot document (and the host page of the frame tests) is counted and aborted, and must be 0. The page
 // runs top level, in a sandboxed frame (no allow-same-origin, so localStorage throws) and in a sandboxed
-// srcdoc frame. Its numbers are compared with the live site at the same moment. Nothing is written to D1.
+// srcdoc frame. Its numbers are compared with the live site at the same moment. Nothing is written to the
+// run's D1. The Sheets test starts a server of its own: build_d1_import.py loads the synthetic dumps of
+// tests/fixtures/sheets into its local D1, and the builder's rows from those dumps must equal what it serves.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
-import { baseUrl, apiClient, browser, closeBrowser, signedInPage, fixture, HARNESS_ROOT } from "./lib.mjs";
+import { spawnSync, execFileSync } from "node:child_process";
+import { baseUrl, apiClient, browser, closeBrowser, signedInPage, fixture, startServer, HARNESS_ROOT } from "./lib.mjs";
 
 const BASE = baseUrl();
 const SHOTS = process.env.SHOTS_DIR || "/tmp/shots-g36";
@@ -22,6 +24,8 @@ const fx = fixture();
 const TODAY = fx.today || process.env.FIXTURE_TODAY;
 const AS_OF = TODAY + "T12:00:00Z";
 const BUILDER = path.join(HARNESS_ROOT, "crm", "scripts", "build_snapshot.mjs");
+const IMPORTER = path.join(HARNESS_ROOT, "crm", "scripts", "build_d1_import.py");
+const SHEETS = path.join(HARNESS_ROOT, "tests", "fixtures", "sheets");
 const DOC = "https://artifact.example.test/snapshot.html";
 const HOST = "https://host.example.test/page";
 const DESKTOP = { width: 1440, height: 900 };
@@ -349,6 +353,22 @@ test("T34 every write control is hidden or disabled; no downloads, popups or pri
     });
     assert.equal(res.opened, null);
     assert.equal(res.prevented, true, "download click cancelled");
+
+    // Today's new prospects with a contact have no Copy email either (no button, not in the ⋯ menu).
+    await v.selectOption("[data-sn-me]", "Monica");
+    await v.evaluate(() => { location.hash = "#today"; });
+    await v.waitForFunction(() => /· Monica$/.test(document.querySelector("[data-td-sub]").textContent.trim()));
+    const withContact = v.locator(".td-prow", { hasText: /\d contacts?\b/ }).first();
+    await withContact.waitFor();
+    assert.equal(await v.locator("[data-td-act=copy]").count(), 0, "no Copy email button on Today");
+    // The row's ⋯ menu shows on a phone.
+    await s.page.setViewportSize(PHONE);
+    await withContact.locator("[data-td-act=more]").click();
+    const items = await v.locator("[role=menu] [role=menuitem]").allTextContents();
+    assert.ok(items.some((t) => /Open details/.test(t)), "the row menu opened: " + items.join(", "));
+    assert.ok(!items.some((t) => /Copy email/.test(t)), "no Copy email in the row menu");
+    await v.keyboard.press("Escape");
+    await s.page.setViewportSize(DESKTOP);
     assert.equal(s.popups.length, 0, "no popup or download page");
     assert.deepEqual(s.requests, []);
     assert.deepEqual(s.errors, []);
@@ -435,4 +455,35 @@ test("T34 in a sandboxed frame: storage throws, the picker keeps the name in mem
   } finally {
     await d.close();
   }
+});
+
+// The Friday digest builds from a Google Sheets dump (spec 6.5). Its rows must be the site's own after the
+// importer loaded the same sheet: here through a real fixture server and local D1, not a stand-in.
+test("T34 a Sheets dump gives the rows the site serves after build_d1_import.py loaded the same sheet", async () => {
+  const sheet = (name) => path.join(SHEETS, name + ".json");
+  const sql = path.join(dir, "sheet-import.sql");
+  execFileSync("python3", ["-I", IMPORTER, sheet("accounts"), sheet("contacts"), sheet("activity"), sql], { encoding: "utf8" });
+  const server = await startServer({ seed: false });
+  let served;
+  try {
+    await server.d1All(null, { file: sql });
+    const r = await (await apiClient(server.baseUrl)).call("GET", "/api/partners?v=2");
+    assert.equal(r.status, 200, r.text.slice(0, 200));
+    served = r.text;
+  } finally {
+    await server.stop();
+  }
+  write("sheet-served.json", served);
+  let r = build(["--rows", sheet("accounts"), "--contacts-sheet", sheet("contacts"), "--activity-sheet", sheet("activity"),
+    "--meta", "meta.json", "--as-of", AS_OF, "--out", path.join(dir, "from-sheet.html")]);
+  assert.equal(r.status, 0, r.stderr);
+  r = build(["--rows", "sheet-served.json", "--meta", "meta.json", "--as-of", AS_OF, "--out", path.join(dir, "from-served.html")]);
+  assert.equal(r.status, 0, r.stderr);
+  const fromSheet = embedded(fs.readFileSync(path.join(dir, "from-sheet.html"), "utf8"));
+  const fromServed = embedded(fs.readFileSync(path.join(dir, "from-served.html"), "utf8"));
+  const body = JSON.parse(served);
+  assert.equal(body.rows.length, 15);
+  assert.deepEqual(fromSheet.cols, body.cols);
+  assert.deepEqual(fromSheet.rows, body.rows, "the rows from the dumps are the server's rows");
+  assert.deepEqual(fromSheet.rows, fromServed.rows, "both snapshots embed the same rows");
 });

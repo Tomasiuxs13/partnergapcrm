@@ -1,0 +1,12 @@
+{
+  "range": "'Activity log'!A1:H1000",
+  "values": [
+    ["Date","Account ID","Contact ID","Type","By","Summary","Link","Client"],
+    ["2026-10-12","PG-00001","C-00001","Email","Kamile","Sent the first email","","Ultahost"],
+    ["46309","PG-00001","","Call","Kamile","Short call","",""],
+    ["2026-10-13","PG-00002","","Note","Jonas","Asked ana.berg@beta-coupons.example.test for rates","",""],
+    ["","PG-00003","","Note","Monica","Skipped: no date","",""],
+    ["2026-10-08","PG-00009","","Meeting","Mantvydas","Kick-off","","Melograno - Trafft"],
+    ["2026-10-15","PG-00099","","Email","Jonas","Follow-up","",""]
+  ]
+}
