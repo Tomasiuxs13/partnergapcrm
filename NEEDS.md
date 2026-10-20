@@ -339,3 +339,23 @@ Still open:
 - F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
 - G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
 - F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
+
+# NEEDS (G3-6)
+
+Snapshot builder (`crm/scripts/build_snapshot.mjs`, `crm/scripts/snapshot/`). Nothing here blocks the snapshot:
+each item has a workaround in `crm/scripts/snapshot/snapshot.css` or the prelude. A snapshot is detected with
+`window.__SNAPSHOT__` (set before any module runs) or `html[data-snapshot]`.
+
+1. **`js/features/record/index.js` (F1, panel owner): no "Copy email" in a snapshot.** A snapshot holds no email,
+   so `copyEmail()` can only fail, and it shows the error toast "Couldn't load the contacts. Try again." Suggested
+   change: when `snapshotMode()`, leave "Copy email" out of the phone ⋯ menu (`moreMenu`) and out of
+   `toolsHtml()`. Workaround: `snapshot.css` hides the header button (`[data-pact="copy-email"]`). The phone
+   ⋯ menu item still shows, and menu items have no attribute that CSS could match.
+2. **Export CSV (G1-C `js/ui/list.js` `[data-csv]`, F3 `js/pages/sites.js` `[data-si-csv]`, F4
+   `js/pages/deals.js` `[data-dl-csv]`), optional: one shared marker.** A snapshot allows no downloads. Suggested
+   change: give every download button a `data-download` attribute, so that one rule (`html[data-snapshot]
+   [data-download]`) hides them all, including future ones. Workaround: `snapshot.css` hides the three selectors.
+   The prelude also cancels any click on a `download`, `blob:` or `data:` link, so a new button would do nothing.
+3. **`js/pages/team.js` (F6), optional: the morning run card in a snapshot.** It shows "Not available yet".
+   `js/pages/clients.js` already says "Open the live site to see this." when `window.__SNAPSHOT__` is set.
+   Suggested change: the same text there.
