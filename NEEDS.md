@@ -320,3 +320,22 @@ Still open:
    `tabindex="-1"`, and the hidden table's links take the Tab stops, so a keyboard user tabs onto links they can't
    see (no visible focus ring). Suggested change: keep the visible label links in the Tab order and give the
    hidden table's links `tabindex="-1"` (screen readers still read them as table cells).
+
+# Status after the F6 merge (crm-easy-site)
+
+Nothing was applied at the F6 merge; both F6 items stay open.
+- F6 1 (owners F3 then F6): not small. It adds a new Sites filter with a removable chip (`js/pages/sites.js`, plus a
+  `30-sites` check), then fills `SITES_FLAGS` in `js/rules/team.js`, which moves about a dozen Team overview links
+  from `#team?show=` to Sites and changes what `60-team` and `rules-team.test.mjs` expect. Until then those numbers
+  open the Team overview's own list, with matching counts (`60-team` T20).
+- F6 2 (owner G1-C, `js/ui/charts.js`; or G3-3 with `95-mobile-a11y`): not applied as suggested. The visible bar
+  list is `aria-hidden="true"`, so putting its links back in the Tab order makes focusable elements inside
+  `aria-hidden` (axe `aria-hidden-focus`, serious) on the client page's stage bars and the Team overview's charts.
+  A fix needs a different chart structure, for example a visible list that is not `aria-hidden` and a hidden table
+  without links. Keyboard users can still reach every chart link through the hidden table.
+
+Still open:
+- F6 1 (F3, then F6) and F6 2 (G1-C or G3-3) as above.
+- F2 1 (F8, `js/shell/whats-new.js`): the Today banner hook `whatsNewBanner(ctx, slot)`.
+- G1-B 6 (G3-1, release): change `BUILD` in `lib/meta.js` together with `window.BUILD` in `index.html`.
+- F1 3 follow-up (record panel owner F1, or G3-1): send the outcomes with a form through `quiet`/`throw`.
