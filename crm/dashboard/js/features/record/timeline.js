@@ -16,7 +16,9 @@ export const FIELD_LABELS = {
   stage: "Stage", owner: "Owner", clients: "Clients", type: "Type", next_step: "Next step", next_due: "Follow-up",
   deal_model: "Deal type", deal_flat: "Flat fee", deal_pct: "Commission", deal_value: "Deal value",
   content_url: "Placement link", live_date: "Went live", tracking_id: "Tracking ID",
+  client: "Client", notes: "Notes",
 };
+const DEAL_STAGE_TEXT = { Active: "Signed" };
 
 const SHOWN = 6;
 
@@ -72,9 +74,25 @@ function keyOf(item) {
   return m ? new Date(+m[1], +m[2] - 1, +m[3]).getTime() : 0;
 }
 
+// A deal_update row ("D-00012.stage") as "Soro deal · Stage: Negotiating → Signed".
+function dealChangeText(row, dealName) {
+  const f = String(row.field || "");
+  const dot = f.lastIndexOf(".");
+  const id = dot > 0 ? f.slice(0, dot) : "";
+  const col = dot > 0 ? f.slice(dot + 1) : f;
+  const st = (v) => (col === "stage" && v != null ? DEAL_STAGE_TEXT[v] || v : v);
+  return dealName(id) + " · " + changeText({ field: col, old: st(row.old), new: st(row.new) });
+}
+
 // The merged list, newest first: [{key, kind, at?, day, by, type, text, changes[], notCopied}].
+// Deals and file links (migration 006) add "Added deal", "Added file" and deal changes.
 export function buildTimeline(profile, { today } = {}) {
   const p = profile || {};
+  const deals = Array.isArray(p.deals) ? p.deals : [];
+  const dealName = (id) => {
+    const d = deals.find((x) => x.id === id);
+    return (d && d.client ? d.client + " deal" : "Deal");
+  };
   const acts = (Array.isArray(p.activity) ? p.activity : []).map((a, i) => Object.assign({}, a, { _i: i }));
   const used = new Set();
   const items = [];
@@ -96,9 +114,16 @@ export function buildTimeline(profile, { today } = {}) {
       } else if (e.kind === "create_contact") {
         const who = personName(parseJson(e.new));
         items.push({ kind: "contact", at: g.at, day, by: g.by, type: "Added contact", text: who, changes: [], notCopied: e.state === "not_copied" });
+      } else if (e.kind === "create_deal") {
+        const j = parseJson(e.new) || {};
+        const terms = [j.deal_model, [j.deal_flat != null && j.deal_flat !== "" ? money(j.deal_flat) : "", j.deal_pct != null && j.deal_pct !== "" ? pct(j.deal_pct) : ""].filter(Boolean).join(" + ")].filter(Boolean).join(" · ");
+        items.push({ kind: "contact", at: g.at, day, by: g.by, type: "Added deal", text: [j.client, DEAL_STAGE_TEXT[j.stage] || j.stage, terms].filter(Boolean).join(" · "), changes: [], notCopied: e.state === "not_copied" });
+      } else if (e.kind === "create_file") {
+        const j = parseJson(e.new) || {};
+        items.push({ kind: "contact", at: g.at, day, by: g.by, type: "Added file", text: [j.label, j.deal_id ? dealName(j.deal_id) : ""].filter(Boolean).join(" · "), changes: [], notCopied: e.state === "not_copied" });
       }
     }
-    const changes = g.rows.filter((e) => e.kind === "update");
+    const changes = g.rows.filter((e) => e.kind === "update" || e.kind === "deal_update");
     const actRow = g.rows.find((e) => e.kind === "activity");
     let act = null;
     if (actRow) {
@@ -121,7 +146,7 @@ export function buildTimeline(profile, { today } = {}) {
         by: g.by,
         type: act ? act.type || "Note" : "Changed",
         text: act ? String(act.summary || "") : "",
-        changes: changes.map(changeText),
+        changes: changes.map((e) => (e.kind === "deal_update" ? dealChangeText(e, dealName) : changeText(e))),
         notCopied,
       });
     }
@@ -155,6 +180,7 @@ export function whenText(item, today) {
 const KIND_CLASS = {
   Email: "is-email", Call: "is-call", Meeting: "is-call", Note: "is-note", "Deal update": "is-deal",
   "Content live": "is-live", Changed: "is-edit", "Added this site": "is-added", "Added contact": "is-added", "Last email": "is-mail",
+  "Added deal": "is-deal", "Added file": "is-added",
 };
 
 const CLAMP = 220;

@@ -22,6 +22,14 @@ Date, Account ID, Contact ID, Type, By, Summary, Link, Client
 ## Keyword runs
 Date, Seed keyword, Tool, Domains found, New domains, Already in CRM, Run by, Client
 
+## Deals (several per account, one per client; from migration 006, after Jonas's OK)
+A Deal ID (D-nnnnn) · B Account ID · C Client · D Stage (Negotiating, Active, Lost) · E Owner · F Deal model · G Flat fee · H Commission % · I Deal value · J Content URL · K Live date · L Tracking ID · M Next step · N Next due · O Notes · P Created.
+The website adds and changes deals; the daily run copies them here (`crm/docs/daily-run-changes.md`, insertion 7). Migration 006 starts the tab with one deal per account that was at Negotiating or Active or had deal terms, for its first client. The account's own deal columns (W:AC) stay as they were and are no longer edited on the site.
+
+## Files (links to contracts, price lists, briefs; from migration 006)
+A File n · B Account ID · C Deal ID (or empty) · D Name · E Type (Contract, Price list, Brief, Invoice, Other) · F Link (https) · G Added · H Added by.
+Only links are kept. The files themselves stay in Google Drive or wherever they were shared.
+
 ## Lists (dropdown sources)
 - Stage: New, Researching, Contacted, Replied, Negotiating, Active, Lost, Do not contact
 - Affiliate type: Media / Publisher, Coupon / Deals, Review, Influencer / Social, Affiliate Network, Loyalty / Rewards, Marketplace Partner, Web Hosting, Email Marketing, WP / Web Platform, Tech / SaaS, Agency, Other, Uncategorized

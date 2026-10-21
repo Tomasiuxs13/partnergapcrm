@@ -431,6 +431,15 @@ function setClientPast(k, past) {
   });
 }
 
+// #help?add=client (the Clients page's + Add client): opens the form once the settings are in.
+function addFromLink() {
+  if (!st || st.set.state !== "ready") return;
+  const p = (st.ctx.route && st.ctx.route.params) || {};
+  if (p.add !== "client") return;
+  st.ctx.setParams({ add: null }, { replace: true });
+  addClientForm();
+}
+
 // The Add client form (a modal). Resolves when it closes.
 function addClientForm() {
   const ctx = st.ctx;
@@ -600,7 +609,7 @@ export default {
     st = { root, ctx, offs: [], set: { state: "idle", data: null, busy: null, err: {}, error: "" }, admin: isAdmin(ctx) };
     render(root, pageHtml(ctx));
     bind();
-    if (st.admin) loadSettings();
+    if (st.admin) loadSettings().then(addFromLink);
   },
   update(ctx, change) {
     if (!st) return;

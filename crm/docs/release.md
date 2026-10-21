@@ -117,6 +117,17 @@ Run `crm/scripts/migrations/003_site_meta.sql`, then `crm/scripts/migrations/004
 
 **11. One week later (planned Fri 30 Oct)**, after the Friday digest has used the new builder twice: delete `crm/dashboard/legacy.html` and the old list format of `GET /api/partners` (the call without `?v=2`, in `functions/api/partners.js`), with the tests that pin them (T24 and the old list checks in `tests/e2e/90-api-contract.test.mjs` and `tests/e2e/91-migrations.test.mjs`). That is a separate pull request, with Jonas's OK.
 
+## Second update: deals per client and file links (migration 006)
+
+Tomas's changes of 2026-10-21, released after the steps above, in their own pull request.
+1. **Jonas's OK** for migration 006 and prompt insertion 7 (`crm/docs/daily-run-changes.md`).
+2. **Migration**: run `crm/scripts/migrations/006_deals_files.sql` on `partnergap-crm-partners` the same way as step 1 (the agent with the D1 query tool, or `npx.cmd wrangler d1 execute partnergap-crm-partners --remote --file crm/scripts/migrations/006_deals_files.sql`). It is safe to run again, and it seeds one deal per site at Negotiating or Active or with deal terms only while `deals` is empty. Check: `SELECT name FROM sqlite_master WHERE name IN ('deals','files')` returns 2 rows, and `SELECT COUNT(*) FROM deals` is above 0.
+3. **Sheet**: add the Deals and Files tabs with the headers in `crm/docs/sheet-schema.md`, and copy every seeded deal (`SELECT * FROM deals ORDER BY id`) into Deals.
+4. **Prompt**: add insertion 7 to the daily run with `update_trigger`, then read it back.
+5. **Merge** after Jonas writes "merge", then open a site with a deal: the record shows Deals and Files, the Deals page shows one row per deal, and `GET /api/deals` answers a list.
+
+To undo: revert the pull request and take insertion 7 out of the prompt. The two tables can stay; the old code ignores them.
+
 ## Rollback
 
 Do this only after Jonas says so in the thread.

@@ -305,4 +305,17 @@ export const api = {
   runs({ limit } = {}) {
     return request("GET", "/api/runs" + qs({ limit }));
   },
+  // Deals and file links (migration 006). deals() gives {deals: null} before the migration.
+  deals() {
+    return request("GET", "/api/deals");
+  },
+  createDeal(id, deal) {
+    return request("POST", "/api/partner/" + enc(id) + "/deals", deal);
+  },
+  updateDeal(dealId, fields) {
+    return request("PATCH", "/api/deal/" + enc(dealId), { fields });
+  },
+  addFile(id, file) {
+    return request("POST", "/api/partner/" + enc(id) + "/files", file);
+  },
 };

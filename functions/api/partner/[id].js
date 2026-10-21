@@ -7,6 +7,7 @@
 //           state: copied (applied = 1), not_copied (applied = 0 below the highest applied n: a sheet edit
 //           won, R5) or waiting
 //         - suggestions: the site's open daily-run suggestions; null before migration 004
+//         - deals (oldest first) and files (newest first): null before migration 006
 //         - about: only from the 7-day cache, never fetched inline. On a miss about is null and
 //           about_pending is true (GET /api/partner/:id/about answers it); the cache is warmed in the
 //           background, so the next open has it.
@@ -14,7 +15,7 @@
 //   PATCH /api/partner/:id: unchanged, plus "v2" (the row in /api/partners?v=2 column order). 400 with
 //         the field check's sentence; a D1 failure is thrown (a 500), never a 400 with the D1 text.
 import { json, bad, body, who, updatePartner, readPartner, v2Row } from "../../../lib/crm.js";
-import { hasTable } from "../../../lib/tables.js";
+import { hasTables } from "../../../lib/tables.js";
 import { cachedAbout, siteAbout, aboutable } from "../../../lib/about.js";
 
 const HISTORY_MAX = 200;
@@ -25,7 +26,8 @@ export async function onRequestGet({ env, params, waitUntil }) {
   const db = env.PARTNERS_DB;
   const partner = await readPartner(db, id);
   if (!partner) return bad("Not found", 404);
-  const sugg = await hasTable(db, "suggestions");
+  const t = await hasTables(db, ["suggestions", "deals", "files"]);
+  const sugg = t.suggestions;
   const stmts = [
     db.prepare("SELECT * FROM contacts WHERE account_id = ? ORDER BY primary_contact DESC, replied DESC, last_email DESC").bind(id),
     db.prepare("SELECT n, date, contact_id, type, by_whom, summary, client FROM activity WHERE account_id = ? ORDER BY date DESC, n DESC").bind(id),
@@ -35,9 +37,14 @@ export async function onRequestGet({ env, params, waitUntil }) {
              ELSE 'waiting' END AS state, contact_id
       FROM edits WHERE account_id = ?1 ORDER BY n DESC LIMIT ${HISTORY_MAX}`).bind(id),
   ];
-  if (sugg) stmts.push(db.prepare("SELECT * FROM suggestions WHERE account_id = ? AND status = 'open' ORDER BY run_date DESC, id").bind(id));
+  const at = {};
+  const add = (k, stmt) => { at[k] = stmts.length; stmts.push(stmt); };
+  if (sugg) add("sugg", db.prepare("SELECT * FROM suggestions WHERE account_id = ? AND status = 'open' ORDER BY run_date DESC, id").bind(id));
+  if (t.deals) add("deals", db.prepare("SELECT * FROM deals WHERE account_id = ? ORDER BY created, id").bind(id));
+  if (t.files) add("files", db.prepare("SELECT * FROM files WHERE account_id = ? ORDER BY n DESC").bind(id));
   const res = await db.batch(stmts);
   const rows = (i) => (res[i] && res[i].results) || [];
+  const opt = (k) => (k in at ? rows(at[k]) : null);
   let about = null, aboutPending = false;
   if (aboutable(partner.domain)) {
     about = await cachedAbout(partner.domain);
@@ -55,7 +62,9 @@ export async function onRequestGet({ env, params, waitUntil }) {
       about,
       about_pending: aboutPending,
       history: { edits: rows(2) },
-      suggestions: sugg ? rows(3) : null,
+      suggestions: opt("sugg"),
+      deals: opt("deals"),
+      files: opt("files"),
     },
     { headers: { "Cache-Control": "private, no-store" } }
   );

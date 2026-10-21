@@ -53,6 +53,13 @@ let st = null; // the mounted page's state
 
 const snapshot = () => typeof window !== "undefined" && !!window.__SNAPSHOT__;
 
+// Admins (meta.admins) add clients; the button opens Help › Settings with the Add client form open.
+function isAdmin(ctx) {
+  let name = "";
+  try { name = String(ctx.me.get() || "").toLowerCase(); } catch (e) { name = ""; }
+  return !!name && !(ctx.meta && ctx.meta.read_only) && ((ctx.meta && ctx.meta.admins) || []).some((a) => String(a).toLowerCase() === name);
+}
+
 function fresh(root, ctx) {
   return {
     root,
@@ -156,7 +163,7 @@ function listHtml(ctx) {
     ? html`<details class="cl-past" data-cl-past${st && st.pastOpen ? html` open` : ""}><summary class="cl-past-sum" data-cl-key="past">Past clients <span class="cl-dim">(${num(past.length)})</span></summary><div class="cl-tablewrap"><table class="cl-table is-past"><caption class="sr-only">Past clients and their sites</caption><thead>${headRow()}</thead><tbody>${past.map((r) => listRow(ctx, r, { past: true }))}</tbody></table></div></details>`
     : "";
   return html`<div class="cl-page cl-list">
-<header class="cl-head"><div class="cl-titles"><h1 tabindex="-1">Clients</h1><p class="cl-sub">${num(rows.length)} active ${plural(rows.length, "client")}. Open one for its deals, placements and program, or send its monthly report.</p></div></header>
+<header class="cl-head"><div class="cl-titles"><h1 tabindex="-1">Clients</h1><p class="cl-sub">${num(rows.length)} active ${plural(rows.length, "client")}. Open one for its deals, placements and program, or send its monthly report.</p></div>${isAdmin(ctx) ? html`<a class="ui-btn" href="${ctx.href("help", { add: "client" })}" data-cl-addclient>+ Add client</a>` : ""}</header>
 ${ready ? body : html`<div class="cl-card">${skeletonRows(6)}</div>`}
 ${ready ? pastHtml : ""}
 </div>`;

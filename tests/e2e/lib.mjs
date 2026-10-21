@@ -27,7 +27,7 @@ export const HARNESS_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const GOLDEN_DIR = path.join(HARNESS_ROOT, "tests", "e2e", "golden");
 export const PASSWORD = "testpass";
 const MAIN_PORT = 8788; // the main checkout's dev server: never ours
-const MIGRATIONS = ["001_base.sql", "003_site_meta.sql", "004_suggestions_runs.sql"];
+const MIGRATIONS = ["001_base.sql", "003_site_meta.sql", "004_suggestions_runs.sql", "006_deals_files.sql"];
 
 // ---------- tools ----------
 

@@ -43,6 +43,7 @@ import { renderContacts, readAddForm, checkContact, firstEmail, sheetUrl, sheetT
 import { renderSuggestions, openRows, splitName, copyTextOf } from "./suggestions.js";
 import { renderDeal, renderPlacement, showDeal, showPlacement, editDeal, editPlacement } from "./deal.js";
 import { renderDetails } from "./details.js";
+import { renderDeals, renderFiles, profileDeals, openDealForm, openFileForm } from "./deals.js";
 
 const DRAFT_KEY = "pgcrm-panel-draft";
 const PROFILE_TTL = 60000;
@@ -51,7 +52,7 @@ const SYNC_SENTENCE = "Copies to the Google Sheet on the next weekday morning (0
 
 // Parts drawn from the store row, and from the profile.
 const RECORD_PARTS = ["title", "sub", "tools", "meta", "queue", "outs", "acts", "next", "deal", "place", "details", "foot"];
-const PROFILE_PARTS = ["about", "timeline", "contacts", "sugg", "tools", "details"];
+const PROFILE_PARTS = ["about", "timeline", "contacts", "sugg", "tools", "details", "deals", "files", "deal", "place"];
 
 const profiles = new Map(); // site id -> {data, at}
 const inflight = new Map(); // site id -> Promise of the profile
@@ -130,6 +131,10 @@ export function start(makeCtx) {
   bus.on("queue", (d) => {
     const dir = d && typeof d === "object" ? d.dir : d;
     if (state && state.queue) step(dir > 0 ? 1 : -1);
+  });
+  // A deal changed elsewhere (the Deals page's Stage ▾): the site's cached profile is out of date.
+  bus.on("deals:changed", (d) => {
+    if (d && d.id != null) profiles.delete(String(d.id));
   });
   bus.on("unauthorized", () => {
     // The draft is kept for after sign-in, so the page may leave without asking (beforeunload).
@@ -351,29 +356,38 @@ function hidden(on) {
   return on ? html` hidden` : "";
 }
 
+// The site's own Deal terms and Placement cards give way to the Deals card once the site has a deal
+// (migration 006 starts one for every site with terms). A site without one keeps them.
+const hasDeals = () => (profileDeals(state) || []).length > 0;
+
 function panelHtml(r) {
   const ro = readOnly();
   const roText = readOnlyText();
   const today = todayIso();
   const m = meta();
   const head = { queue: state.queue, aboutText: state.aboutText, aboutOpen: state.aboutOpen, emailState: emailState(r), copyEmail: !snapshotMode() };
-  const deal = showDeal(r, { showAll: state.showAll || state.dealForced });
-  const place = showPlacement(r, { showAll: state.showAll });
+  const multi = profileDeals(state) !== null;
+  const deal = !hasDeals() && showDeal(r, { showAll: state.showAll || state.dealForced });
+  const place = !hasDeals() && showPlacement(r, { showAll: state.showAll });
   return html`<div class="ui-panel-scrim" data-pclose="scrim"></div>
 <section class="ui-panel rc-panel" role="dialog" aria-modal="true" aria-labelledby="rp-title" data-panel="${r.id}">
 ${renderHeader(r, head, { readOnly: ro, roText, exists })}
 <div class="ui-panel-body rc-body" data-pbody><div class="rc-cols">
+<div class="rc-left">
+<section class="ui-card rc-card rc-contacts" aria-labelledby="rc-ct-h" data-psec="contacts">${renderContacts(r, state, { meta: m, today, readOnly: ro, lookup: store.get })}</section>
+<section class="ui-card rc-card rc-files" aria-labelledby="rc-files-h" data-psec="files"${hidden(!multi)}>${multi ? renderFiles(r, state, { readOnly: ro }) : ""}</section>
+<section class="ui-card rc-card rc-detcard" aria-labelledby="rc-det-h" data-psec="details">${renderDetails(r, state, { today, readOnly: ro })}</section>
+</div>
 <div class="rc-main">
 <section class="ui-card ui-logbox rc-card rc-log" aria-labelledby="rc-log-h" data-psec="log" data-plog>${renderLog(r, state, { meta: m, today, readOnly: ro, roText })}</section>
 <section class="ui-card rc-card rc-nextcard" aria-label="Next step" data-psec="next">${renderNextStep(r, { today, readOnly: ro })}</section>
 <section class="ui-card rc-card rc-tlcard" aria-labelledby="rc-tl-h" data-psec="timeline">${renderTimeline(r, state, { today })}</section>
 </div>
 <div class="rc-side">
-<section class="ui-card rc-card rc-contacts" aria-labelledby="rc-ct-h" data-psec="contacts">${renderContacts(r, state, { meta: m, today, readOnly: ro, lookup: store.get })}</section>
-<section class="ui-card rc-card rc-sugg" aria-labelledby="rc-sg-h" data-psec="sugg"${hidden(!suggCount())}>${renderSuggestions(r, state, { readOnly: ro })}</section>
+<section class="ui-card rc-card rc-deals" aria-labelledby="rc-deals-h" data-psec="deals"${hidden(!multi)}>${multi ? renderDeals(r, state, { readOnly: ro, today }) : ""}</section>
 <section class="ui-card rc-card rc-deal" aria-labelledby="rc-deal-h" data-psec="deal"${hidden(!deal)}>${deal ? renderDeal(r, { readOnly: ro }) : ""}</section>
 <section class="ui-card rc-card rc-place" aria-labelledby="rc-place-h" data-psec="place"${hidden(!place)}>${place ? renderPlacement(r, { readOnly: ro, today }) : ""}</section>
-<section class="ui-card rc-card rc-detcard" aria-labelledby="rc-det-h" data-psec="details">${renderDetails(r, state, { today, readOnly: ro })}</section>
+<section class="ui-card rc-card rc-sugg" aria-labelledby="rc-sg-h" data-psec="sugg"${hidden(!suggCount())}>${renderSuggestions(r, state, { readOnly: ro })}</section>
 </div>
 </div></div>
 <footer class="rc-foot" data-pfootbar>${footHtml(ro)}</footer>
@@ -531,9 +545,19 @@ function draw(parts) {
         if (node) node.hidden = !suggCount();
         break;
       }
+      case "deals":
+      case "files": {
+        const node = q('[data-psec="' + p + '"]');
+        const on = profileDeals(state) !== null;
+        if (node) {
+          node.hidden = !on;
+          render(node, !on ? html`` : p === "deals" ? renderDeals(r, state, { readOnly: ro, today }) : renderFiles(r, state, { readOnly: ro }));
+        }
+        break;
+      }
       case "deal": {
         const node = q('[data-psec="deal"]');
-        const on = showDeal(r, { showAll: state.showAll || state.dealForced });
+        const on = !hasDeals() && showDeal(r, { showAll: state.showAll || state.dealForced });
         if (node) {
           node.hidden = !on;
           render(node, on ? renderDeal(r, { readOnly: ro }) : html``);
@@ -542,7 +566,7 @@ function draw(parts) {
       }
       case "place": {
         const node = q('[data-psec="place"]');
-        const on = showPlacement(r, { showAll: state.showAll });
+        const on = !hasDeals() && showPlacement(r, { showAll: state.showAll });
         if (node) {
           node.hidden = !on;
           render(node, on ? renderPlacement(r, { readOnly: ro, today }) : html``);
@@ -986,6 +1010,16 @@ async function submitAdd(force) {
   }
 }
 
+// After a deal or file write: the site row (its stage or clients may follow the deal), a fresh profile,
+// and a note for the Deals page.
+function dealSaved(id, r, text) {
+  if (r && r.v2) store.upsert(r.v2);
+  profiles.delete(id);
+  bus.emit("deals:changed", { id });
+  say(id, "", text + " " + SYNC_SENTENCE);
+  if (state && state.id === id) loadProfile(id, { force: true });
+}
+
 function findSugg(sid) {
   return (Array.isArray(state.sugg) ? state.sugg : []).find((s) => String(s.id) === String(sid)) || null;
 }
@@ -1163,6 +1197,23 @@ function bind() {
     const sid = id();
     await editPlacement(b, store.get(sid));
     if (state && state.id === sid) draw(RECORD_PARTS);
+  }));
+  // Deals and file links (migration 006): modals, then a fresh profile.
+  offs.push(on(el, "click", "[data-pdl]", async (e, b) => {
+    const sid = id();
+    const rec = store.get(sid);
+    if (!rec || readOnly()) return;
+    const deals = profileDeals(state) || [];
+    const deal = b.getAttribute("data-pdl") === "edit" ? deals.find((d) => d.id === b.getAttribute("data-deal")) || null : null;
+    const r = await openDealForm(rec, deal);
+    if (r) dealSaved(sid, r, deal ? "Deal saved." : "Deal added.");
+  }));
+  offs.push(on(el, "click", "[data-pfl]", async () => {
+    const sid = id();
+    const rec = store.get(sid);
+    if (!rec || readOnly()) return;
+    const r = await openFileForm(rec, profileDeals(state) || []);
+    if (r) dealSaved(sid, r, "File link added.");
   }));
   offs.push(on(el, "toggle", "[data-pdetails]", (e, d) => {
     if (e.target === d) state.detailsOpen = d.open;

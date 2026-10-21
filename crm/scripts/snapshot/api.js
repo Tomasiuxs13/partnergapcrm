@@ -113,4 +113,8 @@ export const api = {
   suggestions: () => request("GET"),
   setSuggestion: () => denied(),
   runs: () => request("GET"),
+  deals: () => request("GET"),
+  createDeal: () => denied(),
+  updateDeal: () => denied(),
+  addFile: () => denied(),
 };

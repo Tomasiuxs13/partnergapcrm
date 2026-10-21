@@ -16,14 +16,24 @@
 // row editors and Log what happened). The four lists are made once at mount and refreshed in place on
 // route, store, meta and person changes; nothing is remounted, so no listener is ever added twice.
 // Export CSV: every deal the filters leave, group by group in the order shown, with the deal columns.
-import { html, render, on, safeUrl } from "../core/dom.js";
+// Once migration 006 is in (GET /api/deals answers a list), each deal is its own row: a site with a Soro
+// deal and a Fiverr deal shows twice, each with that deal's client, stage, terms, owner and next step, and
+// its Stage ▾ moves the deal (PATCH /api/deal/:id), which moves the site with it. A site at a deal stage
+// with no deal yet keeps its own row. Before 006 every row is a site, as above. Tomas asked on 2026-10-21.
+import { html, raw, render, on, safeUrl } from "../core/dom.js";
 import { num, plural, money, pct, date as fmtDate, ago } from "../core/format.js";
 import { dealGroups, dealValue, isQuiet, GROUPS } from "../rules/deals.js";
 import { createList, toCsv, csvColumnsOf, downloadText, csvFileName, FIRST_ROWS } from "../ui/list.js";
 import { createFilterBar, applyFilters } from "../ui/filters.js";
 import { COLUMNS, CSV_DEALS, resolveColumn } from "../ui/columns.js";
-import { clientTags, newDot, waitingBadge, stagePill } from "../ui/pills.js";
+import { clientTags, newDot, waitingBadge, stagePill, stageDot, ownerChip } from "../ui/pills.js";
 import { rowActions } from "../ui/inline-edit.js";
+import { openMenu } from "../ui/menu.js";
+import { toast } from "../ui/toast.js";
+import * as bus from "../core/bus.js";
+import { api } from "../core/api.js";
+import { derive } from "../core/model.js";
+import { dealStageText } from "../features/record/deals.js";
 import { emptyState, EMPTY } from "../ui/empty.js";
 import { skeletonRows } from "../ui/skeleton.js";
 
@@ -31,7 +41,16 @@ const FIELDS = ["client", "owner", "waiting"];
 const SUB = "Sites talking terms with us, signed or live, and the ones lost in the last 30 days.";
 const VALUE_TIP = "Deal value, or the flat fee when no value is set";
 const DOT = { negotiating: "neg", signed: "active", live: "active", lost: "lost" };
-const FOCUS_ATTRS = ["data-open", "data-edit", "data-row-act", "data-sort"];
+const FOCUS_ATTRS = ["data-open", "data-edit", "data-row-act", "data-sort", "data-dl-stage"];
+// The deal's own columns (migration 006) that replace the site's on a deal row.
+const DEAL_COLS = ["stage", "owner", "deal_model", "deal_flat", "deal_pct", "deal_value", "content_url", "live_date", "tracking_id", "next_step", "next_due"];
+const DEAL_STAGE_ITEMS = [
+  { value: "Negotiating", label: "Negotiating", desc: "Talking terms." },
+  { value: "Active", label: "Signed", desc: "Agreed. Live once the placement link is in." },
+  { value: "Lost", label: "Lost", desc: "Said no or went quiet." },
+];
+const CARET = raw('<svg class="ui-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>');
+const SYNC = "Copies to the Google Sheet on the next weekday morning (08:47).";
 
 const has = (v) => v != null && String(v).trim() !== "";
 const title = () => "Deals";
@@ -41,7 +60,8 @@ const dash = html`<span class="ui-faint" aria-label="none">—</span>`;
 let st = null; // the mounted page's state
 
 function fresh(root, ctx) {
-  return { root, ctx, offs: [], lists: {}, bar: null, view: null, frame: 0, announced: false, sayTimer: 0 };
+  // deals: undefined until GET /api/deals answers, null before migration 006, else every deal.
+  return { root, ctx, offs: [], lists: {}, bar: null, view: null, frame: 0, announced: false, sayTimer: 0, deals: undefined, dealsSeq: 0 };
 }
 
 // ---------- data ----------
@@ -69,9 +89,46 @@ function filtered(p) {
   return FIELDS.some((k) => has(p[k]));
 }
 
+const later = (a, b) => (has(a) && (!has(b) || String(a) > String(b)) ? a : b);
+
+// A deal row: the site's record with the deal's client, stage, owner, terms, placement and next step,
+// derived again (so the filters, groups, totals and quiet chips read the deal), keyed by the deal id.
+// siteId opens the site; site is the site's own record (Log what happened acts on the site).
+function dealRow(site, d, ctx) {
+  const src = { ...site, id: String(d.id), clients: d.client || "", updated_at: later(d.updated_at, site.updated_at) };
+  for (const k of DEAL_COLS) src[k] = d[k] == null ? null : d[k];
+  if (!has(src.owner)) src.owner = site.owner;
+  const r = derive(src, { meta: ctx.meta, today: ctx.today });
+  r.siteId = String(site.id);
+  r.site = site;
+  r.deal = d;
+  r.isNew = site.isNew;
+  return r;
+}
+
+// One row per deal once migration 006 is in; sites with no deal keep their own row. Sites marked
+// "Do not contact" show none of their deals.
+function withDeals(sites, deals, ctx) {
+  if (!Array.isArray(deals) || !deals.length) return sites;
+  const bySite = new Map();
+  for (const d of deals) {
+    const k = String(d.account_id);
+    if (!bySite.has(k)) bySite.set(k, []);
+    bySite.get(k).push(d);
+  }
+  const out = [];
+  for (const site of sites) {
+    const list = bySite.get(String(site.id));
+    if (!list) out.push(site);
+    else if (site.stage !== "Do not contact") for (const d of list) out.push(dealRow(site, d, ctx));
+  }
+  return out;
+}
+
 // {groups, byId}: the filtered deals in their groups, and each deal's group label (for the CSV).
 function compute(ctx) {
-  const list = applyFilters(ctx.store.all(), filterParams(params(ctx)), { meta: ctx.meta, me: me(ctx) });
+  const rows = withDeals(ctx.store.all(), st ? st.deals : null, ctx);
+  const list = applyFilters(rows, filterParams(params(ctx)), { meta: ctx.meta, me: me(ctx) });
   const groups = dealGroups(list, { meta: ctx.meta, today: ctx.today });
   const byId = new Map();
   for (const g of GROUPS) for (const r of groups[g.id]) byId.set(String(r.id), g.label);
@@ -90,10 +147,20 @@ function amounts(r) {
   return [money(r.deal_flat), pct(r.deal_pct)].filter(Boolean).join(" + ");
 }
 
+// A deal's Stage ▾: Negotiating, Signed (Live once it has a placement link or live date) or Lost.
+function dealStagePill(r, cx) {
+  const name = dealStageText(r);
+  const inner = html`${stageDot(r.stage)}<span class="ui-pill-text">${name}</span>`;
+  if (cx && cx.readOnly) return html`<span class="ui-pill ui-stage">${inner}</span>`;
+  return html`<button type="button" class="ui-pill ui-stage is-edit" data-dl-stage="${r.id}" aria-haspopup="menu" aria-label="${"Deal stage: " + name + ". Change stage"}">${inner}${CARET}</button>`;
+}
+
 // The name, then the Stage ▾ pill (plain in read-only mode) and the client tags on the line under it.
+// On a deal row the pill is the deal's stage and the tag is the deal's client.
 function siteCell(r, cx) {
   const href = cx && cx.link ? cx.link(r) : "#";
-  return html`<span class="ui-site dl-site"><a class="ui-row-link" href="${href}" data-open="${r.id}">${r.label || r.domain || r.id}</a>${newDot(r)}<span class="dl-tags">${stagePill(r, { edit: !(cx && cx.readOnly) })}${clientTags(r, { max: 2 })}</span></span>`;
+  const pill = r.deal ? dealStagePill(r, cx) : stagePill(r, { edit: !(cx && cx.readOnly) });
+  return html`<span class="ui-site dl-site"><a class="ui-row-link" href="${href}" data-open="${r.siteId || r.id}">${r.label || r.domain || r.id}</a>${newDot(r)}<span class="dl-tags">${pill}${clientTags(r, { max: 2 })}</span></span>`;
 }
 
 function termsCell(r) {
@@ -113,8 +180,14 @@ function quietChip(r) {
   return html` <span class="ui-chip is-warn dl-quiet" title="${"No activity for " + r.quietDays + " days"}">Quiet ${r.quietDays}d</span>`;
 }
 
+// A deal row's next step is the deal's, changed in the deal's Edit on the record page.
 function nextCell(r, cx) {
-  return html`<span class="dl-next">${COLUMNS.next.cell(r, cx)}${quietChip(r)}</span>`;
+  const c = r.deal ? Object.assign({}, cx, { readOnly: true }) : cx;
+  return html`<span class="dl-next">${COLUMNS.next.cell(r, c)}${quietChip(r)}</span>`;
+}
+
+function ownerCell(r, cx) {
+  return ownerChip(r, { edit: !r.deal && !(cx && cx.readOnly) });
 }
 
 function placementCell(r, cx) {
@@ -136,7 +209,7 @@ function lastCell(r, cx) {
 }
 
 function actsCell(r, cx) {
-  return cx && cx.readOnly ? html`` : rowActions(r, { follow: false });
+  return cx && cx.readOnly ? html`` : rowActions(r.site || r, { follow: false });
 }
 
 const SITE = { id: "site", label: "Site", priority: 1, className: "is-site dl-c-site", cell: siteCell };
@@ -145,7 +218,7 @@ const VALUE = { id: "value", label: "Value", title: VALUE_TIP, priority: 3, alig
 const NEXT = { id: "next", label: "Next step", priority: 2, className: "dl-c-what", cell: nextCell };
 const PLACE = { id: "placement", label: "Placement", priority: 2, className: "dl-c-what", cell: placementCell, sort: (r) => (has(r.live_date) ? String(r.live_date).slice(0, 10) : null) };
 const LAST = { id: "last_activity", label: "Last activity", priority: 2, className: "dl-c-what", cell: lastCell };
-const OWNER = { id: "owner", label: "Owner", priority: 1, className: "dl-c-owner" };
+const OWNER = { id: "owner", label: "Owner", priority: 1, className: "dl-c-owner", cell: ownerCell };
 const ACTS = { id: "actions", label: "Actions", labelHidden: true, priority: 1, className: "is-actions dl-c-acts", cell: actsCell, csv: false };
 
 const COLS = {
@@ -249,6 +322,7 @@ function makeLists() {
       loading: () => false,
       queueLabel: g.label,
       openRecord: (id, o) => st.ctx.openRecord(id, o || {}),
+      recOf: (r) => (r && r.siteId) || (r && r.id != null ? String(r.id) : null),
       firstRows,
     });
   }
@@ -338,8 +412,49 @@ function clearFilters() {
   st.ctx.setParams(patch);
 }
 
+// GET /api/deals, again after a deal changes anywhere (bus "deals:changed"). An older answer that
+// arrives after a newer request is dropped. A failed load leaves the rows as they were.
+async function loadDeals() {
+  const mine = st;
+  const seq = ++mine.dealsSeq;
+  let r = null;
+  try {
+    r = await api.deals();
+  } catch (e) {
+    r = null;
+  }
+  if (st !== mine || seq !== mine.dealsSeq || !r) return;
+  mine.deals = Array.isArray(r.deals) ? r.deals : null;
+  schedule("store");
+}
+
+async function dealStageMenu(btn) {
+  const id = btn.getAttribute("data-dl-stage");
+  const d = (Array.isArray(st.deals) ? st.deals : []).find((x) => String(x.id) === id);
+  if (!d) return;
+  const mine = st;
+  const pick = await openMenu(btn, { label: "Deal stage", items: DEAL_STAGE_ITEMS.map((it) => ({ ...it, checked: d.stage === it.value })) });
+  if (st !== mine || !pick || pick === d.stage) return;
+  const name = (st.ctx.store.get(d.account_id) || {}).label || d.account_id;
+  try {
+    const r = await api.updateDeal(id, { stage: pick });
+    if (r && r.v2) st.ctx.store.upsert(r.v2);
+    if (st === mine && r && r.deal) st.deals = st.deals.map((x) => (String(x.id) === id ? r.deal : x));
+    bus.emit("deals:changed", { id: d.account_id });
+    toast(name + " · " + (d.client || "Deal") + " moved to " + dealStageText({ ...d, stage: pick }) + ". " + SYNC);
+    if (st === mine) schedule("store");
+  } catch (e) {
+    if (e && e.status === 401) return;
+    toast("Not saved. " + ((e && (e.friendly || e.message)) || "Try again."), { kind: "error" });
+  }
+}
+
 function bind() {
   const root = st.root;
+  st.offs.push(on(root, "click", "[data-dl-stage]", (e, b) => dealStageMenu(b)));
+  const onDeals = () => st && loadDeals();
+  bus.on("deals:changed", onDeals);
+  st.offs.push(() => bus.off("deals:changed", onDeals));
   st.offs.push(on(root, "click", "[data-dl-csv]", () => exportCsv()));
   st.offs.push(on(root, "click", "[data-empty-act]", (e, b) => {
     if (b.getAttribute("data-empty-act") === "clear") clearFilters();
@@ -364,6 +479,7 @@ export default {
     makeLists();
     bind();
     draw("all", { fresh: loaded(ctx) });
+    loadDeals();
     if (!st.announced) ctx.announce("Deals"); // rows not loaded yet: the count follows when they are
   },
   update(ctx, change) {

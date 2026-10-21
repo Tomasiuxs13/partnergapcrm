@@ -141,6 +141,17 @@ export function whatOf(e, { meta } = {}) {
       const c = metaMod.client(meta, e.field);
       return { text: "Changed " + (c ? c.name : String(e.field || "a client")) + " program", sub: "" };
     }
+    case "create_deal":
+      return { text: "Added " + ((j && j.client) || "a") + " deal", sub: j && has(j.stage) ? (j.stage === "Active" ? "Signed" : j.stage) : "" };
+    case "deal_update": {
+      const f = String(e.field || "");
+      const dot = f.lastIndexOf(".");
+      const col = dot > 0 ? f.slice(dot + 1) : f;
+      const st = (v) => (col === "stage" && v === "Active" ? "Signed" : v);
+      return { text: "Deal " + (dot > 0 ? f.slice(0, dot) + " · " : "") + changeText({ field: col, old: st(e.old), new: st(e.new) }), sub: "" };
+    }
+    case "create_file":
+      return { text: "Added file " + ((j && j.label) || ""), sub: j && has(j.kind) ? j.kind : "" };
     default:
       return { text: String(e.kind || "Change"), sub: "" };
   }

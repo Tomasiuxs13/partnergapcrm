@@ -51,6 +51,10 @@ Six insertions. The rest of the prompt stays word for word.
 
 > Finally INSERT INTO runs (name, started_at, finished_at, status, summary) VALUES ('daily', <start ISO>, <end ISO>, 'ok' or 'error', <JSON counts: edits_applied, conflicts, replies, bounces, candidates, emails, slack_asks>). When the status is 'error', also put "error": "<one short sentence on what went wrong>" in that JSON.
 
+**7. Deals and files** (only together with migration 006, after Jonas's OK; `{DEALS_DATE}` = the day 006 runs). Right after insertion 1, add:
+
+> Deals and files ({DEALS_DATE}): the sheet has a Deals tab (A Deal ID, B Account ID, C Client, D Stage, E Owner, F Deal model, G Flat fee, H Commission %, I Deal value, J Content URL, K Live date, L Tracking ID, M Next step, N Next due, O Notes, P Created) and a Files tab (A File n, B Account ID, C Deal ID, D Name, E Type, F Link, G Added, H Added by). Copy these edits in n order with the same conflict rule: create_deal appends a Deals row from the JSON in new with the next free D- id (D-nnnnn), then renames the NEWD- id in D1 deals.id, files.deal_id, edits.field of create_deal rows and the "NEWD-n." prefix of deal_update fields; deal_update (field "<deal id>.<column>") sets that deal's cell (client C, stage D, owner E, deal_model F, deal_flat G, deal_pct H, deal_value I, content_url J, live_date K, tracking_id L, next_step M, next_due N, notes O); create_file appends a Files row with A = field. When you rename a NEW- site id, also rename it in deals.account_id and files.account_id. Never drop, recreate or empty the D1 tables deals and files.
+
 ## Friday digest (`trig_01BTBs3esEf39BXnJVtwoe9c`)
 
 Replace the sentence that starts "Then refresh the CRM dashboard artifact" (it ends "and republish it to the same URL.") with:

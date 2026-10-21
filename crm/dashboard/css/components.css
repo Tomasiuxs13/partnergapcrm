@@ -796,7 +796,7 @@ html[data-panel-open] { overflow: hidden; }
   z-index: 41;
   display: flex;
   flex-direction: column;
-  width: min(880px, 100vw);
+  width: 100vw;
   background: var(--bg);
   color: var(--ink);
   box-shadow: var(--shadow);
