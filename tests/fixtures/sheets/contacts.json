@@ -1,0 +1,20 @@
+{
+  "range": "Contacts!A1:Q1000",
+  "values": [
+    ["Contact ID","Account ID","Domain","First name","Last name","Title","Email","Email status","LinkedIn URL","Source","Apollo contact ID","Primary contact","Outreach status","Smartlead campaign","Last email date","Replied","Client"],
+    ["C-00001","PG-00001","","Ana","Berg","","ana@alpha-reviews.example.test","","","","","TRUE","","","2026-10-10","FALSE"],
+    ["C-00002","PG-00001","","Bo","","","bo@alpha-reviews.example.test","","","","","","","","46305","true"],
+    ["C-00003","PG-00002","","","","","deals@beta-coupons.example.test"],
+    ["C-00004","PG-00006","","","","","maker.six@creator.example.test","","","","","FALSE"],
+    ["C-00005","PG-00006","","Rūta","Six","","","","","","","FALSE","","","2026-10-05","TRUE"],
+    ["C-00006","PG-00006","","Zed","","","zed@creator.example.test","","","","","TRUE"],
+    ["C-00007","PG-00007","","","","","  seven.local@creator.example.test "],
+    ["C-00008","PG-00007","","","","","a.second@creator.example.test","","","","","TRUE"],
+    ["C-00009","PG-00008","","","","","@no-local.example.test"],
+    ["","PG-00009","","Skipped","","","skipped@delta-hosting.example.test"],
+    ["C-00010","PG-00009","","Dana","Delta","","dana@delta-hosting.example.test","","","","","","","","2026-09-28","TRUE"],
+    ["C-00011","PG-00099","","Kai","","","kai@kappa.example.test","","","","","","","","2026-10-03"],
+    ["C-00012","PG-99999","","Orphan","","","orphan@nowhere.example.test"],
+    ["C-00013","PG-00100","iota.example.test","Ida"]
+  ]
+}

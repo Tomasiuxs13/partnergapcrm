@@ -1,0 +1,229 @@
+/* Sites (spec 2.2.2, 4.7, 4.8, 4.12). Owner F3. Class prefix .si-
+   Desktop: tabs as an underlined row, the filter bar, one row of tab tools with the Sort menu, then the
+   list (ui/list.js) and its bulk bar (ui/bulk.js). Phone (< 640 px): tabs in a 2 x 2 grid, filters in a
+   sheet, bulk actions in one "Actions" menu, Claim on its own line in the card. */
+
+.si-head { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.si-head-text { flex: 1 1 auto; min-width: 0; }
+.si-head .si-csv-head { display: none; }
+.page .si-head h1 { margin: 0; }
+.si-sub { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-14); }
+
+/* ---------- Tabs ---------- */
+
+.si-tabs { margin-bottom: var(--sp-3); }
+.si-tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-1);
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+}
+.si-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-bottom: -1px;
+  padding: 0 var(--sp-3);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-2);
+  font-size: var(--fs-14);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.si-tab[aria-current="page"] { border-bottom-color: var(--link); color: var(--ink); font-weight: 600; }
+.si-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: 4px 4px 0 0; }
+@media (hover: hover) { .si-tab:hover { color: var(--ink); border-bottom-color: var(--line-2); } }
+@media (hover: hover) { .si-tab[aria-current="page"]:hover { border-bottom-color: var(--link); } }
+.si-tab-n {
+  flex: none;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.si-tab-n:empty { display: none; }
+.si-tab[aria-current="page"] .si-tab-n { background: color-mix(in srgb, var(--link) 14%, var(--panel)); color: var(--ink); }
+
+/* ---------- Filters and tab tools ---------- */
+
+.si-filters .ui-filters { margin-bottom: var(--sp-2); }
+.si-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.si-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--sp-2); min-width: 0; }
+.si-chip-n { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ui-chipbtn[aria-pressed="true"] .si-chip-n { color: inherit; }
+.si-start { gap: 6px; }
+.si-start svg { width: 12px; height: 12px; fill: currentColor; }
+.si-hint { color: var(--ink-2); font-size: var(--fs-13); }
+.si-tools-r { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); margin-left: auto; }
+.si-count { margin: 0; color: var(--ink-2); font-size: var(--fs-13); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.si-count:empty { display: none; }
+.si-sort { display: inline-flex; align-items: center; gap: 6px; }
+.si-sort-l { color: var(--ink-2); font-size: var(--fs-13); }
+.si-sort select { width: auto; min-height: 32px; padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-13); }
+
+/* The page shows the count, its own Sort menu and Export CSV in .si-tools: the list's head is not needed. */
+.si-list .ui-list-head { display: none; }
+
+/* ---------- Rows ---------- */
+
+.si-list .ui-table th, .si-list .ui-table td { padding-left: 8px; padding-right: 8px; }
+.si-list .ui-table td.is-c-next { min-width: 110px; }
+/* Last activity is left-aligned text right after the right-aligned DR and Traffic numbers: keep them apart. */
+@media (min-width: 640px) {
+  .si-list .ui-table .si-c-act { padding-left: var(--sp-4); }
+}
+/* A list of one owner's sites (Waiting for reply's default "Me", an Owner filter or "No owner") says the same
+   name on every row, so it drops the Owner column (the CSV keeps it). */
+.si-list[data-one-owner] .ui-table .si-c-owner { display: none; }
+
+/* When the list is narrower than the whole table, columns give way instead of the table scrolling sideways
+   under the sticky actions column (⋯ always offers Log what happened and Follow up, and the row still opens
+   the site; everything hidden stays in the CSV and the Sort menu):
+   - below 1580 px: the domain under the site name and long client names end in "…"; All drops Traffic;
+     on everyone's Waiting for reply and All, Follow up moves into ⋯;
+   - below 1440 px: on those two, Log what happened moves into ⋯ too;
+   - below 1366 px: Follow up moves into ⋯ on every tab;
+   - below 1280 px: only ⋯ (and Claim) stays; Mine to contact, Unowned and All drop Last activity (a new
+     site rarely has any), Unowned drops Next step, Waiting for reply drops DR, and the owner pill loses its
+     initials and "(past owner)";
+   - below 1100 px (where the kit already hides Traffic and Last activity): All drops DR.
+   Media queries, not container queries: they are cheaper to lay out with 7,500 sites. */
+@media (min-width: 640px) and (max-width: 1579.98px) {
+  .si-list .ui-table .ui-site { display: flex; }
+  .si-list .ui-table .ui-site .ui-sub { contain: inline-size; }
+  .si-list .ui-table .ui-tag { max-width: 128px; }
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-acts > [data-row-act="follow"] { display: none; }
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-more { display: inline-flex; }
+  .si-list[data-tab="all"] .ui-table .si-c-traffic { display: none; }
+  .si-list .ui-table th, .si-list .ui-table td { padding-left: 6px; padding-right: 6px; }
+}
+@media (min-width: 640px) and (max-width: 1439.98px) {
+  .si-list:is([data-tab="waiting"], [data-tab="all"]):not([data-one-owner]) .ui-row-acts > [data-row-act="log"] { display: none; }
+}
+@media (min-width: 640px) and (max-width: 1365.98px) {
+  .si-list .ui-row-acts > [data-row-act="follow"] { display: none; }
+  .si-list .ui-row-more { display: inline-flex; }
+}
+@media (min-width: 640px) and (max-width: 1279.98px) {
+  .si-list .ui-table .is-site { min-width: 160px; }
+  .si-list .ui-row-acts > [data-row-act="log"] { display: none; }
+  .si-list:is([data-tab="mine"], [data-tab="unowned"], [data-tab="all"]) .ui-table .si-c-act { display: none; }
+  .si-list[data-tab="unowned"] .ui-table .is-c-next,
+  .si-list[data-tab="unowned"] .ui-table .si-c-next { display: none; }
+  .si-list[data-tab="waiting"] .ui-table .si-c-dr { display: none; }
+  .si-list .ui-table .ui-owner .ui-faint { display: none; }
+  .si-list .ui-table .ui-owner .ui-avatar { display: none; }
+  .si-list .ui-table .ui-owner { padding-left: 10px; }
+}
+@media (min-width: 640px) and (max-width: 1099.98px) {
+  .si-list[data-tab="all"] .ui-table .si-c-dr { display: none; }
+}
+
+.si-claim { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- Bulk bar (ui/bulk.js, inside the list's .ui-bulkbar) ---------- */
+
+.si-bulk {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  min-width: 0;
+}
+.si-bulk[aria-busy="true"] { opacity: .7; }
+.si-bulk-count { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.si-bulk-acts { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.si-bulk-btn { gap: 2px; }
+.si-bulk-menu { display: none; gap: 2px; }
+.si-bulk-clear { margin-left: auto; font-size: var(--fs-13); white-space: nowrap; }
+.si-bulk-over {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 6px var(--sp-2);
+  border-radius: var(--r-input);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-size: var(--fs-13);
+}
+
+.si-bulk-form { display: grid; gap: var(--sp-3); }
+.si-bulk-note { margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.si-bulk-form .ui-radios { display: grid; gap: 2px; }
+
+/* ---------- Phone ---------- */
+
+@media (max-width: 639.98px) {
+  .si-tablist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border-bottom: 0; }
+  .si-tablist > li { display: flex; min-width: 0; }
+  .si-tab {
+    flex: 1 1 auto;
+    justify-content: space-between;
+    min-width: 0;
+    min-height: var(--tap);
+    margin: 0;
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-input);
+    background: var(--panel);
+    white-space: normal;
+  }
+  .si-tab[aria-current="page"] {
+    border-color: var(--link);
+    background: color-mix(in srgb, var(--link) 10%, var(--panel));
+  }
+  .si-tab:focus-visible { border-radius: var(--r-input); }
+  .si-tools-r { flex: 1 1 100%; flex-wrap: nowrap; min-width: 0; margin-left: 0; }
+  .si-count { display: none; } /* the open tab shows the same number */
+  .si-sort { flex: 1 1 auto; min-width: 0; }
+  .si-sort select { flex: 1 1 auto; width: 100%; min-width: 0; }
+  .si-tools .si-csv { display: none; }
+  /* As the Deals head: Export CSV beside the title, the line under them at full width. */
+  .si-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px var(--sp-4); }
+  .si-head-text { display: contents; }
+  .si-head .si-csv-head { display: inline-flex; grid-column: 2; grid-row: 1; }
+  .si-head .si-sub { grid-column: 1 / -1; margin: 0; }
+  .si-tools > .si-chips { flex-basis: 100%; }
+  /* The quick presets stay on one line and scroll sideways instead of taking two lines (as Today's chips). */
+  .si-tools > .si-presets {
+    flex: 0 0 calc(100% + 2 * var(--sp-3)); /* to the screen edges: the phone gutter is --sp-3 (layout.css) */
+    flex-wrap: nowrap;
+    margin: 0 calc(-1 * var(--sp-3));
+    padding: 0 var(--sp-5) 2px var(--sp-3);
+    overflow-x: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, var(--ink) calc(100% - var(--sp-5)), transparent); /* as Today's chips */
+  }
+  .si-presets::-webkit-scrollbar { display: none; }
+  .si-presets > .ui-chipbtn { flex: none; }
+  .si-hint { flex-basis: 100%; }
+  .si-bulk-acts { display: none; }
+  .si-bulk-menu { display: inline-flex; }
+  /* Claim and Assign get their own line in the card instead of the ⋯ corner. */
+  .si-list .ui-table td.si-acts:has(.si-claim) { position: static; flex-basis: 100%; text-align: left; }
+}
+@media (max-width: 639.98px) and (hover: hover) {
+  .si-tab:hover { border-color: var(--ink-2); }
+  .si-tab[aria-current="page"]:hover { border-color: var(--link); }
+}
+
+@media (pointer: coarse) {
+  .si-tab { min-height: var(--tap); }
+  .si-sort select { min-height: var(--tap); font-size: var(--fs-16); }
+}

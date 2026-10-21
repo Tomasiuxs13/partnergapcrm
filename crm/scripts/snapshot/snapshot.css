@@ -1,0 +1,35 @@
+/* Snapshot only (spec 4.14). Owner G3-6. build_snapshot.mjs adds it after the dashboard's styles; the live
+   site never loads it. html[data-snapshot] is set in the snapshot's markup, so it applies before any script. */
+
+/* The bar: "Snapshot of <date>, read-only" and the "View as" picker (scripts/snapshot/ui.js). */
+.sn-bar { gap: var(--sp-2) var(--sp-4); padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+.sn-text { flex: 1 1 320px; min-width: 0; margin: 0; }
+.sn-hint { color: var(--ink-2); }
+.sn-who { display: inline-flex; align-items: center; gap: var(--sp-2); flex: none; margin: 0; }
+.sn-who-label { font-weight: 600; white-space: nowrap; }
+.sn-select { width: auto; min-width: 160px; min-height: 32px; padding-top: 4px; padding-bottom: 4px; }
+@media (pointer: coarse) {
+  .sn-select { min-height: var(--tap); font-size: var(--fs-16); }
+}
+@media (max-width: 639.98px) {
+  .sn-who { flex: 1 1 100%; }
+  .sn-select { flex: 1 1 auto; min-width: 0; }
+}
+
+/* The shell's own read-only banner says what the bar says: hidden, and its row too when nothing else is in it. */
+html[data-snapshot] [data-banner="readonly"] { display: none; }
+html[data-snapshot] .sh-banners:not(:has(> :not([data-banner="readonly"]))) { display: none; }
+
+/* Nothing in the footer applies to a snapshot (sign-in name, sync line, Refresh, Google Sheet, Sign out),
+   and nothing is sent from it either way (the Test badge). */
+html[data-snapshot] .sh-foot,
+html[data-snapshot] .sh-test { display: none !important; }
+
+/* No downloads in a snapshot: Export CSV is hidden on every list (every download button carries data-download). */
+html[data-snapshot] [data-download],
+html[data-snapshot] [data-csv],
+html[data-snapshot] [data-si-csv],
+html[data-snapshot] [data-dl-csv] { display: none !important; }
+
+/* A snapshot holds no email address, so the record panel's "Copy email" could only fail. */
+html[data-snapshot] [data-pact="copy-email"] { display: none !important; }

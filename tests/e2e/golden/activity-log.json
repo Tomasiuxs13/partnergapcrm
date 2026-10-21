@@ -1,0 +1,355 @@
+{
+ "write_path": "POST /api/partner/:id/activity",
+ "kind": "activity",
+ "row_order": "request",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "interested",
+   "about": "The activity half of the Interested outcome, on the row patch-partner#interested leaves. Email also sets partners.last_touch (no edits row for that).",
+   "before": {
+    "PG-00577": {
+     "stage": "Negotiating",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "Review",
+     "next_step": "Agree terms",
+     "next_due": "2026-11-04",
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00577/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Email",
+     "summary": "Interested. Wants the media kit.",
+     "client": "Soro"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "activity": {
+     "n": "{{activity_n}}",
+     "date": "{{today}}",
+     "contact_id": null,
+     "type": "Email",
+     "by_whom": "Kamile",
+     "summary": "Interested. Wants the media kit.",
+     "client": "Soro"
+    },
+    "last_touch": "{{today}}"
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "activity",
+     "account_id": "PG-00577",
+     "contact_id": null,
+     "field": "{{activity_n}}",
+     "old": null,
+     "new": "{\"date\":\"{{today}}\",\"type\":\"Email\",\"summary\":\"Interested. Wants the media kit.\",\"client\":\"Soro\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "note-with-contact",
+   "about": "A note about one contact: contact_id is kept on the activity and the edits row. Note does not touch last_touch.",
+   "before": {
+    "PG-00583": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": "MailerLite/MailerSend",
+     "type": "Influencer / Social",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00583/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Note",
+     "summary": "Asked for rates.",
+     "contact_id": "C-00008",
+     "client": "MailerLite"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "activity": {
+     "n": "{{activity_n}}",
+     "date": "{{today}}",
+     "contact_id": "C-00008",
+     "type": "Note",
+     "by_whom": "Kamile",
+     "summary": "Asked for rates.",
+     "client": "MailerLite"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "activity",
+     "account_id": "PG-00583",
+     "contact_id": "C-00008",
+     "field": "{{activity_n}}",
+     "old": null,
+     "new": "{\"date\":\"{{today}}\",\"type\":\"Note\",\"summary\":\"Asked for rates.\",\"client\":\"MailerLite\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "deal-update-no-client",
+   "about": "No client in the request: client is null in the activity and in the JSON.",
+   "before": {
+    "PG-00578": {
+     "stage": "Replied",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "Review",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": "Flat fee + commission",
+     "deal_flat": 1200,
+     "deal_pct": 12.5,
+     "deal_value": 2500.55,
+     "content_url": "https://c-deal.contract.example.test/post",
+     "live_date": "2026-11-15",
+     "tracking_id": "EF-2001",
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00578/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Deal update",
+     "summary": "Countered: Flat fee $1,200."
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "activity": {
+     "n": "{{activity_n}}",
+     "date": "{{today}}",
+     "contact_id": null,
+     "type": "Deal update",
+     "by_whom": "Kamile",
+     "summary": "Countered: Flat fee $1,200.",
+     "client": null
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "activity",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "{{activity_n}}",
+     "old": null,
+     "new": "{\"date\":\"{{today}}\",\"type\":\"Deal update\",\"summary\":\"Countered: Flat fee $1,200.\",\"client\":null}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "content-live",
+   "about": "Placement is live: the summary is the link.",
+   "before": {
+    "PG-00584": {
+     "stage": "Active",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "Web Hosting",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00584/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Content live",
+     "summary": "https://c-live.contract.example.test/post",
+     "client": "Soro"
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "activity": {
+     "n": "{{activity_n}}",
+     "date": "{{today}}",
+     "contact_id": null,
+     "type": "Content live",
+     "by_whom": "Kamile",
+     "summary": "https://c-live.contract.example.test/post",
+     "client": "Soro"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "activity",
+     "account_id": "PG-00584",
+     "contact_id": null,
+     "field": "{{activity_n}}",
+     "old": null,
+     "new": "{\"date\":\"{{today}}\",\"type\":\"Content live\",\"summary\":\"https://c-live.contract.example.test/post\",\"client\":\"Soro\"}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "call-sets-last-touch",
+   "about": "Call (like Email and Meeting) sets partners.last_touch to the server's date.",
+   "before": {
+    "PG-00596": {
+     "stage": "Lost",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Uncategorized",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00596/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Call",
+     "summary": "Talked about next year.",
+     "client": ""
+    }
+   },
+   "status": 201,
+   "response": {
+    "ok": true,
+    "activity": {
+     "n": "{{activity_n}}",
+     "date": "{{today}}",
+     "contact_id": null,
+     "type": "Call",
+     "by_whom": "Kamile",
+     "summary": "Talked about next year.",
+     "client": null
+    },
+    "last_touch": "{{today}}"
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "activity",
+     "account_id": "PG-00596",
+     "contact_id": null,
+     "field": "{{activity_n}}",
+     "old": null,
+     "new": "{\"date\":\"{{today}}\",\"type\":\"Call\",\"summary\":\"Talked about next year.\",\"client\":null}",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "error-bad-type",
+   "about": "Validation error: nothing is written.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00596/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Tweet",
+     "summary": "x"
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Pick what happened."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-empty-summary",
+   "about": "Validation error: nothing is written.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-00596/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Note",
+     "summary": "  "
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Write a short summary."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-not-found",
+   "about": "Unknown id.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/partner/PG-99999/activity",
+    "body": {
+     "by": "Kamile",
+     "type": "Note",
+     "summary": "x"
+    }
+   },
+   "status": 404,
+   "response": {
+    "error": "Not found"
+   },
+   "edits": []
+  }
+ ]
+}

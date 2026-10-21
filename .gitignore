@@ -5,3 +5,12 @@ bounced.txt
 __pycache__/
 !package.json
 .wrangler/
+
+# Tests: run output stays local. Synthetic JSON may be committed only under tests/
+# (fixtures and golden files; never partner data). *.json stays ignored everywhere else.
+tests/e2e/out/
+!tests/**/*.json
+
+# Page modules and page styles of the dashboard are code, not working data (the pages/ rule above).
+!crm/dashboard/css/pages/
+!crm/dashboard/js/pages/

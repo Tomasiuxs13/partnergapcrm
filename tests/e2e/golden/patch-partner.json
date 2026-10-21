@@ -1,0 +1,896 @@
+{
+ "write_path": "PATCH /api/partner/:id",
+ "kind": "update",
+ "row_order": "request",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "interested",
+   "about": "Replied -> Negotiating with a next step and a date: the field half of the Interested outcome (3 update rows).",
+   "before": {
+    "PG-00577": {
+     "stage": "Replied",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "Review",
+     "next_step": "Answer their reply",
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00577",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "stage": "Negotiating",
+      "next_step": "Agree terms",
+      "next_due": "2026-11-04"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "stage": "Negotiating",
+     "next_step": "Agree terms",
+     "next_due": "2026-11-04"
+    },
+    "partner": {
+     "id": "PG-00577",
+     "domain": "c-interested.contract.example.test",
+     "name": "Contract c-interested",
+     "type": "Review",
+     "dr": 39,
+     "traffic": 9500,
+     "owner": "Tomas",
+     "stage": "Negotiating",
+     "last_touch": "2026-10-14",
+     "clients": "Soro",
+     "country": "US",
+     "contacts": 0,
+     "next_step": "Agree terms",
+     "next_due": "2026-11-04",
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00577",
+     "contact_id": null,
+     "field": "stage",
+     "old": "Replied",
+     "new": "Negotiating",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00577",
+     "contact_id": null,
+     "field": "next_step",
+     "old": "Answer their reply",
+     "new": "Agree terms",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00577",
+     "contact_id": null,
+     "field": "next_due",
+     "old": null,
+     "new": "2026-11-04",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "deal-terms",
+   "about": "Deal terms and placement: numbers are cleaned ($ , % and spaces), rounded to cents and stored as text in edits.",
+   "before": {
+    "PG-00578": {
+     "stage": "Replied",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "Review",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00578",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "deal_model": "Flat fee + commission",
+      "deal_flat": "$1,200",
+      "deal_pct": "12.5%",
+      "deal_value": "2,500.555",
+      "content_url": "https://c-deal.contract.example.test/post",
+      "live_date": "2026-11-15",
+      "tracking_id": "EF-2001"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "deal_model": "Flat fee + commission",
+     "deal_flat": 1200,
+     "deal_pct": 12.5,
+     "deal_value": 2500.55,
+     "content_url": "https://c-deal.contract.example.test/post",
+     "live_date": "2026-11-15",
+     "tracking_id": "EF-2001"
+    },
+    "partner": {
+     "id": "PG-00578",
+     "domain": "c-deal.contract.example.test",
+     "name": "Contract c-deal",
+     "type": "Review",
+     "dr": 31,
+     "traffic": 8500,
+     "owner": "Tomas",
+     "stage": "Replied",
+     "last_touch": "2026-10-14",
+     "clients": "Soro",
+     "country": "ES",
+     "contacts": 0,
+     "next_step": null,
+     "next_due": null,
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": "Flat fee + commission",
+     "deal_flat": 1200,
+     "deal_pct": 12.5,
+     "deal_value": 2500.55,
+     "content_url": "https://c-deal.contract.example.test/post",
+     "live_date": "2026-11-15",
+     "tracking_id": "EF-2001",
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "deal_model",
+     "old": null,
+     "new": "Flat fee + commission",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "deal_flat",
+     "old": null,
+     "new": "1200",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "deal_pct",
+     "old": null,
+     "new": "12.5",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "deal_value",
+     "old": null,
+     "new": "2500.55",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "content_url",
+     "old": null,
+     "new": "https://c-deal.contract.example.test/post",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "live_date",
+     "old": null,
+     "new": "2026-11-15",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00578",
+     "contact_id": null,
+     "field": "tracking_id",
+     "old": null,
+     "new": "EF-2001",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "lost-clears-next",
+   "about": "Not interested: stage Lost and the next step and date cleared (new = null).",
+   "before": {
+    "PG-00579": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": "Ultahost",
+     "type": "Affiliate Network",
+     "next_step": "Follow up if no reply",
+     "next_due": "2026-11-02",
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00579",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "stage": "Lost",
+      "next_step": "",
+      "next_due": ""
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "stage": "Lost",
+     "next_step": null,
+     "next_due": null
+    },
+    "partner": {
+     "id": "PG-00579",
+     "domain": "c-lost.contract.example.test",
+     "name": "Contract c-lost",
+     "type": "Affiliate Network",
+     "dr": 62,
+     "traffic": 9250,
+     "owner": "Tomas",
+     "stage": "Lost",
+     "last_touch": "2026-10-14",
+     "clients": "Ultahost",
+     "country": "DE",
+     "contacts": 0,
+     "next_step": null,
+     "next_due": null,
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00579",
+     "contact_id": null,
+     "field": "stage",
+     "old": "Contacted",
+     "new": "Lost",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00579",
+     "contact_id": null,
+     "field": "next_step",
+     "old": "Follow up if no reply",
+     "new": null,
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00579",
+     "contact_id": null,
+     "field": "next_due",
+     "old": "2026-11-02",
+     "new": null,
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "assign-owner-clients-type",
+   "about": "Owner from empty, clients re-joined with \", \" (stored tokens otherwise kept), type set.",
+   "before": {
+    "PG-00580": {
+     "stage": "New",
+     "owner": null,
+     "clients": "Weglot ,Soro",
+     "type": "Uncategorized",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00580",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "owner": "Kamile",
+      "clients": "Weglot ,Soro, UltaHost",
+      "type": "Review"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "owner": "Kamile",
+     "clients": "Weglot, Soro, UltaHost",
+     "type": "Review"
+    },
+    "partner": {
+     "id": "PG-00580",
+     "domain": "c-assign.contract.example.test",
+     "name": "Contract c-assign",
+     "type": "Review",
+     "dr": 56,
+     "traffic": 3500,
+     "owner": "Kamile",
+     "stage": "New",
+     "last_touch": null,
+     "clients": "Weglot, Soro, UltaHost",
+     "country": "FR",
+     "contacts": 0,
+     "next_step": null,
+     "next_due": null,
+     "source": "Past work (import)",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00580",
+     "contact_id": null,
+     "field": "owner",
+     "old": null,
+     "new": "Kamile",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00580",
+     "contact_id": null,
+     "field": "clients",
+     "old": "Weglot ,Soro",
+     "new": "Weglot, Soro, UltaHost",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00580",
+     "contact_id": null,
+     "field": "type",
+     "old": "Uncategorized",
+     "new": "Review",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "waiting-on-client",
+   "about": "Ask the client: next_step gets the \"Waiting on client: \" prefix, with a date.",
+   "before": {
+    "PG-00582": {
+     "stage": "Negotiating",
+     "owner": "Tomas",
+     "clients": "TransferGO",
+     "type": "Tech / SaaS",
+     "next_step": "Agree terms",
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00582",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "next_step": "Waiting on client: decision on the offer",
+      "next_due": "2026-11-06"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "next_step": "Waiting on client: decision on the offer",
+     "next_due": "2026-11-06"
+    },
+    "partner": {
+     "id": "PG-00582",
+     "domain": "c-waiting.contract.example.test",
+     "name": "Contract c-waiting",
+     "type": "Tech / SaaS",
+     "dr": null,
+     "traffic": null,
+     "owner": "Tomas",
+     "stage": "Negotiating",
+     "last_touch": "2026-10-14",
+     "clients": "TransferGO",
+     "country": "PL",
+     "contacts": 0,
+     "next_step": "Waiting on client: decision on the offer",
+     "next_due": "2026-11-06",
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00582",
+     "contact_id": null,
+     "field": "next_step",
+     "old": "Agree terms",
+     "new": "Waiting on client: decision on the offer",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00582",
+     "contact_id": null,
+     "field": "next_due",
+     "old": null,
+     "new": "2026-11-06",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "clear-owner-and-type",
+   "about": "Empty values clear a field (new = null).",
+   "before": {
+    "PG-00594": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Review",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00594",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "owner": "",
+      "type": ""
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "owner": null,
+     "type": null
+    },
+    "partner": {
+     "id": "PG-00594",
+     "domain": "c-spare-2.contract.example.test",
+     "name": "Contract c-spare-2",
+     "type": null,
+     "dr": 61,
+     "traffic": 8250,
+     "owner": null,
+     "stage": "Contacted",
+     "last_touch": "2026-10-14",
+     "clients": null,
+     "country": null,
+     "contacts": 0,
+     "next_step": null,
+     "next_due": null,
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00594",
+     "contact_id": null,
+     "field": "owner",
+     "old": "Tomas",
+     "new": null,
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00594",
+     "contact_id": null,
+     "field": "type",
+     "old": "Review",
+     "new": null,
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "no-change",
+   "about": "Values equal to the stored ones write nothing (changed = {}).",
+   "before": {
+    "PG-00581": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": "Soro",
+     "type": "WP / Web Platform",
+     "next_step": "Follow up if no reply",
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00581",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "stage": "Contacted",
+      "next_step": "Follow up if no reply"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {},
+    "partner": {
+     "id": "PG-00581",
+     "domain": "c-nochange.contract.example.test",
+     "name": "Contract c-nochange",
+     "type": "WP / Web Platform",
+     "dr": 13,
+     "traffic": 2000,
+     "owner": "Tomas",
+     "stage": "Contacted",
+     "last_touch": "2026-10-14",
+     "clients": "Soro",
+     "country": "PL",
+     "contacts": 0,
+     "next_step": "Follow up if no reply",
+     "next_due": null,
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": null,
+     "updated_by": null
+    }
+   },
+   "edits": []
+  },
+  {
+   "name": "ignores-non-editable",
+   "about": "Fields outside EDITABLE are ignored silently; the editable one is saved.",
+   "before": {
+    "PG-00595": {
+     "stage": "Replied",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Agency",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00595",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "name": "Renamed",
+      "dr": 99,
+      "stage": "Negotiating"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": {
+     "stage": "Negotiating"
+    },
+    "partner": {
+     "id": "PG-00595",
+     "domain": "c-spare-3.contract.example.test",
+     "name": "Contract c-spare-3",
+     "type": "Agency",
+     "dr": null,
+     "traffic": null,
+     "owner": "Tomas",
+     "stage": "Negotiating",
+     "last_touch": "2026-10-14",
+     "clients": null,
+     "country": "FR",
+     "contacts": 0,
+     "next_step": null,
+     "next_due": null,
+     "source": "Gmail outreach",
+     "seed_keyword": null,
+     "notes": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "updated_at": "{{at}}",
+     "updated_by": "Kamile"
+    }
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00595",
+     "contact_id": null,
+     "field": "stage",
+     "old": "Replied",
+     "new": "Negotiating",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "error-bad-stage",
+   "about": "Validation error: nothing is written.",
+   "before": {
+    "PG-00593": {
+     "stage": "New",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Email Marketing",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00593",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "stage": "Bogus"
+     }
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Pick a stage from the list."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-date",
+   "about": "Validation error: nothing is written.",
+   "before": {
+    "PG-00593": {
+     "stage": "New",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Email Marketing",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    }
+   },
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-00593",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "next_step": "Call them",
+      "next_due": "31/10/2026"
+     }
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Use a date like 2026-10-31."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-not-found",
+   "about": "Unknown id.",
+   "before": {},
+   "request": {
+    "method": "PATCH",
+    "url": "/api/partner/PG-99999",
+    "body": {
+     "by": "Kamile",
+     "fields": {
+      "stage": "Contacted"
+     }
+    }
+   },
+   "status": 404,
+   "response": {
+    "error": "Not found"
+   },
+   "edits": []
+  }
+ ]
+}

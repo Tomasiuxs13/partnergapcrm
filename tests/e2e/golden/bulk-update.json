@@ -1,0 +1,426 @@
+{
+ "write_path": "POST /api/bulk",
+ "kind": "update",
+ "row_order": "any (compare after sortEdits: account_id, then field)",
+ "captured_from": "d5e91d9",
+ "captured_commit": "d5e91d92e952463a3e4bab1675c43bdb61d62417",
+ "fixture": "tests/fixtures/make-seed.mjs v1",
+ "by": "Kamile",
+ "cases": [
+  {
+   "name": "owner-and-stage",
+   "about": "Owner and stage on 3 sites; the third already has both, so it writes nothing (changed = 2).",
+   "before": {
+    "PG-00585": {
+     "stage": "New",
+     "owner": "Mantvydas",
+     "clients": "Weglot, Ultahost",
+     "type": "Review",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    },
+    "PG-00586": {
+     "stage": "New",
+     "owner": null,
+     "clients": null,
+     "type": "WP / Web Platform",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    },
+    "PG-00587": {
+     "stage": "Contacted",
+     "owner": "Gaby",
+     "clients": "soro",
+     "type": "Influencer / Social",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00585",
+      "PG-00586",
+      "PG-00587"
+     ],
+     "fields": {
+      "owner": "Gaby",
+      "stage": "Contacted"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": 2
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00585",
+     "contact_id": null,
+     "field": "owner",
+     "old": "Mantvydas",
+     "new": "Gaby",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00585",
+     "contact_id": null,
+     "field": "stage",
+     "old": "New",
+     "new": "Contacted",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00586",
+     "contact_id": null,
+     "field": "owner",
+     "old": null,
+     "new": "Gaby",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00586",
+     "contact_id": null,
+     "field": "stage",
+     "old": "New",
+     "new": "Contacted",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "add-client",
+   "about": "Add client Soro: appended with \", \"; a site that already has it (any case) is unchanged. No slash values here: the d5e91d9 rewrite of \"a/b\" to \"a, b\" is a known bug the redesign fixes (T12).",
+   "before": {
+    "PG-00585": {
+     "stage": "New",
+     "owner": "Mantvydas",
+     "clients": "Weglot, Ultahost",
+     "type": "Review",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    },
+    "PG-00586": {
+     "stage": "New",
+     "owner": null,
+     "clients": null,
+     "type": "WP / Web Platform",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    },
+    "PG-00587": {
+     "stage": "Contacted",
+     "owner": "Gaby",
+     "clients": "soro",
+     "type": "Influencer / Social",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00585",
+      "PG-00586",
+      "PG-00587"
+     ],
+     "fields": {
+      "add_client": "Soro"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": 2
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00585",
+     "contact_id": null,
+     "field": "clients",
+     "old": "Weglot, Ultahost",
+     "new": "Weglot, Ultahost, Soro",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00586",
+     "contact_id": null,
+     "field": "clients",
+     "old": null,
+     "new": "Soro",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "next-due",
+   "about": "A follow-up date on 2 sites.",
+   "before": {
+    "PG-00589": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "Web Hosting",
+     "next_step": null,
+     "next_due": "2026-11-01",
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    },
+    "PG-00590": {
+     "stage": "Contacted",
+     "owner": "Tomas",
+     "clients": null,
+     "type": "WP / Web Platform",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": "2026-10-14"
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00589",
+      "PG-00590"
+     ],
+     "fields": {
+      "next_due": "2026-11-09"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": 2
+   },
+   "edits": [
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00589",
+     "contact_id": null,
+     "field": "next_due",
+     "old": "2026-11-01",
+     "new": "2026-11-09",
+     "applied": 0
+    },
+    {
+     "by_whom": "Kamile",
+     "kind": "update",
+     "account_id": "PG-00590",
+     "contact_id": null,
+     "field": "next_due",
+     "old": null,
+     "new": "2026-11-09",
+     "applied": 0
+    }
+   ]
+  },
+  {
+   "name": "nothing-changes",
+   "about": "Same stage: no rows, changed = 0.",
+   "before": {
+    "PG-00588": {
+     "stage": "Researching",
+     "owner": "Tomas",
+     "clients": "Ultahost",
+     "type": "Media / Publisher",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00588"
+     ],
+     "fields": {
+      "stage": "Researching"
+     }
+    }
+   },
+   "status": 200,
+   "response": {
+    "ok": true,
+    "changed": 0
+   },
+   "edits": []
+  },
+  {
+   "name": "error-no-ids",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [],
+     "fields": {
+      "owner": "Gaby"
+     }
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Select at least one site."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-nothing-to-change",
+   "about": "Validation error.",
+   "before": {},
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00588"
+     ],
+     "fields": {}
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Nothing to change."
+   },
+   "edits": []
+  },
+  {
+   "name": "error-bad-stage",
+   "about": "Validation error: nothing is written.",
+   "before": {
+    "PG-00588": {
+     "stage": "Researching",
+     "owner": "Tomas",
+     "clients": "Ultahost",
+     "type": "Media / Publisher",
+     "next_step": null,
+     "next_due": null,
+     "deal_model": null,
+     "deal_flat": null,
+     "deal_pct": null,
+     "deal_value": null,
+     "content_url": null,
+     "live_date": null,
+     "tracking_id": null,
+     "last_touch": null
+    }
+   },
+   "request": {
+    "method": "POST",
+    "url": "/api/bulk",
+    "body": {
+     "by": "Kamile",
+     "ids": [
+      "PG-00588"
+     ],
+     "fields": {
+      "stage": "Bogus"
+     }
+    }
+   },
+   "status": 400,
+   "response": {
+    "error": "Pick a stage from the list."
+   },
+   "edits": []
+  }
+ ]
+}

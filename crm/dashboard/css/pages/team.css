@@ -1,0 +1,311 @@
+/* Team overview (spec 2.2.5, 4.12). Owner F6. Class prefix .tm-
+   Desktop: Needs a decision (rows grouped by owner), Stuck (5 tiles), the Team table, the Morning run and Data
+   clean-up cards side by side, then Charts (collapsed). Every number opens Sites.
+   Phone (< 640 px): one column; the Team table becomes one card per person with a label on every number;
+   Stuck tiles two by two; row actions behind ⋯ (the kit hides the others in .ui-row-acts). */
+
+.tm-page { min-width: 0; }
+.tm-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); min-width: 0; }
+.tm-overview[aria-busy="true"] .tm-tile.is-loading { min-height: 96px; }
+
+.tm-head { display: grid; gap: 2px; }
+.page .tm-head h1 { margin: 0; }
+.tm-sub { margin: 0; color: var(--ink-2); font-size: var(--fs-14); }
+
+/* One column no wider than the page: an auto column grew to the Team table's width (1,032 px at 820 px),
+   and the whole page scrolled sideways instead of the table's own scroller. */
+.tm-sec { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
+.tm-shead { display: grid; gap: 2px; }
+.tm-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--sp-2); font-size: var(--fs-16); font-weight: 600; }
+.tm-h:focus { outline: none; }
+.tm-h:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.tm-n { color: var(--ink-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.tm-desc { margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.tm-note { margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.tm-na { color: var(--ink); }
+.tm-nowrap { white-space: nowrap; }
+.tm-zero { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* ---------- Needs a decision ---------- */
+
+.tm-decision { display: grid; gap: var(--sp-4); min-width: 0; }
+.tm-dgroup { display: grid; gap: var(--sp-2); min-width: 0; }
+.tm-dh { display: flex; align-items: center; gap: 6px; color: var(--ink); font-size: var(--fs-14); font-weight: 600; }
+.tm-drows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--panel);
+}
+.tm-drow {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(130px, 1fr) minmax(180px, 2fr) auto;
+  align-items: center;
+  gap: 4px var(--sp-4);
+  min-height: var(--row-h);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.tm-drow:last-child { border-bottom: 0; }
+@media (hover: hover) { .tm-drow:hover { background: var(--panel-2); } }
+.tm-drow:first-child { border-top-left-radius: var(--r-card); border-top-right-radius: var(--r-card); }
+.tm-drow:last-child { border-bottom-left-radius: var(--r-card); border-bottom-right-radius: var(--r-card); }
+.tm-dsite { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
+.tm-dlink { white-space: normal; overflow-wrap: anywhere; }
+.tm-dtags { display: flex; flex-basis: 100%; min-width: 0; }
+.tm-dtags .ui-tags.is-none:empty { display: none; }
+.tm-dterms { min-width: 0; font-size: var(--fs-13); overflow-wrap: anywhere; }
+.tm-dnext { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; font-size: var(--fs-13); }
+.tm-dnext-text { min-width: 0; overflow-wrap: anywhere; }
+.tm-dchips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.tm-dchips .ui-chip, .tm-dchips .ui-due { white-space: nowrap; }
+.tm-dacts { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--sp-2); }
+
+/* "Waiting on client?": a tick box that looks like a hint, not like a form. */
+.tm-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 2px 10px 2px 8px;
+  border: 1px dashed var(--warn-ink);
+  border-radius: var(--r-pill);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-size: var(--fs-13);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tm-hint input { width: 16px; height: 16px; margin: 0; accent-color: var(--btn-pri); cursor: pointer; }
+.tm-hint:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tm-hint input:focus-visible { outline: none; }
+
+/* ---------- Stuck ---------- */
+
+.tm-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-3); }
+.tm-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+}
+a.tm-tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (hover: hover) {
+  a.tm-tile:hover { border-color: var(--link); box-shadow: var(--shadow); }
+  a.tm-tile:hover .tm-tile-label { text-decoration: underline; }
+}
+.tm-tile-n { color: var(--link); font-size: var(--fs-24); font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tm-tile-label { font-size: var(--fs-14); font-weight: 600; }
+.tm-tile-desc { color: var(--ink-2); font-size: var(--fs-12); }
+.tm-tile.is-zero { background: var(--panel-2); }
+.tm-tile.is-zero .tm-tile-n { color: var(--ink-2); }
+
+/* ---------- Team table ---------- */
+
+.tm-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--panel);
+  overflow-x: auto;
+}
+.tm-table { width: 100%; border-collapse: collapse; font-size: var(--fs-14); }
+.tm-table thead th {
+  padding: var(--sp-2) 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  vertical-align: bottom;
+}
+.tm-table thead th:first-child { border-top-left-radius: var(--r-card); }
+.tm-table thead th:last-child { border-top-right-radius: var(--r-card); }
+.tm-table tbody th, .tm-table td {
+  height: var(--row-h);
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+.tm-table tbody tr:last-child th, .tm-table tbody tr:last-child td { border-bottom: 0; }
+.tm-table .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.tm-table thead .is-num { text-align: right; }
+.tm-table tbody th { font-weight: 500; white-space: nowrap; }
+.tm-table tr.is-past th, .tm-table tr.is-none th { color: var(--ink-2); }
+.tm-c-name { min-width: 120px; }
+.tm-c-clients { min-width: 150px; }
+.tm-c-last { white-space: nowrap; }
+.tm-person { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; }
+.tm-person.is-none { color: var(--ink-2); }
+a.tm-person:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+@media (hover: hover) { a.tm-person:hover span { color: var(--link); text-decoration: underline; } }
+.tm-past { font-size: var(--fs-12); font-weight: 400; }
+.tm-num {
+  display: inline-block;
+  min-width: 32px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--link);
+  font-weight: 600;
+  text-align: right;
+  text-decoration: none;
+}
+a.tm-num:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+@media (hover: hover) { a.tm-num:hover { background: var(--teal-soft); text-decoration: underline; } }
+.tm-plain { padding: 4px 6px; }
+.tm-clients { font-size: var(--fs-13); }
+.tm-clients a { color: var(--link); }
+.tm-more { color: var(--ink-2); white-space: nowrap; }
+.tm-last { color: var(--ink); }
+
+/* ---------- Morning run and Data clean-up ---------- */
+
+.tm-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
+.tm-card { display: grid; gap: var(--sp-2); min-width: 0; }
+.tm-card-body { display: grid; gap: var(--sp-2); min-width: 0; }
+.tm-cline { margin: 0; }
+.tm-cline a { color: var(--link); }
+.tm-fallback { margin: 0; color: var(--ink-2); }
+.tm-kv { margin: 0; padding: 0; list-style: none; }
+.tm-kv li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.tm-kv li:last-child { border-bottom: 0; }
+.tm-kv-label { min-width: 0; }
+.tm-kv-n { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+a.tm-kv-n { min-width: 32px; padding: 2px 6px; border-radius: 4px; color: var(--link); text-align: right; text-decoration: none; }
+@media (hover: hover) { a.tm-kv-n:hover { background: var(--teal-soft); text-decoration: underline; } }
+.tm-tokens { display: block; color: var(--ink-2); font-size: var(--fs-12); overflow-wrap: anywhere; }
+.tm-cby { margin: 0; color: var(--ink-2); font-size: var(--fs-13); }
+.tm-cby-label { color: var(--ink); }
+.tm-runs { display: grid; gap: var(--sp-2); margin: 0; padding: var(--sp-3) 0 0; border-top: 1px solid var(--line); list-style: none; }
+.tm-run { display: grid; gap: 1px; font-size: var(--fs-13); }
+.tm-run-label { color: var(--ink-2); font-size: var(--fs-12); }
+.tm-good { color: var(--ok); font-weight: 600; }
+.tm-bad { color: var(--danger); font-weight: 600; }
+.tm-run-detail { color: var(--ink); }
+
+/* ---------- Charts ---------- */
+
+.tm-charts { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--panel); }
+.tm-charts-sum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-3);
+  min-height: var(--tap);
+  padding: var(--sp-3) var(--sp-4);
+  list-style: none;
+  cursor: pointer;
+}
+.tm-charts-sum::-webkit-details-marker { display: none; }
+.tm-charts-sum::before { content: "▸"; width: 12px; color: var(--ink-2); }
+.tm-charts[open] > .tm-charts-sum::before { content: "▾"; }
+.tm-charts-sum:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: var(--r-card); }
+.tm-charts-what { color: var(--ink-2); font-size: var(--fs-13); }
+.tm-charts-body { display: grid; gap: var(--sp-3); padding: 0 var(--sp-4) var(--sp-4); }
+.tm-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5) var(--sp-6); }
+.tm-chart { min-width: 0; }
+.tm-chart .ui-bar-label a { color: var(--link); text-decoration: none; }
+@media (hover: hover) { .tm-chart .ui-bar-label a:hover { text-decoration: underline; } }
+.tm-chart-note { margin: 6px 0 0; color: var(--ink-2); font-size: var(--fs-12); }
+
+/* ---------- Narrower screens ---------- */
+
+@media (max-width: 1279.98px) {
+  .tm-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tm-drow { grid-template-columns: minmax(150px, 1fr) minmax(0, 1.6fr) auto; }
+  .tm-dterms { grid-column: 1; grid-row: 2; }
+  .tm-dnext { grid-column: 2; grid-row: 1 / span 2; }
+  .tm-dacts { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+@media (max-width: 899.98px) {
+  .tm-cards, .tm-chart-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Phone: one column, the Team table as cards (spec 4.12). */
+@media (max-width: 639.98px) {
+  .tm-overview { gap: var(--sp-5); }
+  .tm-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .tm-tile { padding: var(--sp-3); }
+
+  .tm-drow { grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--sp-2); padding: var(--sp-3); }
+  .tm-dsite { grid-column: 1; grid-row: 1; font-size: var(--fs-16); }
+  .tm-dacts { grid-column: 2; grid-row: 1; align-self: start; flex-wrap: nowrap; }
+  .tm-dterms { grid-column: 1 / -1; grid-row: 2; }
+  .tm-dnext { grid-column: 1 / -1; grid-row: 3; }
+  .tm-drow .tm-hint { min-height: var(--tap); }
+
+  .tm-table-wrap { border: 0; background: none; overflow: visible; }
+  .tm-table, .tm-table tbody, .tm-table tr, .tm-table th, .tm-table td { display: block; }
+  .tm-table thead { display: none; }
+  .tm-table tbody { display: grid; gap: var(--sp-3); }
+  /* One card per person: the eight counts four by four (label over number, the whole cell opens the list),
+     then Changes this week and Last active, then the clients across. */
+  .tm-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--sp-2);
+    padding: 0 var(--sp-3) var(--sp-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    background: var(--panel);
+  }
+  .tm-table tbody th { grid-column: 1 / -1; height: auto; padding: var(--sp-3) 0 var(--sp-2); border-bottom: 1px solid var(--line); font-size: var(--fs-16); }
+  .tm-table td {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2px;
+    height: auto;
+    min-height: var(--tap);
+    padding: var(--sp-2) 0 0;
+    border-bottom: 0;
+    text-align: left;
+  }
+  .tm-table td::before { content: attr(data-label); color: var(--ink-2); font-size: var(--fs-12); line-height: 1.25; }
+  .tm-table td.is-num { text-align: left; }
+  .tm-table td.tm-c-changes { order: 1; grid-column: span 2; }
+  .tm-table td.tm-c-last { order: 2; grid-column: span 2; }
+  .tm-table td.tm-c-changes, .tm-table td.tm-c-last { margin-top: var(--sp-2); border-top: 1px solid var(--line); }
+  .tm-table td.tm-c-clients { order: 3; grid-column: 1 / -1; margin-top: var(--sp-2); border-top: 1px solid var(--line); }
+  .tm-table .tm-num, .tm-table .tm-zero, .tm-table .tm-plain { padding: 0; font-size: var(--fs-16); text-align: left; }
+  .tm-num { min-width: 0; }
+  .tm-num::after { content: ""; position: absolute; inset: 0; }
+
+  .tm-charts-sum { padding: var(--sp-3); }
+  .tm-charts-body { padding: 0 var(--sp-3) var(--sp-3); }
+}
+
+/* ---------- Touch: 44 px targets (spec 4.1, 4.12) ---------- */
+
+@media (pointer: coarse) {
+  /* The person's name keeps its line; its target reaches into the row (or the card's padding). */
+  a.tm-person { min-height: var(--tap); margin-block: -10px; }
+  /* A number's target is its whole cell (the phone cards already do this below 640 px). */
+  .tm-table td.is-num { position: relative; }
+  .tm-table a.tm-num::after { content: ""; position: absolute; inset: 0; }
+  .tm-clients a { display: inline-block; min-width: var(--tap); padding-block: 14px; margin-block: -14px; }
+  .tm-cline a { display: inline-flex; align-items: center; min-height: var(--tap); }
+  .tm-kv li { align-items: center; min-height: var(--tap); padding-block: 0; }
+  a.tm-kv-n { display: inline-flex; align-items: center; justify-content: flex-end; min-width: var(--tap); min-height: var(--tap); }
+}
