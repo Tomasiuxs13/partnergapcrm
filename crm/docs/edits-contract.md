@@ -70,6 +70,7 @@ POST `/api/partner/:id/activity` runs statements 2–4 in one batch with the sam
 | `suggestions` | 004 | Suggested contacts, test emails and ownership asks from the daily run; the site marks them used or dismissed |
 | `runs` | 004 | One row per scheduled run (`daily`, `discovery`, `digest`) |
 | `partner_snap`, `stage_log` | 005 (deferred, Appendix D) | Stage history, when it ships |
+| `deals`, `files` | 006 | Deals (several per site, one per client) and file links. Unlike the others they **are** copied to the sheet's Deals and Files tabs (section 7), but the run must not drop, recreate or empty them either |
 
 None of them is ever copied to the sheet. Migration 003 also adds indexes on `edits` (`edits_account`, `edits_at`, `edits_kind_field`) and `activity` (`activity_account_date`). All migrations are idempotent: `tests/e2e/91-migrations.test.mjs` applies each twice and compares schemas and row counts.
 
@@ -93,3 +94,19 @@ The exact prompt changes (rules (a)–(f), the suggestions and `runs` rows, the 
 ## 6. How the site sees the sheet's side (freshness, `lib/freshness.js`)
 
 GET `/api/meta` returns `freshness` from cheap indexed reads: the waiting count and the oldest waiting `at` (waiting = `applied = 0` and `n` above the highest applied `n`; a "Not copied" conflict stays `applied = 0` for good, so it is never counted as waiting), and `stale_pending`, the waiting edits older than `stale_before` (the last expected weekday 08:47 run), which is the N of the "didn't pick up N changes" banner; the highest applied `n`; the newest `activity` row that has no `activity` edit (so it came from the sheet); the newest `PG-` id. The last three form `sheet_sig`. When it changes, the site stores `sheet_sig` and `last_sheet_change = now` in `kv_meta`. That is the only write on a GET, it happens only on change, and never on a read-only host. Once the daily run writes `runs` rows (diff in 6.5), the latest `daily` row is returned too. Before migration 003 exists, `freshness` is `null`.
+
+## 7. Deals and file links (migration 006, additive)
+
+Tomas asked on 2026-10-21 for several deals per site (one per client) and for signed contracts and price lists to be visible. Migration 006 adds the D1 tables `deals` and `files` and three new kinds. They are **additive**: the five kinds above, their columns and the golden files are unchanged, and the daily run copies the new kinds only after insertion 7 in `crm/docs/daily-run-changes.md` (with Jonas's OK).
+
+| kind | Written by | account_id | contact_id | field | old | new |
+|---|---|---|---|---|---|---|
+| `create_deal` | POST `/api/partner/:id/deals` | site id | NULL | the new deal id (`NEWD-nnnn`) | NULL | JSON, keys in this order: `client, stage, owner, deal_model, deal_flat, deal_pct, deal_value, next_step, next_due, notes, added` |
+| `deal_update` | PATCH `/api/deal/:id` | the deal's site id | NULL | `<deal id>.<column>`, e.g. `D-00012.stage` | previous value as text, or NULL | new value as text, or NULL |
+| `create_file` | POST `/api/partner/:id/files` | site id | NULL | **the new `files.n`, as text** | NULL | JSON: `label, kind, url, deal_id, added` |
+
+- Deal columns: `client, stage, owner, deal_model, deal_flat, deal_pct, deal_value, content_url, live_date, tracking_id, next_step, next_due, notes` (`lib/deals.js` DEAL_EDITABLE). A deal has one client and a stage of `Negotiating`, `Active` or `Lost`. Numbers and dates are written as for `update` rows.
+- `NEWD-` ids work like `NEW-` (kv_meta `new_deal_n`). The run gives them the next free `D-` id and renames them in `deals.id`, `files.deal_id`, the `field` of `create_deal` rows and the prefix of `deal_update` fields.
+- **The site follows its deals.** A deal write that changes a deal's stage or client also changes the site, as ordinary `update` rows in the same batch: the site's stage becomes the best deal stage (Active, else Negotiating, else Lost; never for a site at "Do not contact"), and a new client is added to the site's clients. So `create_deal` / `deal_update` may be followed by `update` rows for `stage` and `clients`.
+- File links must start with `https://`. Nothing is uploaded; R2 is not enabled on the account.
+- Before migration 006 these endpoints answer 404 `{"unavailable": true}` and write nothing, and the record keeps the old Deal terms and Placement cards.

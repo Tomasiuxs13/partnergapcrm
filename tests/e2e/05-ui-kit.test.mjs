@@ -835,8 +835,9 @@ test("the record panel: its stage menu is clickable, a toast while it is open is
     return !!h && el.contains(h);
   });
   assert.equal(top, true, "the toast is above the panel");
-  const [tb, pb] = [await t.boundingBox(), await page.locator("#layer-panel .ui-panel").boundingBox()];
-  assert.ok(tb.x + tb.width <= pb.x, "with the panel open the toast stays at the window's left edge, clear of the panel");
+  // The record is a full page (2026-10-21), so the toast sits on top of it (checked above), inside the window.
+  const tb = await t.boundingBox();
+  assert.ok(tb.x >= 0 && tb.x + tb.width <= page.viewportSize().width, "the toast is inside the window");
   // Esc closes the panel even while the toast is showing.
   await page.focus("#layer-panel [data-pnote]");
   await page.keyboard.press("Escape");

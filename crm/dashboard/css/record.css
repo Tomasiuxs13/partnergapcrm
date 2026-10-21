@@ -39,19 +39,47 @@
 
 .rc-body { padding: var(--sp-3) var(--sp-4) var(--sp-6); }
 .rc-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
-.rc-main, .rc-side { display: contents; }
+.rc-left, .rc-main, .rc-side { display: contents; }
 .rc-log { order: 1; }
 .rc-nextcard { order: 2; }
-.rc-contacts { order: 3; }
-.rc-sugg { order: 4; }
-.rc-tlcard { order: 5; }
-.rc-deal { order: 6; }
-.rc-place { order: 7; }
-.rc-detcard { order: 8; }
-@media (min-width: 1280px) {
-  .rc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 288px); align-items: start; }
-  .rc-main, .rc-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
+.rc-deals { order: 3; }
+.rc-contacts { order: 4; }
+.rc-sugg { order: 5; }
+.rc-tlcard { order: 6; }
+.rc-deal { order: 7; }
+.rc-place { order: 8; }
+.rc-files { order: 9; }
+.rc-detcard { order: 10; }
+/* The record is a full page (Tomas, 2026-10-21: "like HubSpot"): about the site and its people on the
+   left, what happened in the middle, deals on the right. */
+@media (min-width: 1100px) {
+  .rc-cols { grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 360px); align-items: start; max-width: 1600px; margin: 0 auto; }
+  .rc-left, .rc-main, .rc-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
 }
+@media (min-width: 640px) and (max-width: 1099.98px) {
+  .rc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); align-items: start; }
+  .rc-left, .rc-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; grid-column: 2; }
+  .rc-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; grid-column: 1; grid-row: 1 / span 2; }
+  .rc-side { grid-row: 1; }
+  .rc-left { grid-row: 2; }
+}
+
+/* ---------- Deals and files (migration 006) ---------- */
+
+.rc-deallist, .rc-filelist { display: grid; margin: 0; padding: 0; list-style: none; }
+.rc-dealitem { padding: var(--sp-2) 0; }
+.rc-dealitem:first-child { padding-top: 0; }
+.rc-dealitem + .rc-dealitem { border-top: 1px solid var(--line); }
+.rc-dealitem.is-lost { color: var(--ink-2); }
+.rc-dealhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--sp-2); margin-bottom: 2px; }
+.rc-dealclient { font-weight: 600; overflow-wrap: anywhere; }
+.rc-dealhead .ui-btn { margin-left: auto; min-height: 28px; }
+.rc-pre { white-space: pre-line; overflow-wrap: anywhere; }
+.rc-file { display: grid; gap: 1px; padding: 6px 0; }
+.rc-file:first-child { padding-top: 0; }
+.rc-file + .rc-file { border-top: 1px solid var(--line); }
+.rc-file-name { overflow-wrap: anywhere; }
+.rc-file-name a { color: var(--link); }
 
 .rc-card { min-width: 0; padding: var(--sp-3) var(--sp-4); }
 .rc-card[hidden] { display: none; }
