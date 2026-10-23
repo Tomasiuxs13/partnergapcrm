@@ -18,8 +18,9 @@
 //   holds unsaved text. ×, Esc, the scrim and queue ‹ › ask through closeRecord()/the router guard; Back,
 //   links and route changes ask through router.addGuard; shell.js asks on beforeunload.
 // - A 401 saves the draft (note, chip, add-contact form) to sessionStorage; it comes back after sign-in.
-// - #layer-panel (data-layer) sits outside .app; .app is inert while the panel is open and Tab stays in the
-//   layer. Menus and popovers opened in the panel mount into #layer-panel (top layer).
+// - #layer-panel (data-layer) sits outside .app; .app is inert while the panel is open, all but the sidebar
+//   (>= 1024 px the panel starts right of it, so the menu stays in reach: Tomas, 2026-10-23), and Tab stays
+//   in the layer. Menus and popovers opened in the panel mount into #layer-panel (top layer).
 import { html, render, on, copyText } from "../../core/dom.js";
 import * as router from "../../core/router.js";
 import * as store from "../../core/store.js";
@@ -428,8 +429,7 @@ function show(id) {
   state.el = layer.querySelector(".ui-panel");
   bind();
   if (!switching) {
-    const app = document.querySelector(".app");
-    if (app) app.inert = true;
+    setBehind(true);
     document.documentElement.setAttribute("data-panel-open", "");
   }
   const h2 = state.el.querySelector("[data-ptitle]");
@@ -439,6 +439,14 @@ function show(id) {
   if (snapshotMode()) return;
   if (cached) afterProfile(id);
   if (!fresh(cached)) loadProfile(id);
+}
+
+// The page behind the panel is inert while it is open, all but the sidebar: a menu link there closes the
+// panel and goes (the unsaved guard asks first). Below 1024 px the sidebar is hidden anyway.
+function setBehind(on) {
+  const app = document.querySelector(".app");
+  if (!app) return;
+  for (const el of app.children) el.inert = on && !el.classList.contains("sh-side");
 }
 
 function applyFocus() {
@@ -461,8 +469,7 @@ function teardown() {
   for (const off of state.offs) off();
   state = null;
   render(layer, html``);
-  const app = document.querySelector(".app");
-  if (app) app.inert = false;
+  setBehind(false);
   document.documentElement.removeAttribute("data-panel-open");
   let target = opener && opener.isConnected ? opener : null;
   if (!target && typeof CSS !== "undefined" && CSS.escape) target = document.querySelector('.app a[data-open="' + CSS.escape(id) + '"]');

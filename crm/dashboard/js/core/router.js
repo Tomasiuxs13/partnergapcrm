@@ -1,7 +1,8 @@
 // Hash router: #<page>[/<sub>][?k=v&...] (spec 2.4, 4.2, 5.4). Owner G1-A. No side effects at import.
 //
-// - Legacy URLs are redirected with replaceState: #home, #prospecting, #tasks, #partners, #reports,
-//   #campaigns, #changes, #client-<slug>, #rec-<ID> and #rec/<ID> (2.4). An empty hash or an unknown
+// - Legacy URLs are redirected with replaceState: #home, #prospecting, #tasks, #partners (only while no
+//   Partners page exists; it is back since 2026-10-23), #reports, #campaigns, #changes, #client-<slug>,
+//   #rec-<ID> and #rec/<ID> (2.4). An empty hash or an unknown
 //   page goes to the home page (me.home(): Today, or Team overview for Vik), keeping `rec`.
 // - start() turns /?h=<encoded hash> from sign-in back into the hash (replaceState).
 // - Guards: on a route change every guard gets the next route. If one returns false or a promise,

@@ -17,6 +17,9 @@
 //   after "Waiting on client:"), Deals (Negotiating + Active) with terms, Live placements, Best new
 //   prospects, Pipeline bars, and the Affiliate program card (GET /api/clients; Edit saves with
 //   PUT /api/clients/:k, k = the stored key, e.g. "botanical synthesis").
+// - Suggested partners (Tomas, 2026-10-23): sites in the client's category (Help › Settings) that work, or
+//   worked, with another client in it and aren't with this one yet (rules/partners.js), each with
+//   [+ Add to <client>] (one clients update, with Undo). Without a category the card asks for one.
 // A site row opens the record panel in queue mode over its section; its stage pill edits in place. Store
 // updates redraw in place (the program card keeps an open form); nothing remounts.
 import { html, render, on, copyText, safeUrl } from "../core/dom.js";
@@ -35,6 +38,9 @@ import { bars } from "../ui/charts.js";
 import { skeletonRows } from "../ui/skeleton.js";
 import { openReport } from "../features/report.js";
 import { openAddSite } from "../features/add-site.js";
+import { suggestedPartners, viaText } from "../rules/partners.js";
+import { loadDeals } from "../features/deals-data.js";
+import * as bus from "../core/bus.js";
 
 const has = (v) => v != null && String(v).trim() !== "";
 const DR_TIP = "Ahrefs domain rating, 0–100";
@@ -47,7 +53,7 @@ const PROGRAM_FIELDS = [
   { name: "signup_url", label: "Partner sign-up link", max: 300, placeholder: "https://", url: true },
   { name: "brief", label: "Brief for partners", max: 3000, placeholder: "What to promote, key selling points, what not to say", area: true },
 ];
-const SECTION_LABEL = { waiting: "Waiting on client", deals: "Deals", live: "Live placements", prospects: "Best new prospects" };
+const SECTION_LABEL = { waiting: "Waiting on client", deals: "Deals", live: "Live placements", prospects: "Best new prospects", suggest: "Suggested partners" };
 
 let st = null; // the mounted page's state
 
@@ -70,6 +76,7 @@ function fresh(root, ctx) {
     lists: {}, // section -> ids, for queue mode
     prog: { state: "idle", row: null, editing: false, saving: false, err: "", field: "", draft: null },
     guardOff: null,
+    deals: undefined, // GET /api/deals for the suggestions (features/deals-data.js)
   };
 }
 
@@ -209,7 +216,7 @@ function emptyLine(text) {
 
 function headerHtml(ctx, c, p, m) {
   const who = clientToken(c, p);
-  const sub = [c.past ? "Past client" : "", c.what, c.markets, c.managers && c.managers.length ? "Managed by " + names(c.managers) : ""].filter(has).join(" · ");
+  const sub = [c.past ? "Past client" : "", c.category, c.what, c.markets, c.managers && c.managers.length ? "Managed by " + names(c.managers) : ""].filter(has).join(" · ");
   const products = c.products && c.products.length;
   const addLabel = products && !p ? "+ Add site for " + c.name + "…" : "+ Add site for " + who;
   const acts = html`<div class="cl-head-acts"><button type="button" class="ui-btn is-primary" data-cl-act="report" data-cl-key="act:report">Report</button>${c.past ? "" : html`<button type="button" class="ui-btn" data-cl-act="add" data-cl-key="act:add" data-write${products && !p ? html` aria-haspopup="menu"` : ""}>${addLabel}</button>`}<a class="ui-btn" href="${sitesHref(ctx, c, p)}" data-cl-key="act:all">See all ${num(m.sites)} ${plural(m.sites, "site")}</a></div>`;
@@ -300,6 +307,30 @@ function prospectsHtml(ctx, c, p, best) {
     ? html`<ul class="cl-rows">${rows}</ul>${more}`
     : emptyLine("No new prospects. Monday's discovery adds new sites.");
   return cardHtml("prospects", "Best new prospects", body, { count: best.total });
+}
+
+// Suggested partners: rules/partners.js#suggestedPartners. sugg: its answer.
+function suggestHtml(ctx, c, p, sugg) {
+  const who = clientToken(c, p);
+  const settings = isAdmin(ctx) ? html` <a href="${ctx.href("help")}" data-cl-key="suggest:settings">Help › Settings</a>` : " Help › Settings";
+  if (!sugg.category) {
+    return cardHtml("suggest", "Suggested partners", emptyLine(html`Pick a category for ${c.name} in${settings} to see sites that already work with similar clients.`));
+  }
+  if (!sugg.others.length) {
+    return cardHtml("suggest", "Suggested partners", emptyLine(html`No other client is in ${sugg.category} yet, so there's nobody to borrow partners from.`));
+  }
+  const add = (r) => readOnly(ctx) || c.past ? "" : html`<button type="button" class="ui-btn is-sm cl-sugg-add" data-cl-suggest="${r.id}" data-cl-key="${"suggest:" + r.id}" aria-label="${"Add " + (r.label || r.domain) + " to " + who}">+ Add to ${who}</button>`;
+  const rows = sugg.rows.map(({ r, via }) => html`<li class="cl-srow" data-rec="${r.id}" data-cl-sec="suggest">
+<div class="cl-l1"><a class="cl-link" href="${siteHref(ctx, r.id)}" data-open="${r.id}" data-cl-key="${"open:suggest:" + r.id}">${r.label || r.domain || r.id}</a>${newDot(r)}${stagePill(r)}${add(r)}</div>
+<div class="cl-l2">${join([viaText(via), r.dr != null ? html`<span title="${DR_TIP}">DR ${num(r.dr)}</span>` : "", ownerText(r)])}</div>
+</li>`);
+  const names = sugg.others.map((x) => x.name);
+  const from = names.length > 3 ? names.slice(0, 3).join(", ") + " and " + (names.length - 3) + " more" : names.join(", ").replace(/, ([^,]*)$/, " and $1");
+  const lead = html`<p class="cl-lead">Sites in ${sugg.category} that work with ${from}, and aren't with ${who} yet.</p>`;
+  const more = sugg.total > sugg.rows.length
+    ? html`<div class="cl-card-f"><a href="${ctx.href("partners", {})}" data-cl-key="more:suggest">See every partner on Partners</a></div>` : "";
+  const body = rows.length ? html`${lead}<ul class="cl-rows">${rows}</ul>${more}` : emptyLine("Nothing to suggest yet. Sites show here once they work with " + from + ".");
+  return cardHtml("suggest", "Suggested partners", body, { count: sugg.total });
 }
 
 function pipelineHtml(ctx, c, p, m) {
@@ -505,12 +536,14 @@ function drawClient(ctx, c) {
   const deals = dealList(recs, o);
   const live = liveList(recs, o);
   const best = bestProspects(recs, o);
-  st.lists = { waiting: waiting.map((r) => r.id), deals: deals.map((r) => r.id), live: live.map((r) => r.id), prospects: best.rows.map((r) => r.id) };
+  const sugg = suggestedPartners(recs, st.deals, { meta: meta(ctx), client: c.k });
+  st.lists = { waiting: waiting.map((r) => r.id), deals: deals.map((r) => r.id), live: live.map((r) => r.id), prospects: best.rows.map((r) => r.id), suggest: sugg.rows.map((x) => x.r.id) };
   keepFocus(() => {
     render(el("[data-cl-top]"), html`${headerHtml(ctx, c, p, m)}${productsHtml(c, p)}${ready ? stripHtml(ctx, c, p, m) : html`<div class="cl-card">${skeletonRows(2, { lines: 1 })}</div>`}`);
     render(el("[data-cl-left]"), ready
       ? html`${waitingHtml(ctx, c, p, waiting)}${dealsHtml(ctx, c, p, deals)}${liveHtml(ctx, c, p, live)}${prospectsHtml(ctx, c, p, best)}`
       : html`<div class="cl-card">${skeletonRows(6)}</div>`);
+    render(el("[data-cl-sugg-slot]"), ready ? suggestHtml(ctx, c, p, sugg) : "");
     render(el("[data-cl-pipeline]"), ready ? pipelineHtml(ctx, c, p, m) : "");
   });
   return m;
@@ -542,7 +575,7 @@ function schedule() {
 }
 
 function clientShell() {
-  return html`<div class="cl-page cl-client"><div data-cl-top></div><div class="cl-grid"><div class="cl-main" data-cl-left></div><div class="cl-side"><div data-cl-pipeline></div><div data-cl-program></div></div></div></div>`;
+  return html`<div class="cl-page cl-client"><div data-cl-top></div><div class="cl-grid"><div class="cl-main" data-cl-left></div><div class="cl-side"><div data-cl-sugg-slot></div><div data-cl-pipeline></div><div data-cl-program></div></div></div></div>`;
 }
 
 // ---------- actions ----------
@@ -568,6 +601,23 @@ async function addSite(btn) {
     return;
   }
   openAddSite({ clients: clientToken(c, p) });
+}
+
+// + Add to <client>: the client goes onto the site's clients (one update, with Undo). A client with
+// products asks which one first, as Add site does.
+async function addSuggested(btn) {
+  const ctx = st.ctx;
+  const c = currentClient(ctx);
+  const r = ctx.store.get(btn.getAttribute("data-cl-suggest"));
+  if (!c || !r || readOnly(ctx)) return;
+  let p = currentProduct(ctx, c);
+  if (c.products && c.products.length && !p) {
+    p = await openMenu(btn, { label: "Which product?", items: c.products.map((x) => ({ label: clientToken(c, x), value: x })) });
+    if (p == null || !st) return;
+  }
+  const token = clientToken(c, p);
+  const clients = has(r.clients) ? String(r.clients) + ", " + token : token;
+  await ctx.actions.update(r.id, { clients }, { label: "Added " + (r.label || r.domain) + " to " + token + "." });
 }
 
 async function copyWaiting() {
@@ -623,6 +673,13 @@ function bind() {
     else if (act === "prog-cancel") stopEdit();
     else if (act === "prog-retry") loadProgram();
   }));
+  offs.push(on(root, "click", "[data-cl-suggest]", (e, b) => {
+    e.preventDefault();
+    addSuggested(b);
+  }));
+  const onDeals = () => st && st.sub && getDeals(true);
+  bus.on("deals:changed", onDeals);
+  offs.push(() => bus.off("deals:changed", onDeals));
   offs.push(on(root, "submit", "[data-cl-prog-form]", (e, form) => {
     e.preventDefault();
     saveProgram(form);
@@ -646,6 +703,15 @@ function bind() {
   offs.push(() => root.removeEventListener("toggle", onToggle, true));
 }
 
+function getDeals(force) {
+  const mine = st;
+  loadDeals({ force }).then((list) => {
+    if (st !== mine) return;
+    st.deals = list;
+    schedule();
+  });
+}
+
 function askDiscard() {
   return confirm({ title: "Discard your changes?", body: "Your changes to the affiliate program aren't saved yet.", confirmLabel: "Discard", cancelLabel: "Keep editing", danger: true });
 }
@@ -662,6 +728,7 @@ export default {
     const c = currentClient(ctx);
     if (st.sub && c) {
       loadProgram();
+      getDeals(false);
       // Typed program details survive a route change only when the person says so (spec 4.2's guard).
       st.guardOff = router.addGuard((next) => {
         if (!st || !programDirty()) return true;

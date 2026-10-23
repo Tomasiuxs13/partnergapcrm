@@ -100,6 +100,8 @@
 .hp-table tbody th .hp-sub { font-weight: 400; }
 .hp-table .hp-c-act { width: 1%; padding-right: 0; text-align: right; white-space: nowrap; }
 .hp-table .hp-c-markets { color: var(--ink-2); }
+.hp-clients .hp-c-cat .hp-select { min-width: 150px; }
+.hp-mgr-l { display: none; }
 .hp-person { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
 .hp-home-l { display: none; }
 .hp-select { width: auto; min-width: 150px; min-height: 32px; padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-13); }
@@ -239,6 +241,17 @@
   .hp-home { display: flex; align-items: center; gap: var(--sp-2); }
   .hp-home-l { display: inline; flex: none; color: var(--ink-2); font-size: var(--fs-13); }
   .hp-team .hp-select { flex: 1 1 auto; width: auto; min-width: 0; }
+  /* Settings › Clients (with Category, 2026-10-23): one block per client, as the team list. */
+  .hp-clients thead { display: none; }
+  .hp-clients tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--sp-2); padding: var(--sp-2) 0; border-bottom: 1px solid var(--line); }
+  .hp-clients tbody tr:last-child { border-bottom: 0; }
+  .hp-clients tbody th, .hp-clients tbody td { padding: 0; border: 0; }
+  .hp-clients tbody th { flex: 1 1 auto; min-width: 0; }
+  .hp-clients tbody td.hp-c-act { order: 2; width: auto; }
+  .hp-clients tbody td.hp-c-cat { order: 3; flex: 1 1 100%; }
+  .hp-clients tbody td.hp-c-mgr { order: 4; flex: 1 1 100%; color: var(--ink-2); font-size: var(--fs-13); }
+  .hp-clients .hp-c-cat .hp-select { width: 100%; min-width: 0; }
+  .hp-mgr-l { display: inline; }
   .hp-add .ui-field { max-width: none; }
   .hp-wn-table tbody th { width: 40%; }
 }

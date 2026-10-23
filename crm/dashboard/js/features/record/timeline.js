@@ -186,7 +186,7 @@ const KIND_CLASS = {
 const CLAMP = 220;
 const CHANGES_CLAMP = 80; // about one line of the changes in the main column
 
-function itemHtml(it, today, open) {
+export function itemHtml(it, today, open) {
   const cls = KIND_CLASS[it.type] || "is-note";
   const inline = it.kind === "email" || it.kind === "contact";
   const changes = it.changes.join(" · ");

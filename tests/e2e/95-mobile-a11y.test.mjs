@@ -62,6 +62,8 @@ const ID = {
   deal: one("J-neg-1"), // F7: a Negotiating Soro deal with terms
   prospect: K.newProspects.newIds[0], // F9: a new prospect without a contact
 };
+// A person at the deal's site, for the contact page (Tomas, 2026-10-23).
+const CONTACT = (fx.contacts.find((c) => c.account_id === ID.deal) || fx.contacts[0]).id;
 const TOUCHED = [ID.queueSecond, ID.reply, ID.pill, ID.deal, ID.prospect];
 const F4_DOMAIN = "f4-keyboard.example.test";
 const KV_KEYS = ["new_site_n", "sheet_sig", "last_sheet_change"];
@@ -423,6 +425,9 @@ const VIEWS = [
   { id: "deals", hash: "#deals" },
   { id: "clients", hash: "#clients" },
   { id: "client", hash: "#clients/soro" },
+  { id: "partners", hash: "#partners", open: "rows" },
+  { id: "contacts", hash: "#contacts", open: "rows" },
+  { id: "contact", hash: "#contact/" + CONTACT, open: "record-page" },
   { id: "team", hash: "#team", open: "charts" },
   { id: "history", hash: "#history" },
   { id: "help", hash: "#help" },
@@ -455,6 +460,12 @@ async function openLayer(page, v) {
       return;
     case "panel":
       await page.waitForSelector(P + ".ui-panel[data-panel]");
+      return;
+    case "rows":
+      await page.waitForSelector("main .pt-list tbody tr");
+      return;
+    case "record-page":
+      await page.waitForSelector("main .rv-cols");
       return;
     case "report":
       await page.click('[data-cl-report="soro"]');
@@ -1057,7 +1068,7 @@ for (const width of [390, 320]) {
           acts: Array.from(d.querySelectorAll(".sh-foot-acts > *")).map(t),
         };
       });
-      assert.deepEqual(more.pages, ["Clients", "Team overview", "Help", "Edit history"]);
+      assert.deepEqual(more.pages, ["Clients", "Partners", "Contacts", "Team overview", "Help", "Edit history"]);
       assert.equal(more.me, "Signed in as Kamile · change");
       assert.ok(more.sync, "the sync line");
       assert.equal(more.acts[0], "Refresh");

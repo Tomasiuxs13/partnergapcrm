@@ -25,6 +25,9 @@ const ROUTES = [
   ["#sites?tab=all&owner=me&stage=Contacted", /^Sites$/],
   ["#deals", /^Deals$/],
   ["#deals?client=soro", /^Deals$/],
+  ["#partners", /^Partners$/],
+  ["#partners?tab=now", /^Partners$/],
+  ["#contacts", /^Contacts$/],
   ["#clients", /^Clients$/],
   ["#clients/soro", /soro/i],
   ["#clients/botanical-synthesis", /botanical[ -]synthesis/i],
@@ -40,7 +43,6 @@ const LEGACY = [
   ["#home", /^Today$/],
   ["#prospecting", /^Sites$/],
   ["#tasks", /^Today$/],
-  ["#partners", /^Deals$/],
   ["#reports", /^Team overview$/],
   ["#campaigns", /^Clients$/],
   ["#changes", /^Edit history$/],
@@ -48,6 +50,8 @@ const LEGACY = [
 ];
 
 const NAV_LABELS = ["Today", "Sites", "Deals", "Clients", "Team overview", "Help"];
+// Under the Records group in the side menu (Tomas, 2026-10-23); the group opens on its summary.
+const RECORD_LABELS = ["Partners", "Contacts"];
 
 const BASE = baseUrl();
 const SHOTS = process.env.SHOTS_DIR || "/tmp/shots-g1-d";
@@ -102,7 +106,7 @@ test("sign in lands on the app with the main nav", async () => {
   assert.equal(new URL(page.url()).pathname, "/");
   await waitTitle(page, /^Today$/);
   const navText = await page.$$eval("nav a", (as) => as.map((a) => a.textContent.replace(/\s+/g, " ").trim()));
-  for (const label of NAV_LABELS) assert.ok(navText.some((t) => t.includes(label)), "nav link " + label + " in " + JSON.stringify(navText));
+  for (const label of NAV_LABELS.concat(RECORD_LABELS)) assert.ok(navText.some((t) => t.includes(label)), "nav link " + label + " in " + JSON.stringify(navText));
   await page.screenshot({ path: path.join(SHOTS, "smoke-today.png") });
 });
 
@@ -126,6 +130,12 @@ test("routes also switch in place (hash change and nav links)", async () => {
     await waitTitle(page, re);
   }
   for (const label of NAV_LABELS) {
+    await page.locator("nav a", { hasText: label }).first().click();
+    await waitTitle(page, new RegExp("^" + label + "$"));
+  }
+  for (const label of RECORD_LABELS) {
+    const group = page.locator("details[data-sh-group]");
+    if (!(await group.evaluate((d) => d.open))) await group.locator("summary").click();
     await page.locator("nav a", { hasText: label }).first().click();
     await waitTitle(page, new RegExp("^" + label + "$"));
   }

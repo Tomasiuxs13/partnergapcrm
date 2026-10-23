@@ -103,6 +103,14 @@ html { scroll-padding: calc(var(--top-h) + var(--sp-2)) 0 calc(var(--tabs-h) + v
 }
 .sh-nav-a:focus-visible { outline-offset: -2px; }
 .sh-sep { height: 1px; margin: var(--sp-2) var(--sp-3); background: var(--side-line); }
+/* The Records group (Partners, Contacts): a <details> dropdown in the sidebar. */
+.sh-group-h { cursor: pointer; list-style: none; }
+.sh-group-h::-webkit-details-marker { display: none; }
+.sh-chev { display: inline-flex; margin-left: auto; transition: transform .15s ease; }
+.sh-side .sh-chev svg { width: 16px; height: 16px; }
+.sh-group[open] .sh-chev { transform: rotate(90deg); }
+.sh-group-items { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.sh-sub-a { padding-left: calc(var(--sp-3) + 12px); }
 .sh-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Today's Do now count, the only badge in the nav. */

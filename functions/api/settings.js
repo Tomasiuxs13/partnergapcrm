@@ -8,7 +8,7 @@
 //        - team: [{name (2-40 letters, spaces, ' and -), home?: 'today'|'team', active?: true|false}], the
 //          whole list in order; inactive names leave the menus but stay known as past owners. At least one
 //          active name.
-//        - clients: [{k?, name, what?, managers?, markets?, past?}]: a new client's k is its name in lower
+//        - clients: [{k?, name, what?, managers?, markets?, category?, past?}]: a new client's k is its name in lower
 //          case; an existing client keeps its k (it can't be renamed, only its shown name changes).
 //        - allow_dnc: true|false
 //        400 {"error": "<sentence>"} on a bad value, 403 for someone else; nothing is saved on error. A D1
@@ -69,6 +69,7 @@ function cleanClients(list, stored) {
       out.managers = c.managers.map((m) => personName(m)).filter(Boolean).slice(0, 10);
     }
     if (c.markets != null) out.markets = str(c.markets, 100);
+    if (c.category != null) out.category = str(c.category, 40);
     if (c.past != null) out.past = c.past === true;
     return out;
   });

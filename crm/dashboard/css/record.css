@@ -280,6 +280,7 @@ textarea.rc-note { min-height: 0; height: 54px; }
   /* Inline "more" links: a taller hit area without changing the line. */
   .rc-ti-more, .rc-about-more { padding: 12px 4px; margin: -12px -4px; }
   .rc-sub > .rc-domain { min-width: var(--tap); padding-block: 12px; margin-block: -12px; }
+  .rc-ct-name { min-width: var(--tap); padding-block: 12px; margin-block: -12px; }
 }
 
 /* Touch screens keep :hover after a tap; don't let a chip look picked when it isn't. */

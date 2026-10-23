@@ -318,4 +318,14 @@ export const api = {
   addFile(id, file) {
     return request("POST", "/api/partner/" + enc(id) + "/files", file);
   },
+  // Contact and deal pages and the Contacts list (Tomas, 2026-10-23). deal() is null before migration 006.
+  contacts() {
+    return request("GET", "/api/contacts");
+  },
+  contact(id) {
+    return request("GET", "/api/contact/" + enc(id));
+  },
+  deal(dealId) {
+    return request("GET", "/api/deal/" + enc(dealId));
+  },
 };

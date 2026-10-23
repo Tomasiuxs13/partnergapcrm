@@ -220,13 +220,24 @@ ${past.length ? html`<div class="hp-past"><p class="hp-muted">Past team members 
 </div>`;
 }
 
+// The categories to pick from (meta.client_categories), plus a client's own value when it isn't one of them.
+function categories(ctx, current) {
+  const list = ((ctx.meta && ctx.meta.client_categories) || []).slice();
+  if (has(current) && !list.includes(current)) list.push(current);
+  return list;
+}
+
+function categorySelect(ctx, c, dis) {
+  return html`<select class="ui-input hp-select" data-hp-cat="${c.k}" data-hp-focus="${"cat:" + c.k}" aria-label="${"Category of " + c.name}"${dis}><option value=""${has(c.category) ? "" : html` selected`}>Not set</option>${categories(ctx, c.category).map((x) => html`<option${x === c.category ? html` selected` : ""}>${x}</option>`)}</select>`;
+}
+
 function clientsBlock(ctx, ro) {
   const cur = (ctx.meta.clients || []).filter((c) => c && c.k);
   const past = (ctx.meta.past_clients || []).filter((c) => c && c.k);
   const dis = ro ? html` disabled title="${readOnlyText()}"` : busyAttr("clients");
   return html`<div class="hp-set-block" data-hp-block="clients"><h3 class="hp-h3" id="hp-clients-h">Clients</h3>
-<p class="hp-muted">The clients in the menus and on the Clients page. Marking one as past keeps its sites and their client tags.</p>
-<div class="hp-tablewrap"><table class="hp-table" aria-labelledby="hp-clients-h"><thead><tr><th scope="col">Client</th><th scope="col">Managers</th><th scope="col"><span class="sr-only">Mark as past</span></th></tr></thead><tbody>${cur.map((c) => html`<tr><th scope="row">${c.name}${has(c.what) ? html`<span class="hp-sub">${c.what}</span>` : ""}</th><td>${(c.managers || []).join(", ") || html`<span class="ui-faint">—</span>`}</td><td class="hp-c-act"><button type="button" class="ui-btn is-sm is-ghost" data-hp-past="${c.k}" data-hp-focus="${"past:" + c.k}" aria-label="${"Mark " + c.name + " as a past client"}"${dis}>Mark as past</button></td></tr>`)}</tbody></table></div>
+<p class="hp-muted">The clients in the menus and on the Clients page. Marking one as past keeps its sites and their client tags. A client page suggests partners from the other clients in its category.</p>
+<div class="hp-tablewrap"><table class="hp-table hp-clients" aria-labelledby="hp-clients-h"><thead><tr><th scope="col">Client</th><th scope="col">Category</th><th scope="col">Managers</th><th scope="col"><span class="sr-only">Mark as past</span></th></tr></thead><tbody>${cur.map((c) => html`<tr><th scope="row">${c.name}${has(c.what) ? html`<span class="hp-sub">${c.what}</span>` : ""}</th><td class="hp-c-cat">${categorySelect(ctx, c, dis)}</td><td class="hp-c-mgr"><span class="hp-mgr-l">Managers: </span>${(c.managers || []).join(", ") || html`<span class="ui-faint">—</span>`}</td><td class="hp-c-act"><button type="button" class="ui-btn is-sm is-ghost" data-hp-past="${c.k}" data-hp-focus="${"past:" + c.k}" aria-label="${"Mark " + c.name + " as a past client"}"${dis}>Mark as past</button></td></tr>`)}</tbody></table></div>
 <p class="hp-row"><button type="button" class="ui-btn" data-hp-addclient data-hp-focus="addclient"${dis}>+ Add client</button></p>
 ${errHtml("clients")}
 ${past.length ? html`<div class="hp-past"><p class="hp-muted">Past clients:</p><ul class="hp-pastlist">${past.map((c) => html`<li><span>${c.name}</span> <button type="button" class="ui-linkbtn" data-hp-current="${c.k}" data-hp-focus="${"current:" + c.k}"${dis}>Make current</button></li>`)}</ul></div>` : ""}
@@ -431,6 +442,23 @@ function setClientPast(k, past) {
   });
 }
 
+// A client's category (the client page's Suggested partners use it), stored like "past" in the overrides.
+function setClientCategory(k, category) {
+  const all = (st.ctx.meta.clients || []).concat(st.ctx.meta.past_clients || []);
+  const c = all.find((x) => x.k === k);
+  if (!c || String(c.category || "") === category) return;
+  const before = storedClients();
+  const next = before.map((x) => Object.assign({}, x));
+  const i = next.findIndex((x) => x.k === k);
+  if (i >= 0) next[i] = Object.assign({}, next[i], { category });
+  else next.push({ k, name: c.name, category });
+  save("clients", { clients: next }, {
+    focus: "cat:" + k,
+    message: category ? c.name + " is in " + category + " now. Its page suggests partners of the other clients there." : c.name + " has no category now.",
+    undo: () => save("clients", { clients: before }, { focus: "cat:" + k }),
+  });
+}
+
 // #help?add=client (the Clients page's + Add client): opens the form once the settings are in.
 function addFromLink() {
   if (!st || st.set.state !== "ready") return;
@@ -448,6 +476,7 @@ function addClientForm() {
   const body = html`<div class="ui-form hp-clientform">
 <label class="ui-field"><span class="ui-label">Client name</span><input class="ui-input" name="name" type="text" maxlength="60" autocomplete="off" required aria-describedby="hp-cf-err"></label>
 <label class="ui-field"><span class="ui-label">What they sell (optional)</span><input class="ui-input" name="what" type="text" maxlength="200" autocomplete="off" placeholder="Email marketing"></label>
+<label class="ui-field"><span class="ui-label">Category</span><select class="ui-input" name="category" aria-describedby="hp-cf-cat"><option value="">Not set</option>${categories(ctx, "").map((x) => html`<option>${x}</option>`)}</select><span class="ui-small" id="hp-cf-cat">Its page suggests sites that already work with the other clients in this category.</span></label>
 <fieldset class="ui-fieldset"><legend class="ui-label">Managers</legend><div class="hp-checks">${names.map((n) => html`<label class="ui-check"><input type="checkbox" name="managers" value="${n}"${n === mine ? html` checked` : ""}><span>${n}</span></label>`)}</div></fieldset>
 <label class="ui-field"><span class="ui-label">Markets (optional)</span><input class="ui-input" name="markets" type="text" maxlength="100" autocomplete="off" placeholder="US · GB"></label>
 <p class="ui-error" id="hp-cf-err" role="alert" hidden></p>
@@ -457,6 +486,7 @@ function addClientForm() {
     return {
       name: String(f("name").value || "").replace(/\s+/g, " ").trim(),
       what: String(f("what").value || "").replace(/\s+/g, " ").trim(),
+      category: String(f("category").value || "").trim(),
       markets: String(f("markets").value || "").replace(/\s+/g, " ").trim(),
       managers: Array.from(el.querySelectorAll('[name="managers"]:checked')).map((x) => x.value),
     };
@@ -489,6 +519,7 @@ function addClientForm() {
           if (dupe) return fail(dupe.name + " is already a client" + ((ctx.meta.past_clients || []).includes(dupe) ? " (a past one: use Make current)." : "."));
           const entry = { name: v.name };
           if (v.what) entry.what = v.what;
+          if (v.category) entry.category = v.category;
           entry.managers = v.managers;
           if (v.markets) entry.markets = v.markets;
           const ok = await save("clients", { clients: storedClients().concat([entry]) }, {
@@ -498,6 +529,10 @@ function addClientForm() {
           if (!ok) {
             const e2 = st && st.set.err && st.set.err.clients;
             if (e2) return fail(e2);
+          } else {
+            // The new client's page, with its suggested partners (Tomas, 2026-10-23).
+            const added = (metaMod.get().clients || []).find((c) => compact(c.name) === compact(v.name));
+            if (added) toast("See the partners suggested for " + added.name + ".", { action: { label: "Open " + added.name, fn: () => ctx.go("clients", {}, { sub: added.slug || added.k }) } });
           }
           return ok ? undefined : false;
         },
@@ -598,6 +633,7 @@ function bind() {
   st.offs.push(on(root, "click", "[data-hp-past]", (e, b) => setClientPast(b.getAttribute("data-hp-past"), true)));
   st.offs.push(on(root, "click", "[data-hp-current]", (e, b) => setClientPast(b.getAttribute("data-hp-current"), false)));
   st.offs.push(on(root, "click", "[data-hp-addclient]", () => addClientForm()));
+  st.offs.push(on(root, "change", "[data-hp-cat]", (e, sel) => setClientCategory(sel.getAttribute("data-hp-cat"), sel.value)));
   st.offs.push(on(root, "change", "[data-hp-dnc]", (e, box) => setDnc(box)));
 }
 

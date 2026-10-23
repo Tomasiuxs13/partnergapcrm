@@ -117,4 +117,7 @@ export const api = {
   createDeal: () => denied(),
   updateDeal: () => denied(),
   addFile: () => denied(),
+  contacts: () => request("GET"),
+  contact: () => request("GET"),
+  deal: () => request("GET"),
 };

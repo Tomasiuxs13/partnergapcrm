@@ -803,6 +803,11 @@ html[data-panel-open] { overflow: hidden; }
   animation: ui-panel-in .18s ease-out;
 }
 .ui-panel:focus { outline: none; }
+/* The record panel leaves the sidebar in view (Tomas, 2026-10-23: keep the menu while a record is open). */
+@media (min-width: 1024px) {
+  #layer-panel .ui-panel-scrim { left: var(--side-w); }
+  #layer-panel .ui-panel { left: var(--side-w); width: auto; }
+}
 @keyframes ui-panel-in { from { transform: translateX(24px); } to { transform: none; } }
 .ui-panel-head {
   flex: none;
