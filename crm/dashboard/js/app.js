@@ -38,29 +38,37 @@ import todayPage from "./pages/today.js";
 import sitesPage from "./pages/sites.js";
 import dealsPage from "./pages/deals.js";
 import clientsPage from "./pages/clients.js";
+import partnersPage from "./pages/partners.js";
+import contactsPage from "./pages/contacts.js";
+import contactPage from "./pages/contact.js";
+import dealPage from "./pages/deal.js";
 import teamPage from "./pages/team.js";
 import historyPage from "./pages/history.js";
 import helpPage from "./pages/help.js";
 
 // Nav metadata lives only here (spec 5.4). badge(ctx) returns a number or null.
-// group: 'main' and 'more' are in the sidebar (a divider between them); 'hidden' pages are reached
-// from the footer sync line, and on compact screens from More. tab: a bottom tab on compact screens;
-// every other page is listed in the More sheet. params: the nav link's params (2.4: Sites opens Mine).
+// group: 'main' and 'more' are in the sidebar (a divider between them); 'records' are the sidebar's
+// Records dropdown under the main ones (Tomas, 2026-10-23); 'hidden' pages are reached from the footer
+// sync line, and on compact screens from More. tab: a bottom tab on compact screens; every other page is
+// listed in the More sheet. params: the nav link's params (2.4: Sites opens Mine). also: pages without a
+// nav link of their own that light this one up (a contact's page lights Contacts).
 export const NAV = [
   {
     id: "today", label: "Today", icon: "today", group: "main", order: 1, tab: true,
     badge: (ctx) => doNowCount(ctx.store.all(), { meta: ctx.meta, today: ctx.today, me: ctx.me.get() }),
   },
   { id: "sites", label: "Sites", icon: "sites", group: "main", order: 2, tab: true, params: { tab: "mine" } },
-  { id: "deals", label: "Deals", icon: "deals", group: "main", order: 3, tab: true },
+  { id: "deals", label: "Deals", icon: "deals", group: "main", order: 3, tab: true, also: ["deal"] },
   { id: "clients", label: "Clients", icon: "clients", group: "main", order: 4 },
-  { id: "team", label: "Team overview", icon: "team", group: "more", order: 5 },
-  { id: "help", label: "Help", icon: "help", group: "more", order: 6 },
-  { id: "history", label: "Edit history", icon: "history", group: "hidden", order: 7 },
+  { id: "partners", label: "Partners", icon: "partners", group: "records", order: 5 },
+  { id: "contacts", label: "Contacts", icon: "contacts", group: "records", order: 6, also: ["contact"] },
+  { id: "team", label: "Team overview", icon: "team", group: "more", order: 7 },
+  { id: "help", label: "Help", icon: "help", group: "more", order: 8 },
+  { id: "history", label: "Edit history", icon: "history", group: "hidden", order: 9 },
 ];
 
 // The first page is the fallback when no home page is known.
-export const PAGES = [todayPage, sitesPage, dealsPage, clientsPage, teamPage, historyPage, helpPage];
+export const PAGES = [todayPage, sitesPage, dealsPage, clientsPage, partnersPage, contactsPage, contactPage, dealPage, teamPage, historyPage, helpPage];
 
 const NOT_FOUND = "That site wasn't found (it may have been renamed after the morning copy)";
 

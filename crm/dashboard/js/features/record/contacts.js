@@ -67,7 +67,7 @@ function contactHtml(c, { meta, today }) {
   const li = safeUrl(c.linkedin);
   const last = lastEmailText(c, today);
   const status = c.outreach_status && c.outreach_status !== "Not contacted" ? c.outreach_status : "";
-  return html`<li class="rc-ct"><div class="rc-ct-head"><b class="rc-ct-name">${name}</b>${status ? html`<span class="rc-ct-status">${status}</span>` : ""}${sheet
+  return html`<li class="rc-ct"><div class="rc-ct-head"><a class="rc-ct-name" href="${"#contact/" + encodeURIComponent(c.id)}" title="${"Open " + name + "'s page"}">${name}</a>${status ? html`<span class="rc-ct-status">${status}</span>` : ""}${sheet
     ? html`<a class="rc-sheet" href="${sheet}" target="_blank" rel="noopener noreferrer" data-psheet="${c.id}" title="${"Open " + c.id + " in the Google Sheet"}">Sheet <span aria-hidden="true">↗</span></a>`
     : isNew ? html`<span class="rc-ct-new" title="Added on this site. It reaches the Google Sheet on the next weekday morning.">Not in the sheet yet</span>` : ""}</div>${sub ? html`<p class="rc-ct-sub">${sub}</p>` : ""}${emails.length
     ? html`<ul class="rc-emails">${emails.map((e) => html`<li><span class="rc-email">${e}</span><span class="rc-email-acts"><button type="button" class="ui-btn is-sm is-ghost rc-mini" data-pcopy="${e}" aria-label="${"Copy " + e}">Copy</button><a class="ui-btn is-sm is-ghost rc-mini" href="${gmailUrl(e)}" target="_blank" rel="noopener noreferrer" aria-label="${"Search Gmail for " + e}">Gmail <span aria-hidden="true">↗</span></a></span></li>`)}</ul>`

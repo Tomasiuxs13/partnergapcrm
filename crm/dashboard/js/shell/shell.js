@@ -34,6 +34,10 @@ const I = {
   sheet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
   out: '<path d="M15 4h4a1 1 0 011 1v14a1 1 0 01-1 1h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  records: '<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
+  partners: '<path d="M8 12l3 3 6-6"/><path d="M12 21a9 9 0 100-18 9 9 0 000 18z"/>',
+  contacts: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7.5 17.5a5 5 0 019 0"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
 };
 const MARK = '<svg viewBox="0 0 24 24" aria-hidden="true" class="sh-mark-svg"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2"/></svg>';
 
@@ -52,6 +56,14 @@ let announceTimer = null;
 
 const TEST_TIP = "Outreach is in test mode. Nothing is sent from this site.";
 const MORE_PAGES = new Set();
+// The sidebar's Records group (Partners, Contacts; Tomas, 2026-10-23): a <details> that opens on its own
+// pages and otherwise remembers whether it was left open.
+const GROUP_KEY = "pgcrm-nav-records";
+
+// The nav item a page belongs to: its own, or the one whose `also` lists it (#contact/… → Contacts).
+function navOf(page) {
+  return navItems.find((n) => n.id === page) || navItems.find((n) => Array.isArray(n.also) && n.also.includes(page)) || null;
+}
 
 // ---------- Footer ----------
 
@@ -207,6 +219,7 @@ function navLink(n, cls) {
 function shellHtml() {
   const sorted = navItems.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
   const mainItems = sorted.filter((n) => n.group === "main");
+  const recordItems = sorted.filter((n) => n.group === "records");
   const moreItems = sorted.filter((n) => n.group === "more");
   const tabItems = sorted.filter((n) => n.tab);
   const sheetItems = sorted.filter((n) => !n.tab);
@@ -215,7 +228,7 @@ function shellHtml() {
   return html`<a class="sh-skip" href="#main" data-act="skip">Skip to main content</a>
 <aside class="sh-side" aria-label="CRM sections">
   <div class="sh-brand"><span class="sh-mark">${raw(MARK)}</span><span>PartnerGap CRM</span></div>
-  <nav class="sh-nav" aria-label="Main">${mainItems.map((n) => navLink(n, "sh-nav-a"))}<div class="sh-sep" role="presentation"></div>${moreItems.map((n) => navLink(n, "sh-nav-a"))}</nav>
+  <nav class="sh-nav" aria-label="Main">${mainItems.map((n) => navLink(n, "sh-nav-a"))}${recordItems.length ? groupHtml(recordItems) : ""}<div class="sh-sep" role="presentation"></div>${moreItems.map((n) => navLink(n, "sh-nav-a"))}</nav>
   <div class="sh-foot" data-foot="side"></div>
 </aside>
 <div class="sh-main">
@@ -238,14 +251,30 @@ function shellHtml() {
 <div class="sr-only" aria-live="polite" aria-atomic="true" data-announce></div>`;
 }
 
+function groupHtml(items) {
+  const here = navOf(router.current().page);
+  const open = (here && here.group === "records") || prefs.get(GROUP_KEY) === "1";
+  return html`<details class="sh-group" data-sh-group${open ? raw(" open") : ""}><summary class="sh-nav-a sh-group-h">${icon("records")}<span class="sh-label">Records</span><span class="sh-chev">${icon("chev")}</span></summary><div class="sh-group-items">${items.map((n) => navLink(n, "sh-nav-a sh-sub-a"))}</div></details>`;
+}
+
 function setActive(route) {
   if (!app) return;
+  const n = navOf(route.page);
+  const id = n ? n.id : route.page;
   for (const a of $$("[data-nav]", app)) {
-    if (a.getAttribute("data-nav") === route.page) a.setAttribute("aria-current", "page");
+    if (a.getAttribute("data-nav") === id) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   }
+  const group = $("[data-sh-group]", app);
+  if (group && n && n.group === "records" && !group.open) group.open = true;
   const more = $("[data-more]", app);
-  if (more) more.classList.toggle("is-on", MORE_PAGES.has(route.page));
+  if (more) more.classList.toggle("is-on", MORE_PAGES.has(id));
+}
+
+// The Records group remembers being left open or closed ("toggle" doesn't bubble, so this listens in capture).
+function onToggle(e) {
+  const d = e.target;
+  if (d && d.matches && d.matches("[data-sh-group]")) prefs.set(GROUP_KEY, d.open ? "1" : "0");
 }
 
 function updateBadges() {
@@ -481,6 +510,7 @@ export function mount({ nav = [], ctx, onSearch, onAddSite } = {}) {
   render(app, shellHtml());
   main = $("#main", app);
   app.addEventListener("click", onClick);
+  app.addEventListener("toggle", onToggle, true);
   router.onChange((route) => setActive(route));
   store.subscribe(() => { queueBadges(); setBusy(); });
   bus.on("store:status", () => { renderBanners(); renderFooters(); setBusy(); });

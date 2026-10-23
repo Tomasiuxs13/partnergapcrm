@@ -1,0 +1,70 @@
+/* Partners, Contacts and the contact and deal pages (Tomas, 2026-10-23). Class prefixes .pt- (the two
+   lists), .ct- (Contacts), .rv- (a contact's or deal's own page; .rp- is the client Report's). Tokens only
+   (css/tokens.css). The lists reuse the Sites header and tabs (.si-head, .si-tabs); the pages reuse the
+   record timeline (.rc-tl, css/record.css). */
+
+/* ---------- Partners and Contacts ---------- */
+
+.pt-csv { flex: none; }
+.pt-filters .ui-filters { margin-bottom: var(--sp-3); }
+.pt-links { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.pt-link { display: inline-flex; align-items: baseline; gap: 4px; text-decoration: none; }
+a.pt-link:hover .pt-link-name { text-decoration: underline; }
+.pt-link-kind { color: var(--ink-2); font-size: var(--fs-12); }
+.pt-link.is-partner { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.ct-email { overflow-wrap: anywhere; font-size: var(--fs-13); }
+
+/* ---------- A contact's or deal's own page ---------- */
+
+.rv-page { display: grid; gap: var(--sp-4); max-width: 1600px; }
+.rv-crumbs { color: var(--ink-2); font-size: var(--fs-13); }
+.rv-head { display: grid; gap: var(--sp-2); }
+.rv-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+.rv-title { flex: 1 1 260px; min-width: 0; }
+.page .rv-title h1, .rv-title h1 { margin: 0; overflow-wrap: anywhere; text-wrap: balance; }
+.rv-tools { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.rv-sub { display: block; margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-13); overflow-wrap: anywhere; }
+.rv-muted { color: var(--ink-2); }
+.rv-label { margin: var(--sp-3) 0 var(--sp-1); color: var(--ink-2); font-size: var(--fs-12); font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.rv-email { overflow-wrap: anywhere; }
+
+.rv-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); align-items: start; }
+.rv-left, .rv-main, .rv-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); min-width: 0; }
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .rv-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 320px); }
+  .rv-main { grid-column: 1; grid-row: 1 / span 2; }
+  .rv-left { grid-column: 2; grid-row: 1; }
+  .rv-side { grid-column: 2; grid-row: 2; }
+}
+@media (min-width: 1280px) {
+  .rv-cols { grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 340px); }
+}
+
+.rv-card { min-width: 0; }
+.rv-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.rv-card-head .rv-card-title { margin: 0; }
+.rv-count { color: var(--ink-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.rv-dl { display: grid; grid-template-columns: minmax(84px, max-content) minmax(0, 1fr); gap: 6px var(--sp-3); margin: 0; font-size: var(--fs-14); }
+.rv-dl dt { color: var(--ink-2); }
+.rv-dl dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.rv-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.rv-list > li { padding: var(--sp-2) 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.rv-list > li:first-child { padding-top: 0; border-top: 0; }
+.rv-site { display: grid; gap: var(--sp-3); justify-items: start; }
+.rv-site .rv-dl { width: 100%; }
+.rv-site-top { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.rv-site-name { min-width: 0; }
+.rv-more-btn { font-size: var(--fs-14); }
+.rv-more-body { margin-top: var(--sp-3); }
+
+/* ---------- Client page: Suggested partners ---------- */
+
+.cl-lead { margin: 0; padding: var(--sp-3) var(--sp-4) 0; color: var(--ink-2); font-size: var(--fs-13); }
+.cl-l1 .cl-sugg-add { margin-left: auto; }
+
+/* ---------- Touch screens: 44 px targets without changing the line ---------- */
+
+@media (pointer: coarse) {
+  .rv-tap { padding-block: 13px; margin-block: -13px; }
+  .rv-more-btn { min-height: var(--tap); }
+}

@@ -440,7 +440,8 @@ test("row links: Enter opens the panel and it stays open; J moves through the qu
   assert.equal(await page.locator("#layer-panel .ui-panel").count(), 1, "the panel stays open");
   assert.match(page.url(), /rec=/);
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rp-title", "focus on the h2");
-  assert.equal(await page.evaluate(() => document.querySelector(".app").inert), true, ".app is inert");
+  assert.equal(await page.evaluate(() => document.querySelector(".sh-main").inert), true, "the page behind is inert");
+  assert.equal(await page.evaluate(() => document.querySelector(".sh-side").inert), false, "the sidebar stays in reach");
   assert.equal(await page.getAttribute("#layer-panel .ui-panel", "role"), "dialog");
   assert.equal(await page.getAttribute("#layer-panel .ui-panel", "aria-modal"), "true");
   const q = await page.textContent("#layer-panel .ui-queue-text");
@@ -459,7 +460,7 @@ test("row links: Enter opens the panel and it stays open; J moves through the qu
   await page.keyboard.press("Escape");
   await page.waitForSelector("#layer-panel .ui-panel", { state: "detached" });
   assert.doesNotMatch(page.url(), /rec=/);
-  assert.equal(await page.evaluate(() => document.querySelector(".app").inert), false);
+  assert.equal(await page.evaluate(() => document.querySelector(".sh-main").inert), false);
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute("data-open")), id, "focus returns to the row link");
 
   // A click elsewhere on the row (not on a control) follows the link too; × closes.

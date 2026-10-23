@@ -390,7 +390,7 @@ test("T14: Enter on a row link opens and stays, Tab stays inside, Esc returns fo
   await page.waitForTimeout(700);
   assert.equal(await page.locator(P + ".ui-panel").count(), 1, "the panel stays open");
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), "rp-title");
-  assert.equal(await page.evaluate(() => document.querySelector(".app").inert), true);
+  assert.equal(await page.evaluate(() => document.querySelector(".sh-main").inert), true);
   assert.equal(await page.textContent(P + ".ui-queue-text"), "1 of 3 · Test queue");
   await profileLoaded(page);
   // Tab cycles inside the panel.

@@ -22,7 +22,7 @@ export const MOVES = [
   { was: "Tasks", now: [["Today › Do now", "today"], " · ", ["Sites › Waiting for reply › No reply in 14+ days", "sites", { tab: "waiting", quiet: "14" }]] },
   { was: "Prospecting", now: [["Sites › Mine to contact", "sites", { tab: "mine" }], " / ", ["Unowned", "sites", { tab: "unowned" }]] },
   { was: "All sites", now: [["Sites › All", "sites", { tab: "all" }]] },
-  { was: "Partners", now: [["Deals › Live and Signed, not live", "deals"]] },
+  { was: "Partners", now: [["Records › Partners", "partners"], " · ", ["Deals › Live and Signed, not live", "deals"]] },
   { was: "Deals", now: [["Deals", "deals"]] },
   { was: "Campaigns", now: [["Clients", "clients"], " (numbers on each client page)"] },
   { was: "Team, Reports", now: [["Team overview", "team"]] },

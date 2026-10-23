@@ -85,7 +85,10 @@ export function clientTags(record, opts = {}) {
     return names.length ? html`<span class="ui-tags">${tags}</span>` : html`<span class="ui-tags is-none">${opts.emptyText || ""}</span>`;
   }
   const label = names.length ? "Clients: " + names.join(", ") + ". Change clients" : "Add a client";
-  return html`<button type="button" class="ui-tags is-edit${names.length ? "" : " is-none"}" data-edit="clients" data-id="${record.id}" aria-haspopup="dialog" aria-label="${label}">${names.length ? tags : html`<span class="ui-tag is-add">+ Client</span>`}</button>`;
+  // opts.add: a "+" after the tags says another client can be added (the record header; Tomas couldn't
+  // find how to give a site several clients, 2026-10-23).
+  const plus = names.length && opts.add ? html`<span class="ui-tag is-add" aria-hidden="true">+</span>` : "";
+  return html`<button type="button" class="ui-tags is-edit${names.length ? "" : " is-none"}" data-edit="clients" data-id="${record.id}" aria-haspopup="dialog" aria-label="${label}" title="Pick one or more clients">${names.length ? html`${tags}${plus}` : html`<span class="ui-tag is-add">+ Client</span>`}</button>`;
 }
 
 // "Overdue 3d" / "Due today" / "Due Thu 22 Oct"; {noDate: true} shows a "No date" chip without a date.

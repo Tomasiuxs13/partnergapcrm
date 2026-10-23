@@ -54,7 +54,7 @@ export function waitingHtml(r, { readOnly = false, roText = "" } = {}) {
 }
 
 export function metaHtml(r, opts = {}) {
-  return html`${stagePath(r)}${stagePill(r)}<span class="rc-meta-rest">${ownerChip(r)}${clientTags(r, { max: 4, emptyText: "No client" })}${waitingHtml(r, opts)}</span>`;
+  return html`${stagePath(r)}${stagePill(r)}<span class="rc-meta-rest">${ownerChip(r)}${clientTags(r, { max: 4, emptyText: "No client", add: true })}${waitingHtml(r, opts)}</span>`;
 }
 
 // The About line: description (else title) of the site, from the profile or GET …/about.

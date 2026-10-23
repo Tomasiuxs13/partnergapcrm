@@ -1,6 +1,7 @@
 // localStorage conveniences (me, dismissed banners, recent sites, cache ETag), always in try/catch
 // (spec 5.1). Owner G1-A. Never use it for state that must survive: it can be empty at any time.
-// Keys in use: pgcrm-me (me.js), pgcrm-cache-etag (cache.js), pgcrm-dismiss-<banner> (shell.js).
+// Keys in use: pgcrm-me (me.js), pgcrm-cache-etag (cache.js), pgcrm-dismiss-<banner> and pgcrm-nav-records
+// (shell.js).
 
 export function get(key, fallback = null) {
   try {

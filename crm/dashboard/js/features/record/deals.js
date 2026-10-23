@@ -78,7 +78,7 @@ function dealBlock(d, files, { readOnly, today }) {
   if (mine.length) facts.push(html`<dt>Files</dt><dd>${mine.map((f, i) => html`${i ? ", " : ""}${fileLink(f)}`)}</dd>`);
   const edit = readOnly ? "" : html`<button type="button" class="ui-btn is-sm is-ghost" data-pdl="edit" data-deal="${d.id}" aria-label="${"Edit the " + (d.client || "") + " deal"}">Edit</button>`;
   return html`<li class="rc-dealitem${d.stage === "Lost" ? " is-lost" : ""}" data-dealid="${d.id}">
-<div class="rc-dealhead"><span class="rc-dealclient">${d.client || "No client"}</span><span class="ui-pill ui-stage">${stageDot(d.stage)}<span class="ui-pill-text">${stage}</span></span>${edit}</div>
+<div class="rc-dealhead"><a class="rc-dealclient" href="${"#deal/" + encodeURIComponent(d.id)}" title="${"Open the " + (d.client || "") + " deal's page"}">${d.client || "No client"}</a><span class="ui-pill ui-stage">${stageDot(d.stage)}<span class="ui-pill-text">${stage}</span></span>${edit}</div>
 ${lines}${facts.length ? html`<dl class="rc-dl">${facts}</dl>` : !terms ? html`<p class="ui-small rc-muted">No terms yet.</p>` : ""}
 </li>`;
 }
@@ -171,7 +171,7 @@ export function openDealForm(record, deal = null) {
   if (has(d.owner) && !team.includes(d.owner)) team.push(d.owner);
   const body = html`<div class="ui-form rc-dealform">
 <div class="ui-grid2">
-<label class="ui-field"><span class="ui-label">Client</span><select class="ui-input" name="client"><option value="">Pick a client</option>${mine.length ? html`<optgroup label="This site's clients">${mine.map((c) => html`<option${sel(c, d.client)}>${c}</option>`)}</optgroup>` : ""}<optgroup label="${mine.length ? "Other clients" : "Clients"}">${rest.map((c) => html`<option${sel(c, d.client)}>${c}</option>`)}</optgroup></select></label>
+<label class="ui-field"><span class="ui-label">Client</span><select class="ui-input" name="client"><option value="">Pick a client</option>${mine.length ? html`<optgroup label="This site's clients">${mine.map((c) => html`<option${sel(c, d.client)}>${c}</option>`)}</optgroup>` : ""}<optgroup label="${mine.length ? "Other clients" : "Clients"}">${rest.map((c) => html`<option${sel(c, d.client)}>${c}</option>`)}</optgroup></select><span class="ui-small">One client per deal. Add another deal for another client.</span></label>
 <label class="ui-field"><span class="ui-label">Stage</span><select class="ui-input" name="stage">${DEAL_STAGES.map((s) => html`<option value="${s}"${sel(s, d.stage)}>${STAGE_TEXT[s]}</option>`)}</select></label>
 <label class="ui-field"><span class="ui-label">Deal type</span><select class="ui-input" name="deal_model"><option value="">Not set</option>${models.map((x) => html`<option${sel(x, d.deal_model)}>${x}</option>`)}</select></label>
 <label class="ui-field"><span class="ui-label">Owner</span><select class="ui-input" name="owner"><option value="">Nobody</option>${team.map((x) => html`<option${sel(x, d.owner)}>${x}</option>`)}</select></label>
@@ -238,8 +238,8 @@ export function openDealForm(record, deal = null) {
   return modal.result.then(() => answer);
 }
 
-/** Add a file link to the site (optionally to one of its deals). Resolves to {file} or null. */
-export function openFileForm(record, deals = []) {
+/** Add a file link to the site (optionally to one of its deals, dealId picked first). Resolves to {file} or null. */
+export function openFileForm(record, deals = [], { dealId = "" } = {}) {
   const m = metaMod.get();
   if (!record || m.read_only) return Promise.resolve(null);
   const body = html`<div class="ui-form rc-fileform">
@@ -248,7 +248,7 @@ export function openFileForm(record, deals = []) {
 <div class="ui-grid2">
 <label class="ui-field"><span class="ui-label">Name</span><input class="ui-input" name="label" type="text" maxlength="120" autocomplete="off" placeholder="Signed contract"></label>
 <label class="ui-field"><span class="ui-label">Type</span><select class="ui-input" name="kind">${FILE_KINDS.map((k) => html`<option>${k}</option>`)}</select></label>
-${deals.length ? html`<label class="ui-field is-wide"><span class="ui-label">For deal</span><select class="ui-input" name="deal_id"><option value="">The whole site</option>${deals.map((d) => html`<option value="${d.id}">${(d.client || "No client") + " (" + dealStageText(d) + ")"}</option>`)}</select></label>` : ""}
+${deals.length ? html`<label class="ui-field is-wide"><span class="ui-label">For deal</span><select class="ui-input" name="deal_id"><option value="">The whole site</option>${deals.map((d) => html`<option value="${d.id}"${sel(d.id, dealId)}>${(d.client || "No client") + " (" + dealStageText(d) + ")"}</option>`)}</select></label>` : ""}
 </div>
 <p class="ui-error" role="alert" hidden></p>
 </div>`;
